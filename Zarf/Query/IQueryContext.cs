@@ -14,7 +14,7 @@ namespace Zarf.Query
 
         IProjectionFinder ProjectionFinder { get; }
 
-        string NewAlias();
+        IAliasGenerator AliasGenerator { get; }
     }
 
     public interface IEntityMemberMappingProvider

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Zarf.Query
 {
-    public class QueryContext
+    public class QueryContext : IQueryContext
     {
         public List<Expression> Projections { get; set; }
 
@@ -32,7 +32,7 @@ namespace Zarf.Query
 
         private int _aliasIndex = 0;
 
-        public string CreateAlias ()
+        public string CreateAlias()
         {
             return "T" + _aliasIndex++;
         }
@@ -48,6 +48,31 @@ namespace Zarf.Query
             }
 
             return query;
+        }
+
+        public IEntityMemberMappingProvider EntityMemberMappingProvider { get; }
+
+        public IPropertyNavigationContext PropertyNavigationContext { get; }
+
+        public IQuerySourceProvider QuerySourceProvider { get; }
+
+        public IProjectionFinder ProjectionFinder { get; }
+
+        public IAliasGenerator AliasGenerator { get; }
+
+        public QueryContext(
+            IEntityMemberMappingProvider memberMappingProvider,
+            IPropertyNavigationContext navigationContext,
+            IQuerySourceProvider sourceProvider,
+            IProjectionFinder projectionFinder,
+            IAliasGenerator aliasGenerator
+            )
+        {
+            EntityMemberMappingProvider = memberMappingProvider;
+            PropertyNavigationContext = navigationContext;
+            QuerySourceProvider = sourceProvider;
+            ProjectionFinder = projectionFinder;
+            AliasGenerator = aliasGenerator;
         }
     }
 }

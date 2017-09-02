@@ -8,7 +8,7 @@ namespace Zarf.Query
     {
         public IQueryContext CreateContext()
         {
-            return default(IQueryContext);
+            return new QueryContext();
         }
     }
 }
