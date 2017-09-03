@@ -33,8 +33,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 }
 
                 context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
-                var selector = transformVisitor.Visit(keySelectorLambda);
-                aggregateKey = context.ProjectionFinder.FindProjections(selector).FirstOrDefault();
+                aggregateKey = context
+                    .ProjectionFinder
+                    .Find(transformVisitor.Visit, keySelectorLambda)
+                    .FirstOrDefault();
             }
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);

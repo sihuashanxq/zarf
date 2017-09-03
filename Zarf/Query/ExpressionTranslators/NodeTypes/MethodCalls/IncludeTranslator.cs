@@ -37,7 +37,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var filter = tranformVisitor.Visit(conditionLambda);
 
             context.IncludesCondtion[propertyPath.Member] = filter;
-            context.IncludesCondtionParameter[propertyPath.Member] = context.ProjectionFinder.FindProjections(filter);
+            context.IncludesCondtionParameter[propertyPath.Member] = context.ProjectionFinder.Find(filter);
 
             context.QuerySourceProvider.AddSource(conditionLambda.Parameters[1], innerQuery);
             var condtion = tranformVisitor.Visit(conditionLambda);

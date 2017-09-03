@@ -8,7 +8,7 @@
 
         IQuerySourceProvider QuerySourceProvider { get; }
 
-        IProjectionFinder ProjectionFinder { get; }
+        IRefrenceProjectionFinder ProjectionFinder { get; }
 
         IAliasGenerator AliasGenerator { get; }
     }

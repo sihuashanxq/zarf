@@ -14,7 +14,6 @@ namespace Zarf.Query
         public void AddPropertyNavigation(MemberInfo memberInfo, PropertyNavigation propertyNavigation)
         {
             Navigations[memberInfo] = propertyNavigation;
-
         }
 
         public bool IsPropertyNavigation(MemberInfo memberInfo)

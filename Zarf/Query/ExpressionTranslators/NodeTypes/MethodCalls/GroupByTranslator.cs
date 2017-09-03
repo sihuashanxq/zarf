@@ -29,7 +29,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             context.QuerySourceProvider.AddSource(keySelector.Parameters.First(), query);
             var selector = transformVisitor.Visit(keySelector);
 
-            query.Groups.Add(new GroupExpression(context.ProjectionFinder.FindProjections(selector).Select(item => item as ColumnExpression)));
+            query.Groups.Add(
+                new GroupExpression(
+                    context.ProjectionFinder.Find<ColumnExpression>(selector))
+            );
+
             return query;
         }
     }

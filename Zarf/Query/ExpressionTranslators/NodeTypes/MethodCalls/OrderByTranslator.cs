@@ -46,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var orderByKey = transformVisitor.Visit(selector);
 
             query.Orders.Add(new OrderExpression(
-                context.ProjectionFinder.FindProjections(orderByKey).Select(item => item.As<ColumnExpression>()),
+                context.ProjectionFinder.Find<ColumnExpression>(orderByKey),
                 GetOrderType(methodCall)
                 )
             );

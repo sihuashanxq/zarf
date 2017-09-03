@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+using System.Linq;
 
 namespace Zarf.Query
 {
-    public class ExpressionVisitorProjectionFinder : ExpressionVisitor, IProjectionFinder
+    public class ExpressionVisitorProjectionFinder : ExpressionVisitor, IRefrenceProjectionFinder
     {
         private List<Expression> _extensionExpressions;
 
@@ -15,11 +15,28 @@ namespace Zarf.Query
             return extension;
         }
 
-        public List<Expression> FindProjections(Expression expression)
+        public List<TRefrence> Find<TRefrence>(Expression node)
+            where TRefrence : Expression
         {
             _extensionExpressions = new List<Expression>();
-            Visit(expression);
-            return _extensionExpressions;
+            Visit(node);
+            return _extensionExpressions.OfType<TRefrence>().ToList();
+        }
+
+        public List<TRefrence> Find<TRefrence>(Func<Expression, Expression> preHandle, Expression node)
+            where TRefrence : Expression
+        {
+            return Find<TRefrence>(preHandle(node));
+        }
+
+        public List<Expression> Find(Expression node)
+        {
+            return Find<Expression>(node);
+        }
+
+        public List<Expression> Find(Func<Expression, Expression> preHandle, Expression node)
+        {
+            return Find<Expression>(preHandle, node);
         }
     }
 }

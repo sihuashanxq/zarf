@@ -29,7 +29,7 @@ namespace Zarf.Query
 
         public IQuerySourceProvider QuerySourceProvider { get; }
 
-        public IProjectionFinder ProjectionFinder { get; }
+        public IRefrenceProjectionFinder ProjectionFinder { get; }
 
         public IAliasGenerator AliasGenerator { get; }
 
@@ -37,7 +37,7 @@ namespace Zarf.Query
             IEntityMemberSourceMappingProvider memberMappingProvider,
             IPropertyNavigationContext navigationContext,
             IQuerySourceProvider sourceProvider,
-            IProjectionFinder projectionFinder,
+            IRefrenceProjectionFinder projectionFinder,
             IAliasGenerator aliasGenerator
             )
         {

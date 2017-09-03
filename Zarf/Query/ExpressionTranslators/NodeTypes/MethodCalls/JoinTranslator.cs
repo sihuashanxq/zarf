@@ -47,7 +47,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var right = transformVisitor.Visit(inner).UnWrap().As<LambdaExpression>().Body;
             //只保留Selector中的Columns
             var entityNew = transformVisitor.Visit(selector).UnWrap();
-            var projections = context.ProjectionFinder.FindProjections(entityNew);
+            var projections = context.ProjectionFinder.Find(entityNew);
 
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
 
