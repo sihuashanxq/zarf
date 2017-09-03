@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Zarf.Query;
 
 namespace Zarf
 {
@@ -47,7 +48,7 @@ namespace Zarf
         {
             var mappingProvider = new Mapping.MappingProvider();
             var queryBuilder = new Query.QueryExpressionBuilder(mappingProvider);
-            var context = new Query.QueryContext();
+            var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
 
             return new EntityEnumerable<TEntity>(queryBuilder.Build(Expression, context), mappingProvider, context)
                 .GetEnumerator();
@@ -61,7 +62,7 @@ namespace Zarf
         {
             var mappingProvider = new Mapping.MappingProvider();
             var queryBuilder = new Query.QueryExpressionBuilder(mappingProvider);
-            var context = new Query.QueryContext();
+            var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
 
             return new EntityEnumerable<object>(queryBuilder.Build(Expression, context), mappingProvider, context)
                 .GetEnumerator();

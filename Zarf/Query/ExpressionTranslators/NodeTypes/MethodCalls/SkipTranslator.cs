@@ -32,7 +32,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Projections.Add(query.Offset);
             query.Orders.Clear();
-            query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+            query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
 
             var column = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
             var predicate = Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset));

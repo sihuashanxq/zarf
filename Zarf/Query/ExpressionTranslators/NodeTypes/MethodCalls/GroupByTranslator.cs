@@ -10,7 +10,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
     public class GroupByTranslator : Translator<MethodCallExpression>
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
-   
+
         static GroupByTranslator()
         {
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "GroupBy");
@@ -19,19 +19,17 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
+            var keySelector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
-            context.Projections = new List<Expression>();
-            context.QuerySource[selector.Parameters.First()] = query;
+            context.QuerySourceProvider.AddSource(keySelector.Parameters.First(), query);
+            var selector = transformVisitor.Visit(keySelector);
 
-            transformVisitor.Visit(selector);
-
-            query.Groups.Add(new GroupExpression(context.Projections.Cast<ColumnExpression>()));
+            query.Groups.Add(new GroupExpression(context.ProjectionFinder.FindProjections(selector).Select(item => item as ColumnExpression)));
             return query;
         }
     }

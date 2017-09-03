@@ -6,9 +6,23 @@ namespace Zarf.Query
 {
     public class QueryContextFacotry : IQueryContextFactory
     {
+        public static readonly IQueryContextFactory Factory = new QueryContextFacotry();
+
+        private QueryContextFacotry()
+        {
+
+        }
+
         public IQueryContext CreateContext()
         {
-            return new QueryContext();
+            //di ProviderFactory
+            return new QueryContext(
+                    new EntityMemberSourceMappingProvider(),
+                    new PropertyNavigationContext(),
+                    new QuerySourceProvider(), 
+                    new ExpressionVisitorProjectionFinder(),
+                    new AliasGenerator()
+                );
         }
     }
 }

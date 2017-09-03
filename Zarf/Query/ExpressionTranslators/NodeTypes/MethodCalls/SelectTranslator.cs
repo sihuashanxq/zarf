@@ -28,16 +28,14 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
-            query.Projections.Clear();
-
-            context.Projections = new List<Expression>();
-            context.QuerySource[selector.Parameters.First()] = query;
+            context.QuerySourceProvider.AddSource(selector.Parameters.First(), query);
             var entityNew = transformVisitor.Visit(selector).UnWrap();
+            var projections = context.ProjectionFinder.FindProjections(entityNew);
 
-            foreach (var item in context.Projections)
+            foreach (var item in projections)
             {
                 if (!item.Is<FromTableExpression>())
                 {

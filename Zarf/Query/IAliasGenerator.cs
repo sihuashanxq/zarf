@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zarf
+﻿namespace Zarf
 {
     public interface IAliasGenerator
     {
-        string Generate();
+        string GetNewTableAlias();
+
+        string GetNewColumnAlias();
+
+        void Reset();
     }
 }

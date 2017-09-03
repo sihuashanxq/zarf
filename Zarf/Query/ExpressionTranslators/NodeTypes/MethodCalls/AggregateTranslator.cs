@@ -22,22 +22,22 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
-            var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
+            Expression aggregateKey = null;
 
             if (methodCall.Arguments.Count == 2)
             {
+                var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
                 if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.CreateAlias());
+                    rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias());
                 }
 
-                context.Projections.Clear();
-                context.QuerySource[keySelectorLambda.Parameters.FirstOrDefault()] = rootQuery;
-                transformVisitor.Visit(keySelectorLambda);
+                context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
+                var selector = transformVisitor.Visit(keySelectorLambda);
+                aggregateKey = context.ProjectionFinder.FindProjections(selector).FirstOrDefault();
             }
 
-            var keySelecotor = context.Projections.FirstOrDefault();
-            var aggregate = new AggregateExpression(methodCall.Method, keySelecotor);
+            var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
 
             rootQuery.Projections.Add(aggregate);
             rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);

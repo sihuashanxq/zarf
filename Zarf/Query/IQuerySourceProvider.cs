@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
+﻿using System.Linq.Expressions;
 
 namespace Zarf.Query
 {
     public interface IQuerySourceProvider
     {
-        Expression GetQuerySource(Expression expression);
+        Expression GetSource(Expression expression);
 
-        /// <summary>
-        /// new {User}.Where(item=>item.User.Name)
-        /// </summary>
-        /// <param name="memberInfo"></param>
-        /// <returns></returns>
-        Expression GetQuerySource(MemberInfo memberInfo);
+        void AddSource(Expression expression, Expression source);
     }
 }

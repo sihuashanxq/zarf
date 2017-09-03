@@ -24,13 +24,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (rootQuery.Where != null && (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0))
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
             rootQuery.Projections.Clear();
             rootQuery.Projections.Add(Expression.Constant(1));
 
-            context.QuerySource[lambda.Parameters.First()] = rootQuery;
+            context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
             var condition = tranformVisitor.Visit(lambda).UnWrap();
             if (condition.Is<LambdaExpression>())
             {

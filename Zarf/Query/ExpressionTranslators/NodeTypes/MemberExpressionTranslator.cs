@@ -10,15 +10,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         public override Expression Translate(QueryContext context, MemberExpression memExpression, ExpressionVisitor transformVisitor)
         {
             //new {item.User.Id,} item.User
-            if (context.MemberSource.TryGetValue(memExpression.Member, out QueryExpression query))
+            var refrenceExpression = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
+            if (refrenceExpression != null)
             {
-                return query;
+                return refrenceExpression;
             }
 
             var typeInfo = memExpression.Member.GetMemberInfoType();
             if (typeof(IDataQuery).IsAssignableFrom(typeInfo))
             {
-                return new QueryExpression(typeInfo, context.CreateAlias());
+                return new QueryExpression(typeInfo, context.AliasGenerator.GetNewTableAlias());
             }
 
             var belongInstance = transformVisitor.Visit(memExpression.Expression);
@@ -30,9 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
             if (belongInstance.Is<QueryExpression>())
             {
-                var columnExpression = new ColumnExpression(belongInstance.Cast<QueryExpression>(), memExpression.Member);
-                context.Projections.Add(columnExpression);
-                return columnExpression;
+                return new ColumnExpression(belongInstance.Cast<QueryExpression>(), memExpression.Member);
             }
 
             return memExpression;

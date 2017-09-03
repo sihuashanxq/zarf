@@ -62,7 +62,7 @@ namespace Zarf
             //    .ToList();
 
             var z = db.DataQuery<Order>().ToList();
-
+            BasicTest(db);
             Console.ReadKey();
         }
 

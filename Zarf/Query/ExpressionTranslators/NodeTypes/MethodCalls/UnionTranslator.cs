@@ -39,7 +39,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                     query.Projections.AddRange(query.GenerateColumns());
                 }
 
-                query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
                 query.IsDistinct = true;
             }
 

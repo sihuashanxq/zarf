@@ -122,10 +122,9 @@ namespace Zarf.Query.Expressions
         /// <returns></returns>
         public bool IsEmptyQuery()
         {
-
             return
                 !IsDistinct &&
-                !DefaultIfEmpty &&
+                //!DefaultIfEmpty &&
                 Where == null &&
                 Offset == null &&
                 SubQuery == null &&

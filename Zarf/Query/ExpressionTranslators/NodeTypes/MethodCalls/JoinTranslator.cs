@@ -25,33 +25,33 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (rootQuery.Projections.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
             //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
             if (joinQuery.Projections.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
             {
-                joinQuery = joinQuery.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                joinQuery = joinQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
             var outer = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
             var inner = methodCall.Arguments[3].UnWrap().As<LambdaExpression>();
             var selector = methodCall.Arguments[4].UnWrap().As<LambdaExpression>();
 
-            context.QuerySource[outer.Parameters.First()] = rootQuery;
-            context.QuerySource[inner.Parameters.First()] = joinQuery;
-            context.QuerySource[selector.Parameters.First()] = rootQuery;
-            context.QuerySource[selector.Parameters.Last()] = joinQuery;
+            context.QuerySourceProvider.AddSource(outer.Parameters.First(), rootQuery);
+            context.QuerySourceProvider.AddSource(inner.Parameters.First(), joinQuery);
+            context.QuerySourceProvider.AddSource(selector.Parameters.First(), rootQuery);
+            context.QuerySourceProvider.AddSource(selector.Parameters.Last(), joinQuery);
 
             var left = transformVisitor.Visit(outer).UnWrap().As<LambdaExpression>().Body;
             var right = transformVisitor.Visit(inner).UnWrap().As<LambdaExpression>().Body;
             //只保留Selector中的Columns
-            context.Projections = new List<Expression>();
             var entityNew = transformVisitor.Visit(selector).UnWrap();
+            var projections = context.ProjectionFinder.FindProjections(entityNew);
 
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
 
-            foreach (var item in context.Projections)
+            foreach (var item in projections)
             {
                 if (!item.Is<FromTableExpression>())
                 {

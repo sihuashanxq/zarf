@@ -23,11 +23,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
                 query.Result = query.SubQuery.Result;
             }
 
-            context.QuerySource[condition.Parameters.FirstOrDefault()] = query;
+            context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), query);
             query.AddWhere(transformVisitor.Visit(condition).UnWrap());
 
             if (methodCall.Method.Name == "SingleOrDefault")

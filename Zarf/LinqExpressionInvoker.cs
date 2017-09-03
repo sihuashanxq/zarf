@@ -49,7 +49,7 @@ namespace Zarf
 
         public QType Invoke<QType>(Expression linqExpression)
         {
-            var queryContext = new QueryContext();
+            var queryContext = QueryContextFacotry.Factory.CreateContext() as QueryContext;
             var rootQuery = QueryExpressionBuilder.Build(linqExpression, queryContext);
             if (rootQuery == null)
             {

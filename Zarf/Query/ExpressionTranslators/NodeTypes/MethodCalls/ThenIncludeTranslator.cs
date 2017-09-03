@@ -34,19 +34,18 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             var propertyElementType = propertyPath.Member.GetMemberInfoType().GetElementTypeInfo();
-            var innerQuery = new QueryExpression(propertyElementType, context.CreateAlias());
+            var innerQuery = new QueryExpression(propertyElementType, context.AliasGenerator.GetNewTableAlias());
 
             var conditionLambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
 
-            context.QuerySource[conditionLambda.Parameters[0]] = previousQuery;
+            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[0], previousQuery);
 
-            context.Projections.Clear();
             var filter = tranformVisitor.Visit(conditionLambda);
 
             context.IncludesCondtion[propertyPath.Member] = filter;
-            context.IncludesCondtionParameter[propertyPath.Member] = context.Projections.ToList();
+            context.IncludesCondtionParameter[propertyPath.Member] = context.ProjectionFinder.FindProjections(conditionLambda);
 
-            context.QuerySource[conditionLambda.Parameters[1]] = innerQuery;
+            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[1], innerQuery);
             var condtion = tranformVisitor.Visit(conditionLambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));

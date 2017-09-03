@@ -7,12 +7,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public override Expression Translate(QueryContext context, ParameterExpression parameter, ExpressionVisitor transformVisitor)
         {
-            if (context.QuerySource.TryGetValue(parameter, out QueryExpression query))
+            var refrenceQuery = context.QuerySourceProvider.GetSource(parameter);
+
+            if (refrenceQuery == null)
             {
-                return query;
+                return parameter;
             }
 
-            return parameter;
+            return refrenceQuery;
         }
     }
 }

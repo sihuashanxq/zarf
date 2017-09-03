@@ -5,12 +5,10 @@ namespace Zarf.Query
 {
     public interface IPropertyNavigationContext
     {
-        IQuerySourceProvider QuerySourceProvider { get; }
-
-        void AddPropertyNavigation(MemberInfo memberInfo, QueryExpression queryExpression);
+        void AddPropertyNavigation(MemberInfo memberInfo, PropertyNavigation propertyNavigation);
 
         bool IsPropertyNavigation(MemberInfo memberInfo);
 
-        QueryExpression GetNavigationExpression(MemberInfo memberInfo);
+        PropertyNavigation GetNavigationExpression(MemberInfo memberInfo);
     }
 }

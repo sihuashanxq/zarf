@@ -27,11 +27,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
                 if (rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                    rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
                     rootQuery.Result = rootQuery.SubQuery.Result;
                 }
 
-                context.QuerySource[condition.Parameters.FirstOrDefault()] = rootQuery;
+                context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), rootQuery);
                 rootQuery.AddWhere(transformVisitor.Visit(condition).UnWrap());
             }
 

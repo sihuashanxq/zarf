@@ -21,7 +21,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 throw new NotImplementedException("using IDataQuery<T>");
             }
 
-            return new QueryExpression(entityType, context.CreateAlias());
+            return new QueryExpression(entityType, context.AliasGenerator.GetNewTableAlias());
         }
     }
 }

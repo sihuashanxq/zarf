@@ -38,16 +38,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.CreateAlias(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
             }
 
-            context.Projections = new List<Expression>();
-            context.QuerySource[selector.Parameters.First()] = query;
+            context.QuerySourceProvider.AddSource(selector.Parameters.First(), query);
 
-            transformVisitor.Visit(selector);
+            var orderByKey = transformVisitor.Visit(selector);
 
             query.Orders.Add(new OrderExpression(
-                context.Projections.Cast<ColumnExpression>(),
+                context.ProjectionFinder.FindProjections(orderByKey).Select(item => item.As<ColumnExpression>()),
                 GetOrderType(methodCall)
                 )
             );

@@ -39,8 +39,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                         throw new NotImplementedException("not supported!");
                     }
 
-                    context.MemberSource[newExpression.Members[i]] = argument.As<QueryExpression>();
-                    context.Projections.Add(argument);
+                    context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
                 }
 
                 arguments.Add(argument);
