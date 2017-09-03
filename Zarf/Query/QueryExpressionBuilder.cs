@@ -162,13 +162,13 @@ namespace Zarf.Query
 
             foreach (var member in modeTypeDescriptor.Type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                if (!queryContext.Includes.ContainsKey(member))
+                var navigation = queryContext.PropertyNavigationContext.GetNavigation(member);
+                if (navigation == null)
                 {
                     continue;
                 }
 
-                var parameter = queryContext.IncludesCondtionParameter[member];
-                foreach (var item in parameter)
+                foreach (var item in navigation.RefrenceColumns)
                 {
                     if (!item.Is<ColumnExpression>())
                     {
@@ -209,7 +209,7 @@ namespace Zarf.Query
 
         public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, MappingProvider mappingProvider)
         {
-            var innerQuery = queryContext.Includes[memberInfo].As<QueryExpression>();
+            var innerQuery = queryContext.PropertyNavigationContext.GetNavigation(memberInfo).RefrenceQuery;
             BuildResult(innerQuery, queryContext);
 
             var propertyElementType = memberInfo.GetMemberInfoType().GetElementTypeInfo();

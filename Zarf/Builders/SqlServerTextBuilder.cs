@@ -254,9 +254,11 @@ namespace Zarf.Builders
                     BuildExpression(unary.Operand);
                     Append(" )");
                     break;
-                case ExpressionType.ArrayLength:
+                default:
+                    Visit(unary.Operand);
                     break;
             }
+
             return unary;
         }
 

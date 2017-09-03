@@ -13,12 +13,12 @@ namespace Zarf.Query
 
         private int _columnRefCount;
 
-        public string GetNewTableAlias()
+        public string GetNewTable()
         {
             return "T" + _tableRefCount++;
         }
 
-        public string GetNewColumnAlias()
+        public string GetNewColumn()
         {
             return "C" + _tableRefCount++;
         }

@@ -10,6 +10,6 @@
 
         IRefrenceProjectionFinder ProjectionFinder { get; }
 
-        IAliasGenerator AliasGenerator { get; }
+        IAliasGenerator Alias { get; }
     }
 }

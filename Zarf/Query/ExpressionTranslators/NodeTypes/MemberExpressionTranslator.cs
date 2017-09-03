@@ -19,7 +19,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var typeInfo = memExpression.Member.GetMemberInfoType();
             if (typeof(IDataQuery).IsAssignableFrom(typeInfo))
             {
-                return new QueryExpression(typeInfo, context.AliasGenerator.GetNewTableAlias());
+                return new QueryExpression(typeInfo, context.Alias.GetNewTable());
             }
 
             var belongInstance = transformVisitor.Visit(memExpression.Expression);

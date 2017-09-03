@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
                 if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias());
+                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable());
                 }
 
                 context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);

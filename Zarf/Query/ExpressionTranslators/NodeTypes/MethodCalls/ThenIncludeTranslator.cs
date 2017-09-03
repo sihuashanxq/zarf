@@ -22,36 +22,39 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         {
             var rootQuery = tranformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var propertyPath = methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body.As<MemberExpression>();
+            var previousNaviation = context.PropertyNavigationContext.GetLastNavigation();
 
-            var previousQuery = context
-                .Includes
-                .LastOrDefault()
-                .Value;
-
-            if (propertyPath == null || previousQuery == null)
+            if (propertyPath == null || previousNaviation == null)
             {
                 throw new ArgumentException("need Include before ThenInclude!");
             }
 
-            var propertyElementType = propertyPath.Member.GetMemberInfoType().GetElementTypeInfo();
-            var innerQuery = new QueryExpression(propertyElementType, context.AliasGenerator.GetNewTableAlias());
+            var previousQuery = previousNaviation.RefrenceQuery;
+            var propertyEleType = propertyPath.Member.GetMemberInfoType().GetElementTypeInfo();
+            var innerQuery = new QueryExpression(propertyEleType, context.Alias.GetNewTable());
 
-            var conditionLambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
+            //关联关系
+            var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
 
-            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[0], previousQuery);
+            context.QuerySourceProvider.AddSource(lambda.Parameters[0], previousQuery);
 
-            var filter = tranformVisitor.Visit(conditionLambda);
+            var relation = tranformVisitor.Visit(lambda);
 
-            context.IncludesCondtion[propertyPath.Member] = filter;
-            context.IncludesCondtionParameter[propertyPath.Member] = context.ProjectionFinder.Find(conditionLambda);
-
-            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[1], innerQuery);
-            var condtion = tranformVisitor.Visit(conditionLambda);
+            context.QuerySourceProvider.AddSource(lambda.Parameters[1], innerQuery);
+            var condtion = tranformVisitor.Visit(lambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));
             innerQuery.Projections.AddRange(innerQuery.GenerateColumns());
 
-            context.Includes[propertyPath.Member] = innerQuery;
+            context.PropertyNavigationContext.AddPropertyNavigation(
+                propertyPath.Member,
+                new PropertyNavigation(
+                     propertyPath.Member,
+                     innerQuery,
+                     context.ProjectionFinder.Find(relation),
+                     relation
+                )
+            );
 
             return rootQuery;
         }

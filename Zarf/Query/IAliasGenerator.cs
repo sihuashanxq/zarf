@@ -2,9 +2,9 @@
 {
     public interface IAliasGenerator
     {
-        string GetNewTableAlias();
+        string GetNewTable();
 
-        string GetNewColumnAlias();
+        string GetNewColumn();
 
         void Reset();
     }

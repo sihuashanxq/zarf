@@ -27,7 +27,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
                 if (rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
+                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
                     rootQuery.Result = rootQuery.SubQuery.Result;
                 }
 

@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         static IncludeTranslator()
         {
-            SupprotedMethods = new[] { DataQueryable.IncludeMethodInfo };
+            SupprotedMethods = new[] { DataQueryable.IncludeMethodInfo};
         }
 
         public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
@@ -27,25 +27,31 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 throw new ArgumentException("item=>item.Property");
             }
 
-            var propertyElementType = propertyPath.Member.GetMemberInfoType().GetElementTypeInfo();
-            var innerQuery = new QueryExpression(propertyElementType, context.AliasGenerator.GetNewTableAlias());
+            var propertyEleType = propertyPath.Member.GetMemberInfoType().GetElementTypeInfo();
+            var innerQuery = new QueryExpression(propertyEleType, context.Alias.GetNewTable());
 
-            var conditionLambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
+            //关联关系
+            var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
 
-            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[0], rootQuery);
+            context.QuerySourceProvider.AddSource(lambda.Parameters[0], rootQuery);
 
-            var filter = tranformVisitor.Visit(conditionLambda);
+            var relation = tranformVisitor.Visit(lambda);
 
-            context.IncludesCondtion[propertyPath.Member] = filter;
-            context.IncludesCondtionParameter[propertyPath.Member] = context.ProjectionFinder.Find(filter);
-
-            context.QuerySourceProvider.AddSource(conditionLambda.Parameters[1], innerQuery);
-            var condtion = tranformVisitor.Visit(conditionLambda);
+            context.QuerySourceProvider.AddSource(lambda.Parameters[1], innerQuery);
+            var condtion = tranformVisitor.Visit(lambda);
 
             innerQuery.AddJoin(new JoinExpression(rootQuery, condtion));
             innerQuery.Projections.AddRange(innerQuery.GenerateColumns());
 
-            context.Includes[propertyPath.Member] = innerQuery;
+            context.PropertyNavigationContext.AddPropertyNavigation(
+                propertyPath.Member,
+                new PropertyNavigation(
+                     propertyPath.Member,
+                     innerQuery,
+                     context.ProjectionFinder.Find(relation),
+                     relation
+                )
+            );
 
             return rootQuery;
         }

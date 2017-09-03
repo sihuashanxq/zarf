@@ -25,13 +25,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (rootQuery.Projections.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
             //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
             if (joinQuery.Projections.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
             {
-                joinQuery = joinQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
+                joinQuery = joinQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
             var outer = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();

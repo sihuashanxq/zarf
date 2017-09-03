@@ -11,8 +11,16 @@ namespace Zarf.Query
     {
         protected virtual Dictionary<MemberInfo, PropertyNavigation> Navigations { get; set; }
 
+        protected virtual MemberInfo LastAddedProperty { get; set; }
+
+        public PropertyNavigationContext()
+        {
+            Navigations = new Dictionary<MemberInfo, PropertyNavigation>();
+        }
+
         public void AddPropertyNavigation(MemberInfo memberInfo, PropertyNavigation propertyNavigation)
         {
+            LastAddedProperty = memberInfo;
             Navigations[memberInfo] = propertyNavigation;
         }
 
@@ -21,7 +29,7 @@ namespace Zarf.Query
             return Navigations.ContainsKey(memberInfo);
         }
 
-        public PropertyNavigation GetNavigationExpression(MemberInfo memberInfo)
+        public PropertyNavigation GetNavigation(MemberInfo memberInfo)
         {
             if (IsPropertyNavigation(memberInfo))
             {
@@ -29,6 +37,11 @@ namespace Zarf.Query
             }
 
             return null;
+        }
+
+        public PropertyNavigation GetLastNavigation()
+        {
+            return GetNavigation(LastAddedProperty);
         }
     }
 }

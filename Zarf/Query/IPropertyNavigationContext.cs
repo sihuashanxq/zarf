@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Zarf.Query.Expressions;
+using System.Collections.Generic;
 
 namespace Zarf.Query
 {
@@ -9,6 +10,8 @@ namespace Zarf.Query
 
         bool IsPropertyNavigation(MemberInfo memberInfo);
 
-        PropertyNavigation GetNavigationExpression(MemberInfo memberInfo);
+        PropertyNavigation GetNavigation(MemberInfo memberInfo);
+
+        PropertyNavigation GetLastNavigation();
     }
 }

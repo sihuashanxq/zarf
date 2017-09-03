@@ -31,7 +31,7 @@ namespace Zarf.Query
 
         public IRefrenceProjectionFinder ProjectionFinder { get; }
 
-        public IAliasGenerator AliasGenerator { get; }
+        public IAliasGenerator Alias { get; }
 
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,
@@ -45,7 +45,7 @@ namespace Zarf.Query
             PropertyNavigationContext = navigationContext;
             QuerySourceProvider = sourceProvider;
             ProjectionFinder = projectionFinder;
-            AliasGenerator = aliasGenerator;
+            Alias = aliasGenerator;
         }
     }
 }

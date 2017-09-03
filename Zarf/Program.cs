@@ -50,19 +50,16 @@ namespace Zarf
         static void Main(string[] args)
         {
             var db = new DataContext();
-            //var x = db.DataQuery<User>()
-            //    .Include(item => item.Orders, (user, order) => user.Id == order.UserId)
-            //    .Include(item => item.Address, (user, address) => user.AddressId == address.Id)
-            //    .Where(item => item.Id < 3).ToList();
 
-            //var y = db.DataQuery<User>()
-            //    .Include(item => item.Address, (user, address) => user.AddressId == address.Id)
-            //    .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-            //    .Where(item => item.Id < 4)
-            //    .ToList();
+            var y = db.DataQuery<User>()
+                .Include(item => item.Address, (user, address) => user.AddressId == address.Id)
+                .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+                .Where(item => item.Id < 4)
+                .ToList();
 
-            var z = db.DataQuery<Order>().ToList();
-            BasicTest(db);
+            var x = y[0].Address.ToList();
+            //var z = db.DataQuery<Order>().ToList();
+            //BasicTest(db);
             Console.ReadKey();
         }
 

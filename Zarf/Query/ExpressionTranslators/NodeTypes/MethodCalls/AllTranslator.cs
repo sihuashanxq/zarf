@@ -24,7 +24,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (rootQuery.Where != null && (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0))
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.AliasGenerator.GetNewTableAlias(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
             rootQuery.Projections.Clear();
