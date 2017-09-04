@@ -9,8 +9,8 @@ namespace Zarf.Query
 
         bool IsMapped(MemberInfo memberInfo);
 
-        Expression GetExpression(MemberInfo memberInfo);
-
         void UpdateExpression(Expression oldMapExpression, Expression newMapExpression);
+
+        Expression GetExpression(MemberInfo memberInfo);
     }
 }

@@ -2,15 +2,15 @@
 
 namespace Zarf.Mapping
 {
-    public class MemberMapping : IMapping
+    public class EntityProjectionMapping : IEntityProjectionMapping
     {
+        public Expression Source { get; }
+
         public Expression Expression { get; }
 
         public int Ordinal { get; }
 
-        public Expression Source { get; }
-
-        public MemberMapping(Expression source, Expression node, int ordinal)
+        public EntityProjectionMapping(Expression source, Expression node, int ordinal)
         {
             Expression = node;
             Ordinal = ordinal;

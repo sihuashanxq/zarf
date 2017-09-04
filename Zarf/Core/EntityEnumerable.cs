@@ -15,7 +15,7 @@ namespace Zarf
 {
     public class EntityEnumerable<T> : IEnumerable<T>
     {
-        protected MappingProvider MappingProvider { get; }
+        protected EntityProjectionMappingProvider MappingProvider { get; }
 
         protected ISqlTextBuilder SqlBuilder { get; }
 
@@ -25,7 +25,7 @@ namespace Zarf
 
         private QueryContext _context;
 
-        public EntityEnumerable(Expression linq, MappingProvider mappingProvider, QueryContext context)
+        public EntityEnumerable(Expression linq, EntityProjectionMappingProvider mappingProvider, QueryContext context)
         {
             _linq = linq;
             _context = context;
@@ -79,7 +79,7 @@ namespace Zarf
         public EntityEnumerator(
             Expression rootQuery,
             string sqlCommdText,
-            MappingProvider mappingProvider,
+            EntityProjectionMappingProvider mappingProvider,
             QueryContext context)
         {
 

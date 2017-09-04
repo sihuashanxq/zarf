@@ -2,7 +2,7 @@
 
 namespace Zarf.Mapping
 {
-    public interface IMapping
+    public interface IEntityProjectionMapping
     {
         Expression Source { get; }
 

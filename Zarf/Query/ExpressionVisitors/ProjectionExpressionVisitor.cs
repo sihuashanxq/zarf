@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Linq;
 
-namespace Zarf.Query
+namespace Zarf.Query.ExpressionVisitors
 {
-    public class ExpressionVisitorProjectionFinder : ExpressionVisitor, IRefrenceProjectionFinder
+    public class ProjectionExpressionVisitor : ExpressionVisitor, IRefrenceProjectionFinder
     {
         private List<Expression> _extensionExpressions;
 

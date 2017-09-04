@@ -1,4 +1,6 @@
-﻿namespace Zarf.Query
+﻿using Zarf.Mapping;
+
+namespace Zarf.Query
 {
     public interface IQueryContext
     {
@@ -9,6 +11,8 @@
         IQuerySourceProvider QuerySourceProvider { get; }
 
         IRefrenceProjectionFinder ProjectionFinder { get; }
+
+        IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 
         IAliasGenerator Alias { get; }
     }

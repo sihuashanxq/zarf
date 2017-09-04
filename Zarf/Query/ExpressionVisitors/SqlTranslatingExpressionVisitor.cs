@@ -3,7 +3,7 @@ using Zarf.Query.ExpressionTranslators;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class SqlTranslatingExpressionVisitor : ZarfExpressionVisitor
+    public class SqlTranslatingExpressionVisitor : ExpressionVisitorBase
     {
         private QueryContext _queryContext;
 

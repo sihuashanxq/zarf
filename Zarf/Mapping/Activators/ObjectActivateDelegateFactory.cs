@@ -9,13 +9,13 @@ namespace Zarf.Mapping
 {
     public class ObjectActivateDelegateFactory : ExpressionVisitor
     {
-        private MappingProvider _mappingProvider;
+        private EntityProjectionMappingProvider _mappingProvider;
 
         private QueryContext _queryContext;
 
         private Expression _source;
 
-        public ObjectActivateDelegateFactory(MappingProvider provider)
+        public ObjectActivateDelegateFactory(EntityProjectionMappingProvider provider)
         {
             _mappingProvider = provider;
         }
@@ -74,9 +74,10 @@ namespace Zarf.Mapping
             {
                 var bindExpression = Visit(item.Expression);
 
-                if (_queryContext.Includes.ContainsKey(item.Member))
+                var navigation = _queryContext.PropertyNavigationContext.GetNavigation(item.Member);
+                if (navigation != null)
                 {
-                    var condtion = Visit(_queryContext.IncludesCondtion[item.Member]).UnWrap().As<LambdaExpression>();
+                    var condtion = Visit(navigation.Relateion).UnWrap().As<LambdaExpression>();
                     var elementType = item.Member.GetMemberInfoType().GetElementTypeInfo();
 
                     var lambda = Expression.Lambda(condtion.Body, condtion.Parameters.LastOrDefault());

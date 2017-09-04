@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Zarf.Mapping;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
@@ -18,9 +17,10 @@ namespace Zarf.Query
             //di ProviderFactory
             return new QueryContext(
                     new EntityMemberSourceMappingProvider(),
+                    new EntityProjectionMappingProvider(),
                     new PropertyNavigationContext(),
-                    new QuerySourceProvider(), 
-                    new ExpressionVisitorProjectionFinder(),
+                    new QuerySourceProvider(),
+                    new ProjectionExpressionVisitor(),
                     new AliasGenerator()
                 );
         }

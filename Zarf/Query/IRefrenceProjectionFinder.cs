@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq.Expressions;
-using System;
+using System.Collections.Generic;
 
 namespace Zarf.Query
 {
+    /// <summary>
+    /// 查找引用的投影接口
+    /// </summary>
     public interface IRefrenceProjectionFinder
     {
         /// <summary>

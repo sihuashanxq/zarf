@@ -1,29 +1,16 @@
-﻿using System.Linq;
-using System.Reflection;
-using System.Linq.Expressions;
+﻿using System.Reflection;
 using System.Collections.Generic;
 
+using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query
 {
     public class QueryContext : IQueryContext
     {
-        public Dictionary<MemberInfo, QueryExpression> Includes = new Dictionary<MemberInfo, QueryExpression> { };
-
-        public Dictionary<MemberInfo, Expression> IncludesCondtion = new Dictionary<MemberInfo, Expression>();
-
-        public Dictionary<MemberInfo, List<Expression>> IncludesCondtionParameter = new Dictionary<MemberInfo, List<Expression>>();
-
-        public Dictionary<MemberInfo, object> IncludesMemberInstances = new Dictionary<MemberInfo, object>();
-
-        public QueryExpression UpdateRefrenceSource(QueryExpression query)
-        {
-            EntityMemberMappingProvider.UpdateExpression(query.SubQuery, query);
-            return query;
-        }
-
         public IEntityMemberSourceMappingProvider EntityMemberMappingProvider { get; }
+
+        public IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 
         public IPropertyNavigationContext PropertyNavigationContext { get; }
 
@@ -33,8 +20,11 @@ namespace Zarf.Query
 
         public IAliasGenerator Alias { get; }
 
+        public Dictionary<MemberInfo, object> SubQueryInstance { get; set; }
+
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,
+            IEntityProjectionMappingProvider projectionMappingProvider,
             IPropertyNavigationContext navigationContext,
             IQuerySourceProvider sourceProvider,
             IRefrenceProjectionFinder projectionFinder,
@@ -42,10 +32,18 @@ namespace Zarf.Query
             )
         {
             EntityMemberMappingProvider = memberMappingProvider;
+            ProjectionMappingProvider = projectionMappingProvider;
             PropertyNavigationContext = navigationContext;
             QuerySourceProvider = sourceProvider;
             ProjectionFinder = projectionFinder;
             Alias = aliasGenerator;
+            SubQueryInstance = new Dictionary<MemberInfo, object>();
+        }
+
+        public QueryExpression UpdateRefrenceSource(QueryExpression query)
+        {
+            EntityMemberMappingProvider.UpdateExpression(query.SubQuery, query);
+            return query;
         }
     }
 }

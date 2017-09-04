@@ -16,9 +16,9 @@ namespace Zarf.Query
 {
     public class QueryExpressionBuilder : IQueryExpressionBuilder
     {
-        private MappingProvider _mappingProvider;
+        private EntityProjectionMappingProvider _mappingProvider;
 
-        public QueryExpressionBuilder(MappingProvider mappingProvider)
+        public QueryExpressionBuilder(EntityProjectionMappingProvider mappingProvider)
         {
             _mappingProvider = mappingProvider;
         }
@@ -132,7 +132,7 @@ namespace Zarf.Query
         public Expression ToEntityNewExpression(
             QueryExpression rootQuery,
             QueryExpression newQuery,
-            MappingProvider mappingProvider,
+            EntityProjectionMappingProvider mappingProvider,
             QueryContext queryContext
         )
         {
@@ -156,7 +156,7 @@ namespace Zarf.Query
                     continue;
                 }
 
-                mappingProvider.Map(rootQuery, column, ordinal);
+                mappingProvider.Map(column, rootQuery, ordinal);
                 bindings.Add(Expression.Bind(member, column));
             }
 
@@ -180,7 +180,7 @@ namespace Zarf.Query
                     if (column.FromTable == rootQuery)
                     {
                         index = QueryUtils.FindExpressionIndex(rootQuery, item);
-                        mappingProvider.Map(rootQuery, item, index);
+                        mappingProvider.Map(item, rootQuery, index);
                     }
 
                     if (index == -1)
@@ -207,7 +207,7 @@ namespace Zarf.Query
             }
         }
 
-        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, MappingProvider mappingProvider)
+        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, EntityProjectionMappingProvider mappingProvider)
         {
             var innerQuery = queryContext.PropertyNavigationContext.GetNavigation(memberInfo).RefrenceQuery;
             BuildResult(innerQuery, queryContext);
@@ -216,7 +216,7 @@ namespace Zarf.Query
             var propertyEnumerableType = typeof(EntityEnumerable<>).MakeGenericType(propertyElementType);
 
             var newPropertyEnumearbles = Expression.Convert(
-                    Expression.New(propertyEnumerableType.GetConstructor(new Type[] { typeof(Expression), typeof(MappingProvider), typeof(QueryContext) }),
+                    Expression.New(propertyEnumerableType.GetConstructor(new Type[] { typeof(Expression), typeof(EntityProjectionMappingProvider), typeof(QueryContext) }),
                     Expression.Constant(innerQuery), Expression.Constant(mappingProvider), Expression.Constant(queryContext)),
                     propertyEnumerableType
                 );
@@ -244,7 +244,7 @@ namespace Zarf.Query
 
         public static object GetIncludeMemberInstance(QueryContext queryContext, MemberInfo member)
         {
-            if (queryContext.IncludesMemberInstances.TryGetValue(member, out object instance))
+            if (queryContext.SubQueryInstance.TryGetValue(member, out object instance))
             {
                 return instance;
             }
@@ -254,7 +254,7 @@ namespace Zarf.Query
 
         public static void SetIncludeMemberInstance(QueryContext queryContext, MemberInfo member, object instance)
         {
-            queryContext.IncludesMemberInstances[member] = instance;
+            queryContext.SubQueryInstance[member] = instance;
         }
 
         public static MethodInfo GetIncludeMemberInstanceMethodInfo = typeof(QueryExpressionBuilder).GetMethod(nameof(GetIncludeMemberInstance));

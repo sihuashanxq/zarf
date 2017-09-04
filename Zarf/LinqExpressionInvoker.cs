@@ -21,7 +21,7 @@ namespace Zarf
 
     public class LinqExpressionInvoker : ILinqExpressionInvoker
     {
-        protected MappingProvider MappingProvider { get; }
+        protected EntityProjectionMappingProvider MappingProvider { get; }
 
         protected IQueryExpressionBuilder QueryExpressionBuilder { get; }
 
@@ -33,13 +33,13 @@ namespace Zarf
 
         public LinqExpressionInvoker()
         {
-            MappingProvider = new MappingProvider();
+            MappingProvider = new EntityProjectionMappingProvider();
             QueryExpressionBuilder = new QueryExpressionBuilder(MappingProvider);
             DelegateFactory = new ObjectActivateDelegateFactory(MappingProvider);
             SqlBuilder = new SqlServerTextBuilder();
         }
 
-        public LinqExpressionInvoker(MappingProvider map)
+        public LinqExpressionInvoker(EntityProjectionMappingProvider map)
         {
             MappingProvider = map;
             QueryExpressionBuilder = new QueryExpressionBuilder(MappingProvider);

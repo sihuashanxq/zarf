@@ -6,7 +6,7 @@ namespace Zarf.Mapping
 {
     public class EntityMemberActivator : IObjectActivator
     {
-        public IMapping _mapping;
+        public IEntityProjectionMapping _mapping;
 
         public static ParameterExpression ActivateMethodParameter { get; }
 
@@ -18,7 +18,7 @@ namespace Zarf.Mapping
             ActivateMethod = typeof(EntityMemberActivator).GetMethod(nameof(CreateInstance));
         }
 
-        public EntityMemberActivator(IMapping mapping)
+        public EntityMemberActivator(IEntityProjectionMapping mapping)
         {
             _mapping = mapping;
         }
@@ -33,7 +33,7 @@ namespace Zarf.Mapping
             return dbDataReader.GetValue(_mapping.Ordinal);
         }
 
-        public static IObjectActivator CreateActivator(IMapping mapping)
+        public static IObjectActivator CreateActivator(IEntityProjectionMapping mapping)
         {
             return new EntityMemberActivator(mapping);
         }

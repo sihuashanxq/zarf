@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public abstract class ZarfExpressionVisitor : ExpressionVisitor
+    public abstract class ExpressionVisitorBase : ExpressionVisitor
     {
         public override Expression Visit(Expression node)
         {

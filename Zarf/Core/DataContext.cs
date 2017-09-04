@@ -9,14 +9,8 @@ namespace Zarf
 {
     public class DataContext
     {
-        public IDataQuery<User> Users { get; set; }
-
-        public IDataQuery<Address> Addresses { get; set; }
-
         public DataContext()
         {
-            Users = new DataQuery<User>(new DataQueryProvider());
-            Addresses = new DataQuery<Address>(new DataQueryProvider());
         }
 
         public IDataQuery<TEntity> DataQuery<TEntity>()
