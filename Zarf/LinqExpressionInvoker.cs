@@ -23,7 +23,7 @@ namespace Zarf
     {
         protected EntityProjectionMappingProvider MappingProvider { get; }
 
-        protected IQueryExpressionBuilder QueryExpressionBuilder { get; }
+        protected LinqExpressionTanslator QueryExpressionBuilder { get; }
 
         protected ISqlTextBuilder SqlBuilder { get; }
 
@@ -34,16 +34,16 @@ namespace Zarf
         public LinqExpressionInvoker()
         {
             MappingProvider = new EntityProjectionMappingProvider();
-            QueryExpressionBuilder = new QueryExpressionBuilder(MappingProvider);
-            DelegateFactory = new ObjectActivateDelegateFactory(MappingProvider);
+            QueryExpressionBuilder = new LinqExpressionTanslator();
+            DelegateFactory = new ObjectActivateDelegateFactory();
             SqlBuilder = new SqlServerTextBuilder();
         }
 
         public LinqExpressionInvoker(EntityProjectionMappingProvider map)
         {
             MappingProvider = map;
-            QueryExpressionBuilder = new QueryExpressionBuilder(MappingProvider);
-            DelegateFactory = new ObjectActivateDelegateFactory(MappingProvider);
+            QueryExpressionBuilder = new LinqExpressionTanslator();
+            DelegateFactory = new ObjectActivateDelegateFactory();
             SqlBuilder = new SqlServerTextBuilder();
         }
 

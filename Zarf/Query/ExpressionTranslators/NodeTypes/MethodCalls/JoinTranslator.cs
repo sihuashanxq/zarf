@@ -62,7 +62,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 rootQuery.Projections.AddRange(item.As<FromTableExpression>().GenerateColumns());
             }
 
-            rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetElementTypeInfo());
+            rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
             return rootQuery;
         }
 

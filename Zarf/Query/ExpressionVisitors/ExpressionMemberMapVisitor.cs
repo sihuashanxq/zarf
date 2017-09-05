@@ -8,9 +8,7 @@ namespace Zarf.Query.ExpressionVisitors
 {
     public class ExpressionMemberMapVisitor : ExpressionVisitor
     {
-        private Func<QueryExpression, QueryExpression, EntityProjectionMappingProvider, QueryContext, Expression> _makeObjectNew;
-
-        private EntityProjectionMappingProvider _mappingProvider;
+        private Func<QueryExpression, QueryExpression, IQueryContext, Expression> _makeObjectNew;
 
         private QueryExpression _rootQuery;
 
@@ -18,13 +16,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         public ExpressionMemberMapVisitor(
             QueryExpression rootQuery,
-            Func<QueryExpression, QueryExpression, EntityProjectionMappingProvider, QueryContext, Expression> makeObjectNew,
-            EntityProjectionMappingProvider mappingProvider,
+            Func<QueryExpression, QueryExpression, IQueryContext, Expression> makeObjectNew,
             QueryContext context)
         {
             _rootQuery = rootQuery;
             _makeObjectNew = makeObjectNew;
-            _mappingProvider = mappingProvider;
             _queryContext = context;
         }
 
@@ -34,7 +30,7 @@ namespace Zarf.Query.ExpressionVisitors
             {
                 if (node.Is<QueryExpression>())
                 {
-                    return _makeObjectNew(_rootQuery, node.Cast<QueryExpression>(), _mappingProvider, _queryContext);
+                    return _makeObjectNew(_rootQuery, node.Cast<QueryExpression>(),  _queryContext);
                 }
                 else
                 {
@@ -44,7 +40,7 @@ namespace Zarf.Query.ExpressionVisitors
                         throw new Exception("ExpressionMemberMapVisitor");
                     }
 
-                    _mappingProvider.Map(node, _rootQuery, ordinal);
+                    _queryContext.ProjectionMappingProvider.Map(node, _rootQuery, ordinal);
                     return node;
                 }
             }

@@ -47,7 +47,7 @@ namespace Zarf
         public IEnumerator<TEntity> GetEnumerator()
         {
             var mappingProvider = new Mapping.EntityProjectionMappingProvider();
-            var queryBuilder = new Query.QueryExpressionBuilder(mappingProvider);
+            var queryBuilder = new LinqExpressionTanslator();
             var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
 
             return new EntityEnumerable<TEntity>(queryBuilder.Build(Expression, context), mappingProvider, context)
@@ -61,7 +61,7 @@ namespace Zarf
         IEnumerator IEnumerable.GetEnumerator()
         {
             var mappingProvider = new Mapping.EntityProjectionMappingProvider();
-            var queryBuilder = new Query.QueryExpressionBuilder(mappingProvider);
+            var queryBuilder = new Query.LinqExpressionTanslator();
             var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
 
             return new EntityEnumerable<object>(queryBuilder.Build(Expression, context), mappingProvider, context)

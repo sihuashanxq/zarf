@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Zarf.Query;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Collections;
 
 namespace Zarf
 {
@@ -60,6 +61,7 @@ namespace Zarf
             var x = y[0].Address.ToList();
             //var z = db.DataQuery<Order>().ToList();
             //BasicTest(db);
+            Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
             Console.ReadKey();
         }
 

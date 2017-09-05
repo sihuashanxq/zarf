@@ -83,7 +83,7 @@ namespace Zarf
             QueryContext context)
         {
 
-            DelegateFactory = new ObjectActivateDelegateFactory(mappingProvider);
+            DelegateFactory = new ObjectActivateDelegateFactory();
             if (rootQuery.Is<QueryExpression>())
             {
                 ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.Cast<QueryExpression>().Result.EntityNewExpression, rootQuery, context);

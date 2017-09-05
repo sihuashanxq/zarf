@@ -33,13 +33,13 @@ namespace Zarf.Query
             MemberExpressions[memberInfo] = mapExpression;
         }
 
-        public void UpdateExpression(Expression oldMapExpression, Expression newMapExpression)
+        public void UpdateExpression(Expression oMappedExpression, Expression nMappedExpression)
         {
             foreach (var item in MemberExpressions)
             {
-                if (item.Value == oldMapExpression)
+                if (item.Value == oMappedExpression)
                 {
-                    MemberExpressions[item.Key] = newMapExpression;
+                    MemberExpressions[item.Key] = nMappedExpression;
                 }
             }
         }

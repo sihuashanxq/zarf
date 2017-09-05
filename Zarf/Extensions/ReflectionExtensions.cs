@@ -24,58 +24,41 @@ namespace Zarf.Extensions
 
         public static bool IsStatic(this MemberInfo memberInfo)
         {
-            if (memberInfo.Is<FieldInfo>())
+            switch (memberInfo.MemberType)
             {
-                return memberInfo.Cast<FieldInfo>().IsStatic;
+                case MemberTypes.Constructor:
+                    return memberInfo.Cast<ConstructorInfo>().IsStatic;
+                case MemberTypes.Field:
+                    return memberInfo.Cast<FieldInfo>().IsStatic;
+                case MemberTypes.Method:
+                    return memberInfo.Cast<MethodInfo>().IsStatic;
+                case MemberTypes.Property:
+                    var property = memberInfo.Cast<PropertyInfo>();
+                    return (property.GetMethod ?? property.SetMethod).IsStatic;
+                default:
+                    return false;
             }
-
-            if (memberInfo.Is<ConstructorInfo>())
-            {
-                return memberInfo.Cast<ConstructorInfo>().IsStatic;
-            }
-
-            if (memberInfo.Is<MethodInfo>())
-            {
-                return memberInfo.Cast<MethodInfo>().IsStatic;
-            }
-
-            if (memberInfo.Is<PropertyInfo>())
-            {
-                var property = memberInfo.Cast<PropertyInfo>();
-                if (property.GetMethod != null)
-                {
-                    return property.GetMethod.IsStatic;
-                }
-
-                return property.SetMethod.IsStatic;
-            }
-
-            return false;
         }
 
-        public static Type GetElementTypeInfo(this Type type)
+        public static Type GetCollectionElementType(this Type type)
         {
-            if (typeof(IQueryable).IsAssignableFrom(type) && type.GetTypeInfo().IsGenericType)
+            if (IsCollection(type))
             {
-                var elementType = type.GetElementType();
-                if (elementType == null)
+                var genericArguments = type.GetGenericArguments();
+                if (genericArguments != null)
                 {
-                    return type.GetGenericArguments()[0];
+                    return genericArguments.FirstOrDefault();
                 }
 
-                return elementType;
+                return type.GetElementType();
             }
-            else if (typeof(IEnumerable).IsAssignableFrom(type) && type.GetTypeInfo().IsGenericType)
-            {
-                var elementType = type.GetElementType();
-                if (elementType == null)
-                {
-                    return type.GetGenericArguments()[0];
-                }
 
-                return elementType;
-            }
             return type;
+        }
+
+        public static bool IsCollection(this Type type)
+        {
+            return typeof(IEnumerable).IsAssignableFrom(type);
         }
 
         public static T As<T>(this object o)

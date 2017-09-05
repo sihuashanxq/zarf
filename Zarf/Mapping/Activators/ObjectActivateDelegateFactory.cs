@@ -9,16 +9,9 @@ namespace Zarf.Mapping
 {
     public class ObjectActivateDelegateFactory : ExpressionVisitor
     {
-        private EntityProjectionMappingProvider _mappingProvider;
-
         private QueryContext _queryContext;
 
         private Expression _source;
-
-        public ObjectActivateDelegateFactory(EntityProjectionMappingProvider provider)
-        {
-            _mappingProvider = provider;
-        }
 
         protected override Expression VisitExtension(Expression node)
         {
@@ -43,7 +36,7 @@ namespace Zarf.Mapping
 
         private Expression GetMemberValue(Expression node)
         {
-            var map = _mappingProvider.GetMapping(node);
+            var map = _queryContext.ProjectionMappingProvider.GetMapping(node);
             if (map != null && map.Source == _source)
             {
                 var entityMemberActivator = EntityMemberActivator.CreateActivator(map);
@@ -77,8 +70,8 @@ namespace Zarf.Mapping
                 var navigation = _queryContext.PropertyNavigationContext.GetNavigation(item.Member);
                 if (navigation != null)
                 {
-                    var condtion = Visit(navigation.Relateion).UnWrap().As<LambdaExpression>();
-                    var elementType = item.Member.GetMemberInfoType().GetElementTypeInfo();
+                    var condtion = Visit(navigation.Relation).UnWrap().As<LambdaExpression>();
+                    var elementType = item.Member.GetMemberInfoType().GetCollectionElementType();
 
                     var lambda = Expression.Lambda(condtion.Body, condtion.Parameters.LastOrDefault());
                     var filter = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(elementType), bindExpression, lambda);

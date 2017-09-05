@@ -17,7 +17,7 @@ namespace Zarf.Query
 
         public List<Expression> RefrenceColumns { get; }
 
-        public Expression Relateion { get; }
+        public Expression Relation { get; }
 
         public PropertyNavigation(
             MemberInfo property,
@@ -28,7 +28,7 @@ namespace Zarf.Query
             Property = property;
             RefrenceQuery = refrenceQuery;
             RefrenceColumns = refrenceColumns;
-            Relateion = relation;
+            Relation = relation;
         }
     }
 }

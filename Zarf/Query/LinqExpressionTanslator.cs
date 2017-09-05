@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
@@ -14,15 +13,8 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
-    public class QueryExpressionBuilder : IQueryExpressionBuilder
+    public class LinqExpressionTanslator : ILinqExpressionTanslator
     {
-        private EntityProjectionMappingProvider _mappingProvider;
-
-        public QueryExpressionBuilder(EntityProjectionMappingProvider mappingProvider)
-        {
-            _mappingProvider = mappingProvider;
-        }
-
         public Expression Build(Expression node, QueryContext context)
         {
             var translatedExpression = new SqlTranslatingExpressionVisitor(context, NodeTypeTranslatorProvider.Default).Visit(node);
@@ -41,7 +33,7 @@ namespace Zarf.Query
             }
             else
             {
-                _mappingProvider.Map(translatedExpression, translatedExpression, 0);
+                context.ProjectionMappingProvider.Map(translatedExpression, translatedExpression, 0);
                 return translatedExpression;
             }
         }
@@ -53,7 +45,6 @@ namespace Zarf.Query
                 var entityNewExpression = new ExpressionMemberMapVisitor(
                     rootQuery,
                     ToEntityNewExpression,
-                    _mappingProvider,
                     context
                  ).Visit(rootQuery.Result.EntityNewExpression);
 
@@ -68,7 +59,6 @@ namespace Zarf.Query
             var entityNew = ToEntityNewExpression(
                     rootQuery,
                     rootQuery,
-                    _mappingProvider,
                     context
                 );
 
@@ -126,21 +116,19 @@ namespace Zarf.Query
         /// 清醒后重构
         /// </summary>
         /// <param name="rootQuery"></param>
-        /// <param name="newQuery"></param>
+        /// <param name="targetQuery"></param>
         /// <param name="mappingProvider"></param>
         /// <returns></returns>
         public Expression ToEntityNewExpression(
             QueryExpression rootQuery,
-            QueryExpression newQuery,
-            EntityProjectionMappingProvider mappingProvider,
-            QueryContext queryContext
+            QueryExpression targetQuery,
+            IQueryContext queryContext
         )
         {
-            var modeType = newQuery.Type;
-            //属性为集合
-            if (typeof(IEnumerable).IsAssignableFrom(newQuery.Type))
+            var modeType = targetQuery.Type;
+            if (modeType.IsCollection())
             {
-                modeType = modeType.GetElementTypeInfo();
+                modeType = modeType.GetCollectionElementType();
             }
 
             var modeTypeDescriptor = EntityTypeDescriptorFactory.Factory.Create(modeType);
@@ -149,14 +137,14 @@ namespace Zarf.Query
 
             foreach (var member in modeTypeDescriptor.GetWriteableMembers())
             {
-                var column = new ColumnExpression(newQuery, member);
+                var column = new ColumnExpression(targetQuery, member);
                 var ordinal = QueryUtils.FindExpressionIndex(rootQuery, column);
                 if (ordinal == -1)
                 {
                     continue;
                 }
 
-                mappingProvider.Map(column, rootQuery, ordinal);
+                queryContext.ProjectionMappingProvider.Map(column, rootQuery, ordinal);
                 bindings.Add(Expression.Bind(member, column));
             }
 
@@ -180,7 +168,7 @@ namespace Zarf.Query
                     if (column.FromTable == rootQuery)
                     {
                         index = QueryUtils.FindExpressionIndex(rootQuery, item);
-                        mappingProvider.Map(item, rootQuery, index);
+                        queryContext.ProjectionMappingProvider.Map(item, rootQuery, index);
                     }
 
                     if (index == -1)
@@ -189,13 +177,13 @@ namespace Zarf.Query
                     }
                 }
 
-                var propertyBinding = CreateIncludePropertyBinding(member, queryContext, mappingProvider);
+                var propertyBinding = CreateIncludePropertyBinding(member, queryContext as QueryContext, queryContext.ProjectionMappingProvider);
                 bindings.Add(propertyBinding);
             }
 
             var memInit = Expression.MemberInit(modeNew, bindings);
 
-            if (!typeof(IEnumerable).IsAssignableFrom(newQuery.Type))
+            if (!typeof(IEnumerable).IsAssignableFrom(targetQuery.Type))
             {
                 return memInit;
             }
@@ -207,12 +195,12 @@ namespace Zarf.Query
             }
         }
 
-        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, EntityProjectionMappingProvider mappingProvider)
+        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, IEntityProjectionMappingProvider mappingProvider)
         {
             var innerQuery = queryContext.PropertyNavigationContext.GetNavigation(memberInfo).RefrenceQuery;
             BuildResult(innerQuery, queryContext);
 
-            var propertyElementType = memberInfo.GetMemberInfoType().GetElementTypeInfo();
+            var propertyElementType = memberInfo.GetMemberInfoType().GetCollectionElementType();
             var propertyEnumerableType = typeof(EntityEnumerable<>).MakeGenericType(propertyElementType);
 
             var newPropertyEnumearbles = Expression.Convert(
@@ -257,8 +245,16 @@ namespace Zarf.Query
             queryContext.SubQueryInstance[member] = instance;
         }
 
-        public static MethodInfo GetIncludeMemberInstanceMethodInfo = typeof(QueryExpressionBuilder).GetMethod(nameof(GetIncludeMemberInstance));
 
-        public static MethodInfo SetIncludeMemberInstanceMethodInfo = typeof(QueryExpressionBuilder).GetMethod(nameof(SetIncludeMemberInstance));
+        public static MethodInfo GetIncludeMemberInstanceMethodInfo = typeof(LinqExpressionTanslator).GetMethod(nameof(GetIncludeMemberInstance));
+
+        public static MethodInfo SetIncludeMemberInstanceMethodInfo = typeof(LinqExpressionTanslator).GetMethod(nameof(SetIncludeMemberInstance));
+
+        public Expression Translate(Expression linqExpression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryContext Context => throw new NotImplementedException();
     }
 }
