@@ -34,14 +34,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
                 else if (argument is QueryExpression)
                 {
-                    if (typeof(IEnumerable).IsAssignableFrom(newExpression.Members[i].GetMemberInfoType()))
+                    if (newExpression.Members[i].GetMemberInfoType().IsCollection())
                     {
                         throw new NotImplementedException("not supported!");
                     }
-
-                    context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
                 }
 
+                context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
                 arguments.Add(argument);
             }
 

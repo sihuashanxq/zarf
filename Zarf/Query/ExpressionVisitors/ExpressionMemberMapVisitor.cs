@@ -34,7 +34,7 @@ namespace Zarf.Query.ExpressionVisitors
                 }
                 else
                 {
-                    var ordinal = QueryUtils.FindExpressionIndex(_rootQuery, node);
+                    var ordinal = QueryUtils.FindProjectionOrdinal(_rootQuery, node);
                     if (ordinal == -1)
                     {
                         throw new Exception("ExpressionMemberMapVisitor");

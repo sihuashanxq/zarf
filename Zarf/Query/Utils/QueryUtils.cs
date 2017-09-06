@@ -6,29 +6,29 @@ namespace Zarf.Query
 {
     public class QueryUtils
     {
-        public static int FindExpressionIndex(QueryExpression rootQuery, Expression node)
+        public static int FindProjectionOrdinal(QueryExpression rootQuery, Expression refProjection)
         {
             if (rootQuery.SubQuery != null && rootQuery.Projections.Count == 0)
             {
-                return FindExpressionIndex(rootQuery.SubQuery, node);
+                return FindProjectionOrdinal(rootQuery.SubQuery, refProjection);
             }
 
-            for (var i = 0; i < rootQuery.Projections.Count; i++)
+            for (var index = 0; index < rootQuery.Projections.Count; index++)
             {
-                if (rootQuery.Projections[i] == node)
+                if (rootQuery.Projections[index] == refProjection)
                 {
-                    return i;
+                    return index;
                 }
 
-                var projiection = rootQuery.Projections[i].As<ColumnExpression>();
+                var projiection = rootQuery.Projections[index].As<ColumnExpression>();
                 if (projiection == null)
                 {
                     continue;
                 }
 
-                if (projiection.Member == node.As<ColumnExpression>()?.Member)
+                if (projiection.Member == refProjection.As<ColumnExpression>()?.Member)
                 {
-                    return i;
+                    return index;
                 }
             }
 

@@ -7,7 +7,7 @@ namespace Zarf
 {
     public interface IDbService
     {
-        IDbTransaction CreateDbTransaction();
+        IDbTransaction CreateDbTransaction(IDbConnection dbConnection);
 
         IDbCommand CreateDbCommand();
 

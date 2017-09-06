@@ -55,7 +55,6 @@ namespace Zarf
             var y = db.DataQuery<User>()
                 .Include(item => item.Address, (user, address) => user.AddressId == address.Id)
                 .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-                .Where(item => item.Id < 4)
                 .ToList();
 
             var x = y[0].Address.ToList();

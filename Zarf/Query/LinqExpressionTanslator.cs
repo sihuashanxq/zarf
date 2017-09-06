@@ -18,7 +18,6 @@ namespace Zarf.Query
         public Expression Build(Expression node, QueryContext context)
         {
             var translatedExpression = new SqlTranslatingExpressionVisitor(context, NodeTypeTranslatorProvider.Default).Visit(node);
-
             if (translatedExpression.Is<QueryExpression>())
             {
                 var rootQuery = translatedExpression.As<QueryExpression>();
@@ -116,46 +115,46 @@ namespace Zarf.Query
         /// 清醒后重构
         /// </summary>
         /// <param name="rootQuery"></param>
-        /// <param name="targetQuery"></param>
+        /// <param name="fromTable"></param>
         /// <param name="mappingProvider"></param>
         /// <returns></returns>
         public Expression ToEntityNewExpression(
             QueryExpression rootQuery,
-            QueryExpression targetQuery,
-            IQueryContext queryContext
+            FromTableExpression fromTable,
+            IQueryContext context
         )
         {
-            var modeType = targetQuery.Type;
-            if (modeType.IsCollection())
-            {
-                modeType = modeType.GetCollectionElementType();
-            }
+            var entityType = fromTable.Type.GetCollectionElementType();
+            var entityTypeDescriptor = EntityTypeDescriptorFactory.Factory.Create(entityType);
+            var entityBindings = new List<MemberBinding>();
+            var entityNew = Expression.New(entityTypeDescriptor.Constructor);
 
-            var modeTypeDescriptor = EntityTypeDescriptorFactory.Factory.Create(modeType);
-            var bindings = new List<MemberBinding>();
-            var modeNew = Expression.New(modeTypeDescriptor.Constructor);
-
-            foreach (var member in modeTypeDescriptor.GetWriteableMembers())
+            foreach (var memberInfo in entityTypeDescriptor.GetWriteableMembers())
             {
-                var column = new ColumnExpression(targetQuery, member);
-                var ordinal = QueryUtils.FindExpressionIndex(rootQuery, column);
+                var column = new ColumnExpression(fromTable, memberInfo);
+                if (context.EntityMemberMappingProvider.IsMapped(memberInfo))
+                {
+                    column = context.EntityMemberMappingProvider.GetExpression(memberInfo).As<ColumnExpression>();
+                }
+
+                var ordinal = QueryUtils.FindProjectionOrdinal(rootQuery, column);
                 if (ordinal == -1)
                 {
                     continue;
                 }
 
-                queryContext.ProjectionMappingProvider.Map(column, rootQuery, ordinal);
-                bindings.Add(Expression.Bind(member, column));
+                context.ProjectionMappingProvider.Map(column, rootQuery, ordinal);
+                entityBindings.Add(Expression.Bind(memberInfo, column));
             }
 
-            foreach (var member in modeTypeDescriptor.Type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            foreach (var member in entityTypeDescriptor.Type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
-                var navigation = queryContext.PropertyNavigationContext.GetNavigation(member);
-                if (navigation == null)
+                if (!context.PropertyNavigationContext.IsPropertyNavigation(member))
                 {
                     continue;
                 }
 
+                var navigation = context.PropertyNavigationContext.GetNavigation(member);
                 foreach (var item in navigation.RefrenceColumns)
                 {
                     if (!item.Is<ColumnExpression>())
@@ -167,8 +166,8 @@ namespace Zarf.Query
                     var index = -1;
                     if (column.FromTable == rootQuery)
                     {
-                        index = QueryUtils.FindExpressionIndex(rootQuery, item);
-                        queryContext.ProjectionMappingProvider.Map(item, rootQuery, index);
+                        index = QueryUtils.FindProjectionOrdinal(rootQuery, item);
+                        context.ProjectionMappingProvider.Map(item, rootQuery, index);
                     }
 
                     if (index == -1)
@@ -177,20 +176,19 @@ namespace Zarf.Query
                     }
                 }
 
-                var propertyBinding = CreateIncludePropertyBinding(member, queryContext as QueryContext, queryContext.ProjectionMappingProvider);
-                bindings.Add(propertyBinding);
+                var binding = CreateIncludePropertyBinding(member, context as QueryContext, context.ProjectionMappingProvider);
+                entityBindings.Add(binding);
             }
 
-            var memInit = Expression.MemberInit(modeNew, bindings);
-
-            if (!typeof(IEnumerable).IsAssignableFrom(targetQuery.Type))
+            var memInit = Expression.MemberInit(entityNew, entityBindings);
+            if (!fromTable.Type.IsCollection())
             {
                 return memInit;
             }
             else
             {
                 //属性为集合 简单处理为List<T>
-                var constructor = typeof(List<>).MakeGenericType(modeType).GetConstructor(Type.EmptyTypes);
+                var constructor = typeof(List<>).MakeGenericType(entityType).GetConstructor(Type.EmptyTypes);
                 return Expression.ListInit(Expression.New(constructor), memInit);
             }
         }
@@ -252,9 +250,19 @@ namespace Zarf.Query
 
         public Expression Translate(Expression linqExpression)
         {
-            throw new NotImplementedException();
+            return Build(linqExpression, Context as QueryContext);
         }
 
-        public IQueryContext Context => throw new NotImplementedException();
+        public IQueryContext Context { get; }
+
+        public LinqExpressionTanslator(IQueryContext context)
+        {
+            Context = context;
+        }
+
+        public LinqExpressionTanslator()
+        {
+
+        }
     }
 }

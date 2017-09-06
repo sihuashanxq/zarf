@@ -15,9 +15,9 @@ namespace Zarf.SqlServer
             return new SqlConnection(connectionString);
         }
 
-        public IDbTransaction CreateDbTransaction()
+        public IDbTransaction CreateDbTransaction(IDbConnection dbConnection)
         {
-            return null;
+            return dbConnection.BeginTransaction(IsolationLevel.Snapshot);
         }
     }
 }
