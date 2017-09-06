@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Join");
         }
 
-        public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var joinQuery = transformVisitor.Visit(methodCall.Arguments[1]).As<QueryExpression>();

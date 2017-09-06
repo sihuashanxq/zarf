@@ -36,7 +36,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator());
         }
 
-        public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var translator = GetTranslator(methodCall);
             if (translator != null)
@@ -72,7 +72,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        private Expression TranslateMethodCall(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        private Expression TranslateMethodCall(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var arguments = new List<Expression>();
             var @object = transformVisitor.Visit(methodCall.Object);

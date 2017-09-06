@@ -10,7 +10,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberInitExpressionTranslator : Translator<MemberInitExpression>
     {
-        public override Expression Translate(QueryContext context, MemberInitExpression memberInit, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MemberInitExpression memberInit, ExpressionVisitor transformVisitor)
         {
             var newExpression = transformVisitor.Visit(memberInit.NewExpression).Cast<NewExpression>();
             var newBindings = new List<MemberBinding>();

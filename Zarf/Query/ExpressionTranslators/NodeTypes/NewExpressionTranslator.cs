@@ -11,7 +11,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
-        public override Expression Translate(QueryContext context, NewExpression newExpression, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, NewExpression newExpression, ExpressionVisitor transformVisitor)
         {
             if (newExpression.Arguments == null ||
                 newExpression.Arguments.Count == 0)

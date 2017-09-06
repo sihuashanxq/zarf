@@ -1,4 +1,6 @@
 ﻿using Zarf.Mapping;
+using System.Linq.Expressions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Query
 {
@@ -15,5 +17,7 @@ namespace Zarf.Query
         IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 
         IAliasGenerator Alias { get; }
+
+        QueryExpression UpdateRefrenceSource(QueryExpression query);
     }
 }

@@ -255,9 +255,12 @@ namespace Zarf.Query
 
         public IQueryContext Context { get; }
 
+        public ExpressionVisitor QueryExpressionVisitor { get; }
+
         public LinqExpressionTanslator(IQueryContext context)
         {
             Context = context;
+            QueryExpressionVisitor = new SqlTranslatingExpressionVisitor(Context.Cast<QueryContext>(), NodeTypeTranslatorProvider.Default);
         }
 
         public LinqExpressionTanslator()

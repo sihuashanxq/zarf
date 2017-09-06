@@ -19,7 +19,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => methods.Contains(item.Name));
         }
 
-        public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             Expression aggregateKey = null;

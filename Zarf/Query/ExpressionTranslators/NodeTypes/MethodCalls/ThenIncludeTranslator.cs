@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = new[] { DataQueryable.ThenIncludeMethodInfo };
         }
 
-        public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
         {
             var rootQuery = tranformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var propertyPath = methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body.As<MemberExpression>();

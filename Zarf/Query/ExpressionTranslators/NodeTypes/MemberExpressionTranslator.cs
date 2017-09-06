@@ -7,7 +7,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {
-        public override Expression Translate(QueryContext context, MemberExpression memExpression, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MemberExpression memExpression, ExpressionVisitor transformVisitor)
         {
             //new {item.User.Id,} item.User
             var refrenceExpression = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);

@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 : OrderType.Desc;
         }
 
-        public override Expression Translate(QueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
             var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();

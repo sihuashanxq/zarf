@@ -5,13 +5,13 @@ namespace Zarf.Query.ExpressionVisitors
 {
     public class SqlTranslatingExpressionVisitor : ExpressionVisitorBase
     {
-        private QueryContext _queryContext;
+        private IQueryContext _context;
 
         private ITransaltorProvider _transaltorProvider;
 
-        public SqlTranslatingExpressionVisitor(QueryContext queryContext, ITransaltorProvider provider)
+        public SqlTranslatingExpressionVisitor(QueryContext context, ITransaltorProvider provider)
         {
-            _queryContext = queryContext;
+            _context = context;
             _transaltorProvider = provider;
         }
 
@@ -25,7 +25,7 @@ namespace Zarf.Query.ExpressionVisitors
             var translator = _transaltorProvider.GetTranslator(node);
             if (translator != null)
             {
-                return translator.Translate(_queryContext, node, this);
+                return translator.Translate(_context, node, this);
             }
 
             return base.Visit(node);
