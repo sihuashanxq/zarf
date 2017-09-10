@@ -16,7 +16,7 @@ namespace Zarf.Query
 
         public IQuerySourceProvider QuerySourceProvider { get; }
 
-        public IRefrenceProjectionFinder ProjectionFinder { get; }
+        public IProjectionScanner ProjectionScanner { get; }
 
         public IAliasGenerator Alias { get; }
 
@@ -27,7 +27,7 @@ namespace Zarf.Query
             IEntityProjectionMappingProvider projectionMappingProvider,
             IPropertyNavigationContext navigationContext,
             IQuerySourceProvider sourceProvider,
-            IRefrenceProjectionFinder projectionFinder,
+            IProjectionScanner projectionFinder,
             IAliasGenerator aliasGenerator
             )
         {
@@ -35,7 +35,7 @@ namespace Zarf.Query
             ProjectionMappingProvider = projectionMappingProvider;
             PropertyNavigationContext = navigationContext;
             QuerySourceProvider = sourceProvider;
-            ProjectionFinder = projectionFinder;
+            ProjectionScanner = projectionFinder;
             Alias = aliasGenerator;
             SubQueryInstance = new Dictionary<MemberInfo, object>();
         }

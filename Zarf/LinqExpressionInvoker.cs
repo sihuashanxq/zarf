@@ -21,7 +21,7 @@ namespace Zarf
 
     public class LinqExpressionInvoker : ILinqExpressionInvoker
     {
-        protected EntityProjectionMappingProvider MappingProvider { get; }
+        protected IEntityProjectionMappingProvider MappingProvider { get; }
 
         protected LinqExpressionTanslator QueryExpressionBuilder { get; }
 
@@ -31,26 +31,20 @@ namespace Zarf
 
         protected Delegate ObjectActivate { get; set; }
 
+        protected IQueryContext Context { get; set; }
+
         public LinqExpressionInvoker()
         {
-            MappingProvider = new EntityProjectionMappingProvider();
-            QueryExpressionBuilder = new LinqExpressionTanslator();
-            DelegateFactory = new ObjectActivateDelegateFactory();
-            SqlBuilder = new SqlServerTextBuilder();
-        }
-
-        public LinqExpressionInvoker(EntityProjectionMappingProvider map)
-        {
-            MappingProvider = map;
-            QueryExpressionBuilder = new LinqExpressionTanslator();
+            Context = QueryContextFacotry.Factory.CreateContext();
+            QueryExpressionBuilder = new LinqExpressionTanslator(Context);
+            MappingProvider = Context.ProjectionMappingProvider;
             DelegateFactory = new ObjectActivateDelegateFactory();
             SqlBuilder = new SqlServerTextBuilder();
         }
 
         public QType Invoke<QType>(Expression linqExpression)
         {
-            var queryContext = QueryContextFacotry.Factory.CreateContext() as QueryContext;
-            var rootQuery = QueryExpressionBuilder.Build(linqExpression, queryContext);
+            var rootQuery = QueryExpressionBuilder.Translate(linqExpression);
             if (rootQuery == null)
             {
                 throw new NullReferenceException(nameof(rootQuery));
@@ -58,11 +52,11 @@ namespace Zarf
 
             if (rootQuery.Is<QueryExpression>())
             {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.As<QueryExpression>().Result.EntityNewExpression, rootQuery, queryContext);
+                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.As<QueryExpression>().Result.EntityNewExpression, rootQuery, Context);
             }
             else
             {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery);
+                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery, Context);
             }
 
             var sqlText = SqlBuilder.Build(rootQuery);

@@ -48,7 +48,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 new PropertyNavigation(
                      propertyPath.Member,
                      innerQuery,
-                     context.ProjectionFinder.Find(relation),
+                     context.ProjectionScanner.Scan(relation),
                      relation
                 )
             );

@@ -12,7 +12,7 @@ namespace Zarf.Query
 
         IQuerySourceProvider QuerySourceProvider { get; }
 
-        IRefrenceProjectionFinder ProjectionFinder { get; }
+        IProjectionScanner ProjectionScanner { get; }
 
         IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 

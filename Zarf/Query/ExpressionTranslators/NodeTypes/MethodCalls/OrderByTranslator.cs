@@ -33,25 +33,23 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
+            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            if (query.Sets.Count != 0)
+            if (rootQuery.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(selector.Parameters.First(), query);
+            context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
 
-            var orderByKey = transformVisitor.Visit(selector);
-
-            query.Orders.Add(new OrderExpression(
-                context.ProjectionFinder.Find<ColumnExpression>(orderByKey),
+            rootQuery.Orders.Add(new OrderExpression(
+                context.ProjectionScanner.Scan<ColumnExpression>(transformVisitor.Visit(lambda)),
                 GetOrderType(methodCall)
                 )
             );
 
-            return query;
+            return rootQuery;
         }
     }
 }

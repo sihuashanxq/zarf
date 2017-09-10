@@ -13,6 +13,18 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
+    //TODO:1
+    public class EntityQueryResult
+    {
+        Type Type { get; set; }
+
+        IQueryContext Context { get; set; }
+
+        Expression EntityNewExpression { get; set; }
+
+        List<EntityQueryResult> SubEntityQueryResults { get; set; }
+    }
+
     public class LinqExpressionTanslator : ILinqExpressionTanslator
     {
         public Expression Build(Expression node, QueryContext context)
@@ -176,7 +188,7 @@ namespace Zarf.Query
                     }
                 }
 
-                var binding = CreateIncludePropertyBinding(member, context as QueryContext, context.ProjectionMappingProvider);
+                var binding = CreateIncludePropertyBinding(member, context as QueryContext);
                 entityBindings.Add(binding);
             }
 
@@ -193,7 +205,7 @@ namespace Zarf.Query
             }
         }
 
-        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext, IEntityProjectionMappingProvider mappingProvider)
+        public MemberBinding CreateIncludePropertyBinding(MemberInfo memberInfo, QueryContext queryContext)
         {
             var innerQuery = queryContext.PropertyNavigationContext.GetNavigation(memberInfo).RefrenceQuery;
             BuildResult(innerQuery, queryContext);
@@ -202,8 +214,8 @@ namespace Zarf.Query
             var propertyEnumerableType = typeof(EntityEnumerable<>).MakeGenericType(propertyElementType);
 
             var newPropertyEnumearbles = Expression.Convert(
-                    Expression.New(propertyEnumerableType.GetConstructor(new Type[] { typeof(Expression), typeof(EntityProjectionMappingProvider), typeof(QueryContext) }),
-                    Expression.Constant(innerQuery), Expression.Constant(mappingProvider), Expression.Constant(queryContext)),
+                    Expression.New(propertyEnumerableType.GetConstructor(new Type[] { typeof(Expression), typeof(QueryContext) }),
+                    Expression.Constant(innerQuery), Expression.Constant(queryContext)),
                     propertyEnumerableType
                 );
 
@@ -261,11 +273,6 @@ namespace Zarf.Query
         {
             Context = context;
             QueryExpressionVisitor = new SqlTranslatingExpressionVisitor(Context.Cast<QueryContext>(), NodeTypeTranslatorProvider.Default);
-        }
-
-        public LinqExpressionTanslator()
-        {
-
         }
     }
 }

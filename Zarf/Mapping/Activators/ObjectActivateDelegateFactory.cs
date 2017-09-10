@@ -9,9 +9,9 @@ namespace Zarf.Mapping
 {
     public class ObjectActivateDelegateFactory : ExpressionVisitor
     {
-        private QueryContext _queryContext;
+        private IQueryContext _context;
 
-        private Expression _source;
+        private Expression _rootSource;
 
         protected override Expression VisitExtension(Expression node)
         {
@@ -36,8 +36,8 @@ namespace Zarf.Mapping
 
         private Expression GetMemberValue(Expression node)
         {
-            var map = _queryContext.ProjectionMappingProvider.GetMapping(node);
-            if (map != null && map.Source == _source)
+            var map = _context.ProjectionMappingProvider.GetMapping(node);
+            if (map != null && map.Source == _rootSource)
             {
                 var entityMemberActivator = EntityMemberActivator.CreateActivator(map);
                 return Expression.Convert(
@@ -67,7 +67,7 @@ namespace Zarf.Mapping
             {
                 var bindExpression = Visit(item.Expression);
 
-                var navigation = _queryContext.PropertyNavigationContext.GetNavigation(item.Member);
+                var navigation = _context.PropertyNavigationContext.GetNavigation(item.Member);
                 if (navigation != null)
                 {
                     var condtion = Visit(navigation.Relation).UnWrap().As<LambdaExpression>();
@@ -85,12 +85,15 @@ namespace Zarf.Mapping
             return memInit.Update(newExpression, bindings);
         }
 
-        public Delegate CreateQueryModelActivateDelegate(Expression modelExpression, Expression source, QueryContext context = null)
+        public Delegate CreateQueryModelActivateDelegate(Expression modelExpression, Expression source, IQueryContext context = null)
         {
-            _queryContext = context;
-            _source = source;
+            lock (this)
+            {
+                _context = context;
+                _rootSource = source;
+                modelExpression = Visit(modelExpression).UnWrap();
+            }
 
-            modelExpression = Visit(modelExpression).UnWrap();
             if (modelExpression.NodeType == ExpressionType.Lambda)
             {
                 modelExpression = modelExpression.As<LambdaExpression>().Body;

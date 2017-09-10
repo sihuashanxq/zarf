@@ -7,14 +7,14 @@ namespace Zarf.Query
     /// <summary>
     /// 查找引用的投影接口
     /// </summary>
-    public interface IRefrenceProjectionFinder
+    public interface IProjectionScanner
     {
         /// <summary>
         /// </summary>
         /// <typeparam name="TRefrence">is ExpressionType.Extension</typeparam>
         /// <param name="node"></param>
         /// <returns></returns>
-        List<TRefrence> Find<TRefrence>(Expression node)
+        List<TRefrence> Scan<TRefrence>(Expression node)
             where TRefrence : Expression;
 
         /// <summary>
@@ -23,11 +23,11 @@ namespace Zarf.Query
         /// <param name="preHandle"></param>
         /// <param name="node"></param>
         /// <returns></returns>
-        List<TRefrence> Find<TRefrence>(Func<Expression, Expression> preHandle, Expression node)
+        List<TRefrence> Scan<TRefrence>(Func<Expression, Expression> preHandle, Expression node)
             where TRefrence : Expression;
 
-        List<Expression> Find(Expression node);
+        List<Expression> Scan(Expression node);
 
-        List<Expression> Find(Func<Expression, Expression> preHandle, Expression node);
+        List<Expression> Scan(Func<Expression, Expression> preHandle, Expression node);
     }
 }

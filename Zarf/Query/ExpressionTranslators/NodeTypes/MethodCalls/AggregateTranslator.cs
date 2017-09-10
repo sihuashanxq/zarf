@@ -34,8 +34,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
                 context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
                 aggregateKey = context
-                    .ProjectionFinder
-                    .Find(transformVisitor.Visit, keySelectorLambda)
+                    .ProjectionScanner
+                    .Scan(transformVisitor.Visit, keySelectorLambda)
                     .FirstOrDefault();
             }
 

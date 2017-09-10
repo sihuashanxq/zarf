@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             context.QuerySourceProvider.AddSource(selector.Parameters.First(), query);
             var entityNew = transformVisitor.Visit(selector).UnWrap();
-            var projections = context.ProjectionFinder.Find(entityNew);
+            var projections = context.ProjectionScanner.Scan(entityNew);
 
             foreach (var item in projections)
             {
