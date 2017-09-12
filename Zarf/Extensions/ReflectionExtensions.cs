@@ -58,6 +58,11 @@ namespace Zarf.Extensions
 
         public static bool IsCollection(this Type type)
         {
+            if (type == typeof(string))
+            {
+                return false;
+            }
+
             return typeof(IEnumerable).IsAssignableFrom(type);
         }
 

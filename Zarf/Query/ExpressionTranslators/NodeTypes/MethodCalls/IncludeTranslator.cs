@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         static IncludeTranslator()
         {
-            SupprotedMethods = new[] { DataQueryable.IncludeMethodInfo};
+            SupprotedMethods = new[] { DataQueryable.IncludeMethodInfo };
         }
 
         public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
@@ -49,7 +49,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                      propertyPath.Member,
                      innerQuery,
                      context.ProjectionScanner.Scan(relation),
-                     relation
+                     lambda
                 )
             );
 

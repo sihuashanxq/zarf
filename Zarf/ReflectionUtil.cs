@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Linq;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Zarf
 {
@@ -18,6 +20,8 @@ namespace Zarf
         /// Enumerable.ToList
         /// </summary>
         public static MethodInfo EnumerableToListMethod { get; }
+
+        public static MethodInfo EnumerableDistinct { get; }
 
         public static MethodInfo[] AllQueryableMethods { get; }
 
@@ -64,8 +68,22 @@ namespace Zarf
             AllQueryableMethods = typeof(Queryable).GetMethods();
             AllEnumerableMethods = typeof(Enumerable).GetMethods();
 
-            EnumerableWhereMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "Where" && item.GetParameters().Last().ParameterType.GenericTypeArguments.Length == 2);
+            EnumerableWhereMethod = typeof(ReflectionUtil).GetMethod(nameof(Where));
+            EnumerableDistinct = AllEnumerableMethods.FirstOrDefault(item => item.Name == "Distinct");
+
+            //.FirstOrDefault(item => item.Name == "Where" && item.GetParameters().Last().ParameterType.GenericTypeArguments.Length == 2);
             EnumerableToListMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "ToList");
+        }
+
+        public static IEnumerable<V> Where<T, V>(this IEnumerable<V> enumerable, T t, Func<T, V, bool> func)
+        {
+            foreach (var item in enumerable)
+            {
+                if (func(t, item))
+                {
+                    yield return item;
+                }
+            }
         }
     }
 }

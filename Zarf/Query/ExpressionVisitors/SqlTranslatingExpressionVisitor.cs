@@ -9,7 +9,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         private ITransaltorProvider _transaltorProvider;
 
-        public SqlTranslatingExpressionVisitor(QueryContext context, ITransaltorProvider provider)
+        public SqlTranslatingExpressionVisitor(IQueryContext context, ITransaltorProvider provider)
         {
             _context = context;
             _transaltorProvider = provider;

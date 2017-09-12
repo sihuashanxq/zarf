@@ -36,6 +36,8 @@ namespace Zarf
         public int Id { get; set; }
         public string Street { get; set; }
 
+        public int UserId { get; set; }
+
         public IEnumerable<Order> Orders { get; set; }
     }
 
@@ -53,14 +55,15 @@ namespace Zarf
             var db = new DataContext();
 
             var y = db.DataQuery<User>()
-                .Include(item => item.Address, (user, address) => user.AddressId == address.Id)
-                .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+                .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
+                //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
                 .ToList();
 
-            var x = y[0].Address.ToList();
-            //var z = db.DataQuery<Order>().ToList();
             //BasicTest(db);
-            Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
+
+            //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
+
+
             Console.ReadKey();
         }
 
