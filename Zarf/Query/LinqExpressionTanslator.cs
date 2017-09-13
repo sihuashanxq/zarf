@@ -13,18 +13,6 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
-    //TODO:1
-    public class EntityQueryResult
-    {
-        Type Type { get; set; }
-
-        IQueryContext Context { get; set; }
-
-        Expression EntityNewExpression { get; set; }
-
-        List<EntityQueryResult> SubEntityQueryResults { get; set; }
-    }
-
     public class LinqExpressionTanslator : ILinqExpressionTanslator
     {
         public Expression Build(Expression node, QueryContext context)

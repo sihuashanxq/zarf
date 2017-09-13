@@ -25,6 +25,9 @@ namespace Zarf.Query.ExpressionVisitors
             return node;
         }
 
-        protected abstract Expression VisitLambda(LambdaExpression lambda);
+        protected virtual Expression VisitLambda(LambdaExpression lambda)
+        {
+            return lambda;
+        }
     }
 }

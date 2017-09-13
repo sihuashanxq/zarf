@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query;
-using System.Linq;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace Zarf.Mapping
 {
@@ -96,6 +96,7 @@ namespace Zarf.Mapping
 
                 bindings.Add(Expression.Bind(item.Member, bindExpression));
             }
+
             return memInit.Update(newExpression, bindings);
         }
 
@@ -112,7 +113,6 @@ namespace Zarf.Mapping
             {
                 modelExpression = modelExpression.As<LambdaExpression>().Body;
             }
-
             //var container=MemberInitExpression
             //container.AAA=new AAA();
             //return container;

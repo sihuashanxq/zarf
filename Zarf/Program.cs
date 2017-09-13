@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using Zarf.Query;
-using System.Reflection;
-using System.Linq.Expressions;
-using System.Collections;
 
 namespace Zarf
 {
@@ -34,6 +30,7 @@ namespace Zarf
     public class Address
     {
         public int Id { get; set; }
+
         public string Street { get; set; }
 
         public int UserId { get; set; }
