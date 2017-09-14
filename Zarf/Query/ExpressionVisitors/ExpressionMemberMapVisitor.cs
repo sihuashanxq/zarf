@@ -26,6 +26,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         public override Expression Visit(Expression node)
         {
+            if (node == null)
+            {
+                return node;
+            }
+
             if (node.NodeType == ExpressionType.Extension)
             {
                 if (node.Is<QueryExpression>())

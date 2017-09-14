@@ -42,12 +42,12 @@ namespace Zarf.Mapping
             var map = _context.ProjectionMappingProvider.GetMapping(node);
             if (map != null && map.Source == _rootSource)
             {
-                var entityMemberActivator = EntityMemberActivator.CreateActivator(map);
+                var entityMemberActivator = EntityMemberValueProvider.CreateProvider(map);
                 return Expression.Convert(
                         Expression.Call(
                             Expression.Constant(entityMemberActivator),
-                            EntityMemberActivator.ActivateMethod,
-                            EntityMemberActivator.ActivateMethodParameter
+                            EntityMemberValueProvider.ActivateMethod,
+                            EntityMemberValueProvider.ActivateMethodParameter
                           ),
                         node.Type
                        );
@@ -55,18 +55,6 @@ namespace Zarf.Mapping
 
             return null;
         }
-
-        protected override Expression VisitParameter(ParameterExpression param)
-        {
-            if (param == P)
-            {
-                return This;
-            }
-
-            return param;
-        }
-
-        protected ParameterExpression P { get; set; }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
         {
@@ -76,24 +64,6 @@ namespace Zarf.Mapping
             foreach (var item in memInit.Bindings.OfType<MemberAssignment>())
             {
                 var bindExpression = Visit(item.Expression);
-
-                var navigation = _context.PropertyNavigationContext.GetNavigation(item.Member);
-                if (navigation != null && This != null)
-                {
-                    //var condtion = Visit(navigation.Relation).UnWrap().As<LambdaExpression>();
-                    var condtion = navigation.Relation.UnWrap().As<LambdaExpression>();
-                    P = condtion.Parameters.First();
-                    var elementType = item.Member.GetMemberInfoType().GetCollectionElementType();
-
-                    condtion = Expression.Lambda(condtion.Body, This, condtion.Parameters.Last());
-
-                    var lambda = Visit(condtion);
-                    var filter = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(This.Type, elementType), bindExpression, This, lambda);
-                    var toList = Expression.Call(null, ReflectionUtil.EnumerableToListMethod.MakeGenericMethod(elementType), filter);
-
-                    bindExpression = toList;
-                }
-
                 bindings.Add(Expression.Bind(item.Member, bindExpression));
             }
 
@@ -113,42 +83,36 @@ namespace Zarf.Mapping
             {
                 modelExpression = modelExpression.As<LambdaExpression>().Body;
             }
-            //var container=MemberInitExpression
-            //container.AAA=new AAA();
-            //return container;
-
-            //var result = Expression.Lambda(modelExpression, EntityMemberActivator.ActivateMethodParameter).Compile();
+        
             var target = Expression.Label(modelExpression.Type);
             This = Expression.Variable(modelExpression.Type);
             var setLocal = Expression.Assign(This, modelExpression);
 
             var exp = modelExpression.As<MemberInitExpression>();
+
             var binding = exp.Bindings.Last().As<MemberAssignment>();
 
             if (binding.Member.GetMemberInfoType().IsCollection())
             {
-
                 //begin
                 var navigation = _context.PropertyNavigationContext.GetNavigation(binding.Member);
 
                 var condtion = navigation.Relation.UnWrap().As<LambdaExpression>();
-                P = condtion.Parameters.First();
                 var elementType = binding.Member.GetMemberInfoType().GetCollectionElementType();
+                condtion = new Query.ExpressionVisitors.InnerNodeUpdateExpressionVisitor(condtion.Parameters.First(), This)
+                       .Update(condtion).As<LambdaExpression>();
 
-                condtion = Expression.Lambda(condtion.Body, This, condtion.Parameters.Last());
-
-                var lambda = Visit(condtion);
-                var filter = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(This.Type, elementType), binding.Expression, This, lambda);
+                var filter = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(This.Type, elementType), binding.Expression, This, condtion);
                 var toList = Expression.Call(null, ReflectionUtil.EnumerableToListMethod.MakeGenericMethod(elementType), filter);
                 //end
 
-                var call = Expression.Call(This, binding.Member.As<PropertyInfo>().SetMethod,filter);
+                var call = Expression.Call(This, binding.Member.As<PropertyInfo>().SetMethod, filter);
 
                 var ret = Expression.Return(target, This, modelExpression.Type);
                 var label = Expression.Label(target, This);
                 var block = Expression.Block(new[] { This }, setLocal, call, ret, label);
 
-                return Expression.Lambda(block, EntityMemberActivator.ActivateMethodParameter).Compile();
+                return Expression.Lambda(block, EntityMemberValueProvider.ActivateMethodParameter).Compile();
             }
             else
             {
@@ -156,7 +120,7 @@ namespace Zarf.Mapping
                 var label = Expression.Label(target, This);
                 var block = Expression.Block(new[] { This }, setLocal, ret, label);
 
-                return Expression.Lambda(block, EntityMemberActivator.ActivateMethodParameter).Compile();
+                return Expression.Lambda(block, EntityMemberValueProvider.ActivateMethodParameter).Compile();
             }
         }
     }

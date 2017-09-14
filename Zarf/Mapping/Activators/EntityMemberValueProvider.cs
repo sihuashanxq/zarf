@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Zarf.Mapping
 {
-    public class EntityMemberActivator : IObjectActivator
+    public class EntityMemberValueProvider : IEntityMemberValueProvider
     {
         public IEntityProjectionMapping _mapping;
 
@@ -12,18 +12,18 @@ namespace Zarf.Mapping
 
         public static MethodInfo ActivateMethod { get; }
 
-        static EntityMemberActivator()
+        static EntityMemberValueProvider()
         {
             ActivateMethodParameter = Expression.Parameter(typeof(IDataReader), "dbDataReader");
-            ActivateMethod = typeof(EntityMemberActivator).GetMethod(nameof(CreateInstance));
+            ActivateMethod = typeof(EntityMemberValueProvider).GetMethod(nameof(GetValue));
         }
 
-        public EntityMemberActivator(IEntityProjectionMapping mapping)
+        public EntityMemberValueProvider(IEntityProjectionMapping mapping)
         {
             _mapping = mapping;
         }
 
-        public object CreateInstance(IDataReader dbDataReader)
+        public object GetValue(IDataReader dbDataReader)
         {
             if (dbDataReader.IsDBNull(_mapping.Ordinal))
             {
@@ -33,9 +33,9 @@ namespace Zarf.Mapping
             return dbDataReader.GetValue(_mapping.Ordinal);
         }
 
-        public static IObjectActivator CreateActivator(IEntityProjectionMapping mapping)
+        public static IEntityMemberValueProvider CreateProvider(IEntityProjectionMapping mapping)
         {
-            return new EntityMemberActivator(mapping);
+            return new EntityMemberValueProvider(mapping);
         }
     }
 }

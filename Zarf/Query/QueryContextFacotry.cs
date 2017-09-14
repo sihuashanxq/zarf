@@ -20,7 +20,7 @@ namespace Zarf.Query
                     new EntityProjectionMappingProvider(),
                     new PropertyNavigationContext(),
                     new QuerySourceProvider(),
-                    new InnerNodeUpdateExpressionVisitor(),
+                    new ProjectionExpressionVisitor(),
                     new AliasGenerator()
                 );
         }

@@ -45,6 +45,13 @@ namespace Zarf
         public string OrderName { get; set; }
     }
 
+    public class Abc
+    {
+        public int Id { get; set; }
+
+        public int Count { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)

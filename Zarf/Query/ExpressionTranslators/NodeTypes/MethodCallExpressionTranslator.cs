@@ -94,18 +94,22 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             {
                 var parameters = new object[methodCall.Arguments.Count];
                 var instance = @object.As<ConstantExpression>()?.Value;
-
+                var canEval = true;
                 for (var i = 0; i < arguments.Count; i++)
                 {
                     if (arguments[i].NodeType != ExpressionType.Constant)
                     {
+                        canEval = false;
                         break;
                     }
 
                     parameters[i] = arguments[i].Cast<ConstantExpression>().Value;
                 }
 
-                return transformVisitor.Visit(Expression.Constant(methodInfo.Invoke(instance, parameters)));
+                if (canEval)
+                {
+                    return transformVisitor.Visit(Expression.Constant(methodInfo.Invoke(instance, parameters)));
+                }
             }
 
             return Expression.Call(@object, methodInfo, arguments);
