@@ -6,7 +6,7 @@ namespace Zarf.Mapping.Activators
 {
     public class EntityFieldBinder : IEntityMemberBinder<FieldInfo>
     {
-        public void Bind(FieldInfo member, Expression bindExpression)
+        public Expression Bind(FieldInfo fiedInfo, Expression bindingExpression)
         {
             throw new NotImplementedException();
         }

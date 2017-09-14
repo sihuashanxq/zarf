@@ -5,11 +5,11 @@ namespace Zarf.Mapping.Activators
 {
     public interface IEntityBinder
     {
-        void Bind(Type type, Expression bindExpression);
+        Expression Bind(Type type, Expression entityNewExpression);
     }
 
     public interface IEntityMemberBinder<in TMember>
     {
-        void Bind(TMember member, Expression bindExpression);
+        Expression Bind(TMember member, Expression bindingExpression);
     }
 }

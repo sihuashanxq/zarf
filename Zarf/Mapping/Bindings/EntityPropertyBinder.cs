@@ -8,7 +8,7 @@ namespace Zarf.Mapping.Activators
 {
     public class EntityPropertyBinder : IEntityMemberBinder<PropertyInfo>
     {
-        public void Bind(PropertyInfo member, Expression bindExpression)
+        public Expression Bind(PropertyInfo property, Expression bindingExpression)
         {
             throw new NotImplementedException();
         }
