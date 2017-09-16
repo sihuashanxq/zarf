@@ -1,9 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Reflection;
+using System.Linq.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {
     public interface IBindingContext
     {
-        int GetExpressionOrdinal(Expression node);
+        Type EntityType { get; }
+
+        Expression EntityObject { get; }
+
+        MemberInfo Member { get; }
     }
 }

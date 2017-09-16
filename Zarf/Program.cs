@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Linq.Expressions;
+using Zarf.Mapping.Bindings;
 
 namespace Zarf
 {
@@ -49,7 +52,7 @@ namespace Zarf
     {
         public int Id { get; set; }
 
-        public int Count { get; set; }
+        public int Count;
     }
 
     class Program
@@ -60,13 +63,12 @@ namespace Zarf
 
             var y = db.DataQuery<User>()
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-                //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-                .ToList();
-
+                .Select(item => new Abc() { Count = 2 })
+                .Where(item => item.Count == 3);
+            //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
-
 
             Console.ReadKey();
         }

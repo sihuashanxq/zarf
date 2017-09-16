@@ -1,21 +1,24 @@
 ﻿using System.Linq.Expressions;
 using Zarf.Query.Expressions;
 using Zarf.Extensions;
+using System;
+using System.Reflection;
 
 namespace Zarf.Mapping.Bindings
 {
     public class BindingContext : IBindingContext
     {
-        public QueryExpression RootQuery { get; }
+        public Type EntityType { get; }
 
-        public BindingContext(QueryExpression rootQuery)
-        {
-            RootQuery = rootQuery;
-        }
+        public Expression EntityObject { get; }
 
-        public int GetExpressionOrdinal(Expression node)
+        public MemberInfo Member { get; }
+
+        public BindingContext(Type entityType, Expression entityObject, MemberInfo member = null)
         {
-            return GetExpressionOridinal(node, RootQuery);
+            EntityType = entityType;
+            EntityObject = entityObject;
+            Member = member;
         }
 
         internal static int GetExpressionOridinal(Expression node, QueryExpression queryExpression)

@@ -107,7 +107,7 @@ namespace Zarf.Mapping
                 //end
 
                 var call = Expression.Call(This, binding.Member.As<PropertyInfo>().SetMethod, filter);
-
+             
                 var ret = Expression.Return(target, This, modelExpression.Type);
                 var label = Expression.Label(target, This);
                 var block = Expression.Block(new[] { This }, setLocal, call, ret, label);
