@@ -27,40 +27,98 @@ namespace Zarf
 
         public static MethodInfo[] AllEnumerableMethods { get; }
 
+        public static Type CharType = typeof(char);
+
+        public static Type CharNullableType = typeof(char?);
+
+        public static Type ByteType = typeof(byte);
+
+        public static Type ByteNullableType = typeof(byte?);
+
+        public static Type StringType = typeof(string);
+
+        public static Type IntType = typeof(int);
+
+        public static Type IntNullableType = typeof(int?);
+
+        public static Type UIntType = typeof(uint);
+
+        public static Type UIntNullableType = typeof(uint?);
+
+        public static Type ShortType = typeof(short);
+
+        public static Type ShortNullableType = typeof(short?);
+
+        public static Type UShortType = typeof(ushort);
+
+        public static Type UShortNullableType = typeof(ushort?);
+
+        public static Type LongType = typeof(long);
+
+        public static Type LongNullbaleType = typeof(long?);
+
+        public static Type ULongType = typeof(ulong);
+
+        public static Type ULongNullableType = typeof(ulong?);
+
+        public static Type DecimalType = typeof(decimal);
+
+        public static Type DecimalNullableType = typeof(decimal?);
+
+        public static Type FloatType = typeof(float);
+
+        public static Type FloatNullableType = typeof(float?);
+
+        public static Type DoubleType = typeof(double);
+
+        public static Type DoubleNullableType = typeof(double?);
+
+        public static Type DateTimeType = typeof(DateTime);
+
+        public static Type DateTimeNullableType = typeof(DateTime?);
+
+        public static Type GuidType = typeof(DateTime);
+
+        public static Type GuidNullableType = typeof(DateTime?);
+
+        public static Type BooleanType = typeof(DateTime);
+
+        public static Type BooleanNullableType = typeof(DateTime?);
+
         /// <summary>
         /// 简单类型
         /// </summary>
         public static Type[] SimpleTypes = new[]
         {
-            typeof(char),
-            typeof(char?),
-            typeof(byte),
-            typeof(byte?),
-            typeof(string),
-            typeof(int),
-            typeof(int?),
-            typeof(uint),
-            typeof(uint?),
-            typeof(short),
-            typeof(short?),
-            typeof(ushort),
-            typeof(ushort?),
-            typeof(long),
-            typeof(long?),
-            typeof(ulong),
-            typeof(ulong?),
-            typeof(decimal),
-            typeof(decimal?),
-            typeof(float),
-            typeof(float?),
-            typeof(double),
-            typeof(double?),
-            typeof(DateTime),
-            typeof(DateTime?),
-            typeof(Guid),
-            typeof(Guid?),
-            typeof(bool),
-            typeof(bool?)
+            CharType,
+            CharNullableType,
+            ByteType,
+            ByteNullableType,
+            StringType,
+            IntType,
+            IntNullableType,
+            UIntType,
+            UIntNullableType,
+            ShortType,
+            ShortNullableType,
+            UShortType,
+            UShortNullableType,
+            LongType,
+            LongNullbaleType,
+            ULongType,
+            ULongNullableType,
+            DecimalType,
+            DecimalNullableType,
+            FloatType,
+            FloatNullableType,
+            DoubleType,
+            DoubleNullableType,
+            DateTimeType,
+            DateTimeNullableType,
+            GuidType,
+            GuidNullableType,
+            BooleanType,
+            BooleanNullableType
         };
 
         static ReflectionUtil()

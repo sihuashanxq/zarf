@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Zarf.Mapping
 {
@@ -10,11 +11,14 @@ namespace Zarf.Mapping
 
         public int Ordinal { get; }
 
-        public EntityProjectionMapping(Expression source, Expression node, int ordinal)
+        public MemberInfo Member { get; }
+
+        public EntityProjectionMapping(Expression source, Expression node, MemberInfo member, int ordinal)
         {
             Expression = node;
             Ordinal = ordinal;
             Source = source;
+            Member = member;
         }
     }
 }

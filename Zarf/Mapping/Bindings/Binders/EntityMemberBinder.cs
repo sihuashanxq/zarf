@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Zarf.Extensions;
 using System.Linq;
 
@@ -20,6 +19,10 @@ namespace Zarf.Mapping.Bindings
                 if (binder != null)
                 {
                     var binding = binder.Bind(typeBindingContext);
+                    //if (binding.HasCondtion()
+                    //{
+                    //    //filter
+                    //});
                     return Expression.Assign(memberAccess, binding);
                 }
             }

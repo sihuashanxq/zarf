@@ -63,13 +63,14 @@ namespace Zarf
 
             var y = db.DataQuery<User>()
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-                .Select(item => new Abc() { Count = 2 })
-                .Where(item => item.Count == 3);
+                .ToList();
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
+            Func<int> g = () => 2;
 
+            var x = typeof(int?);
             Console.ReadKey();
         }
 

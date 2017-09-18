@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Zarf.Mapping
 {
@@ -9,7 +11,7 @@ namespace Zarf.Mapping
 
         public void Map(Expression refrenceProjection, Expression source, int ordinal)
         {
-            _maps[refrenceProjection] = new EntityProjectionMapping(source, refrenceProjection, ordinal);
+            _maps[refrenceProjection] = new EntityProjectionMapping(source, refrenceProjection, null, ordinal);
         }
 
         public IEntityProjectionMapping GetMapping(Expression refrenceProjection)

@@ -40,7 +40,7 @@ namespace Zarf.Mapping
         private Expression GetMemberValue(Expression node)
         {
             var map = _context.ProjectionMappingProvider.GetMapping(node);
-            if (map != null && map.Source == _rootSource)
+            if (map != null)
             {
                 var entityMemberActivator = EntityMemberValueProvider.CreateProvider(map);
                 return Expression.Convert(
