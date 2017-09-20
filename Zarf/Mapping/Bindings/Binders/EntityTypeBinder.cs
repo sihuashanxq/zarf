@@ -10,13 +10,13 @@ namespace Zarf.Mapping.Bindings
     {
         public Expression Bind(IBindingContext bindingContext)
         {
-            var entityDescriptor = EntityTypeDescriptorFactory.Factory.Create(bindingContext.EntityType);
+            var entityDescriptor = EntityTypeDescriptorFactory.Factory.Create(bindingContext.Type);
             if (entityDescriptor.Constructor == null)
             {
                 throw new NullReferenceException("the entity must have a consctrucotr with none arguments");
             }
 
-            var entityNewBlock = CreateEntityNewExpressionBlock(entityDescriptor.Constructor, bindingContext.EntityType);
+            var entityNewBlock = CreateEntityNewExpressionBlock(entityDescriptor.Constructor, bindingContext.Type);
             var entityObject = entityNewBlock.Variables.FirstOrDefault();
 
             var bindings = BindMember(bindingContext, entityDescriptor, entityObject);
@@ -37,7 +37,7 @@ namespace Zarf.Mapping.Bindings
 
             foreach (var member in typeDescriptor.GetWriteableMembers())
             {
-                var memberBindingContext = new BindingContext(bindingContext.EntityType, entityObject, member);
+                var memberBindingContext = new BindingContext(bindingContext.Type, entityObject, member);
                 var binder = EntityBinderProvider.Default.GetBinder(memberBindingContext);
                 if (binder == null)
                 {

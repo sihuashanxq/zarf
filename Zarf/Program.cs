@@ -68,9 +68,7 @@ namespace Zarf
             //BasicTest(db);
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
-            Func<int> g = () => 2;
 
-            var x = typeof(int?);
             Console.ReadKey();
         }
 

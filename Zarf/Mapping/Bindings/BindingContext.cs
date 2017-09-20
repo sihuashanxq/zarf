@@ -8,7 +8,7 @@ namespace Zarf.Mapping.Bindings
 {
     public class BindingContext : IBindingContext
     {
-        public Type EntityType { get; }
+        public Type Type { get; }
 
         public Expression EntityObject { get; }
 
@@ -16,7 +16,7 @@ namespace Zarf.Mapping.Bindings
 
         public BindingContext(Type entityType, Expression entityObject, MemberInfo member = null)
         {
-            EntityType = entityType;
+            Type = entityType;
             EntityObject = entityObject;
             Member = member;
         }

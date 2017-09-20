@@ -8,5 +8,7 @@ namespace Zarf.Mapping
         void Map(Expression refrenceProjection, Expression source, int ordinal);
 
         IEntityProjectionMapping GetMapping(Expression refrenceProjection);
+
+        int GetOrdinal(MemberInfo member);
     }
 }

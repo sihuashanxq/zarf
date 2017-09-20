@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -32,12 +31,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 {
                     argument.Cast<ColumnExpression>().Alias = newExpression.Members[i].Name;
                 }
-                else if (argument is QueryExpression)
+                else if (argument is QueryExpression && newExpression.Members[i].GetMemberInfoType().IsCollection())
                 {
-                    if (newExpression.Members[i].GetMemberInfoType().IsCollection())
-                    {
-                        throw new NotImplementedException("not supported!");
-                    }
+                    throw new NotImplementedException("not supported!");
                 }
 
                 context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);

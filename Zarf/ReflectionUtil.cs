@@ -27,68 +27,68 @@ namespace Zarf
 
         public static MethodInfo[] AllEnumerableMethods { get; }
 
-        public static Type CharType = typeof(char);
+        public static readonly Type CharType = typeof(char);
 
-        public static Type CharNullableType = typeof(char?);
+        public static readonly Type CharNullableType = typeof(char?);
 
-        public static Type ByteType = typeof(byte);
+        public static readonly Type ByteType = typeof(byte);
 
-        public static Type ByteNullableType = typeof(byte?);
+        public static readonly Type ByteNullableType = typeof(byte?);
 
-        public static Type StringType = typeof(string);
+        public static readonly Type StringType = typeof(string);
 
-        public static Type IntType = typeof(int);
+        public static readonly Type IntType = typeof(int);
 
-        public static Type IntNullableType = typeof(int?);
+        public static readonly Type IntNullableType = typeof(int?);
 
-        public static Type UIntType = typeof(uint);
+        public static readonly Type UIntType = typeof(uint);
 
-        public static Type UIntNullableType = typeof(uint?);
+        public static readonly Type UIntNullableType = typeof(uint?);
 
-        public static Type ShortType = typeof(short);
+        public static readonly Type ShortType = typeof(short);
 
-        public static Type ShortNullableType = typeof(short?);
+        public static readonly Type ShortNullableType = typeof(short?);
 
-        public static Type UShortType = typeof(ushort);
+        public static readonly Type UShortType = typeof(ushort);
 
-        public static Type UShortNullableType = typeof(ushort?);
+        public static readonly Type UShortNullableType = typeof(ushort?);
 
-        public static Type LongType = typeof(long);
+        public static readonly Type LongType = typeof(long);
 
-        public static Type LongNullbaleType = typeof(long?);
+        public static readonly Type LongNullbaleType = typeof(long?);
 
-        public static Type ULongType = typeof(ulong);
+        public static readonly Type ULongType = typeof(ulong);
 
-        public static Type ULongNullableType = typeof(ulong?);
+        public static readonly Type ULongNullableType = typeof(ulong?);
 
-        public static Type DecimalType = typeof(decimal);
+        public static readonly Type DecimalType = typeof(decimal);
 
-        public static Type DecimalNullableType = typeof(decimal?);
+        public static readonly Type DecimalNullableType = typeof(decimal?);
 
-        public static Type FloatType = typeof(float);
+        public static readonly Type FloatType = typeof(float);
 
-        public static Type FloatNullableType = typeof(float?);
+        public static readonly Type FloatNullableType = typeof(float?);
 
-        public static Type DoubleType = typeof(double);
+        public static readonly Type DoubleType = typeof(double);
 
-        public static Type DoubleNullableType = typeof(double?);
+        public static readonly Type DoubleNullableType = typeof(double?);
 
-        public static Type DateTimeType = typeof(DateTime);
+        public static readonly Type DateTimeType = typeof(DateTime);
 
-        public static Type DateTimeNullableType = typeof(DateTime?);
+        public static readonly Type DateTimeNullableType = typeof(DateTime?);
 
-        public static Type GuidType = typeof(DateTime);
+        public static readonly Type GuidType = typeof(DateTime);
 
-        public static Type GuidNullableType = typeof(DateTime?);
+        public static readonly Type GuidNullableType = typeof(DateTime?);
 
-        public static Type BooleanType = typeof(DateTime);
+        public static readonly Type BooleanType = typeof(DateTime);
 
-        public static Type BooleanNullableType = typeof(DateTime?);
+        public static readonly Type BooleanNullableType = typeof(DateTime?);
 
         /// <summary>
         /// 简单类型
         /// </summary>
-        public static Type[] SimpleTypes = new[]
+        public static HashSet<Type> SimpleTypes = new HashSet<Type>()
         {
             CharType,
             CharNullableType,
@@ -133,13 +133,16 @@ namespace Zarf
             EnumerableToListMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "ToList");
         }
 
-        public static IEnumerable<V> Where<T, V>(this IEnumerable<V> enumerable, T t, Func<T, V, bool> func)
+        public static IEnumerable<TEntity> Where<TOtherEntity, TEntity>(
+            this IEnumerable<TEntity> collection,
+            TOtherEntity oEntity, 
+            Func<TOtherEntity, TEntity, bool> predicate)
         {
-            foreach (var item in enumerable)
+            foreach (var element in collection)
             {
-                if (func(t, item))
+                if (predicate(oEntity, element))
                 {
-                    yield return item;
+                    yield return element;
                 }
             }
         }

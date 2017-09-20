@@ -6,10 +6,14 @@ namespace Zarf.Mapping.Bindings
 {
     public interface IBindingContext
     {
-        Type EntityType { get; }
+        Type Type { get; }
 
         Expression EntityObject { get; }
 
         MemberInfo Member { get; }
+
+        IEntityProjectionMappingProvider MappingProvider { get; }
+
+        EntityCreationHandleProvider CreationHandleProvider { get; set; }
     }
 }

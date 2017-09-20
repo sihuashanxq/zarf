@@ -5,47 +5,55 @@ using System.Collections.Generic;
 
 namespace Zarf.Mapping.Bindings.Binders
 {
-    public class MemberValueGetter
+    public class MemberValueGetterProvider
     {
-        public static Dictionary<Type, MethodInfo> ValueGetterCache;
+        private static Dictionary<Type, MethodInfo> ValueGetterCache;
 
-        static MemberValueGetter()
+        public static readonly MemberValueGetterProvider DefaultProvider = new MemberValueGetterProvider();
+
+        private MemberValueGetterProvider()
         {
-            ValueGetterCache = new Dictionary<Type, MethodInfo>();
 
-            ValueGetterCache[ReflectionUtil.StringType] = typeof(MemberValueGetter).GetMethod(nameof(GetString));
-            ValueGetterCache[ReflectionUtil.CharType] = typeof(MemberValueGetter).GetMethod(nameof(GetChar));
-            ValueGetterCache[ReflectionUtil.ByteType] = typeof(MemberValueGetter).GetMethod(nameof(GetByte));
-            ValueGetterCache[ReflectionUtil.IntType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt32));
-            ValueGetterCache[ReflectionUtil.UIntType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt32));
-            ValueGetterCache[ReflectionUtil.ShortType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt16));
-            ValueGetterCache[ReflectionUtil.UShortType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt16));
-            ValueGetterCache[ReflectionUtil.LongType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt64));
-            ValueGetterCache[ReflectionUtil.ULongType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt64));
-            ValueGetterCache[ReflectionUtil.DecimalType] = typeof(MemberValueGetter).GetMethod(nameof(GetDecimal));
-            ValueGetterCache[ReflectionUtil.FloatType] = typeof(MemberValueGetter).GetMethod(nameof(GetFloat));
-            ValueGetterCache[ReflectionUtil.DoubleType] = typeof(MemberValueGetter).GetMethod(nameof(GetDouble));
-            ValueGetterCache[ReflectionUtil.DateTimeType] = typeof(MemberValueGetter).GetMethod(nameof(GetDateTime));
-            ValueGetterCache[ReflectionUtil.GuidType] = typeof(MemberValueGetter).GetMethod(nameof(GetGuid));
-            ValueGetterCache[ReflectionUtil.BooleanType] = typeof(MemberValueGetter).GetMethod(nameof(GetBoolean));
-
-            ValueGetterCache[ReflectionUtil.CharNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetCharNullable));
-            ValueGetterCache[ReflectionUtil.ByteNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetByteNullable));
-            ValueGetterCache[ReflectionUtil.IntNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt32Nullable));
-            ValueGetterCache[ReflectionUtil.UIntNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt32Nullable));
-            ValueGetterCache[ReflectionUtil.ShortNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt16Nullable));
-            ValueGetterCache[ReflectionUtil.UShortNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt16Nullable));
-            ValueGetterCache[ReflectionUtil.LongNullbaleType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt64Nullable));
-            ValueGetterCache[ReflectionUtil.ULongNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetInt64Nullable));
-            ValueGetterCache[ReflectionUtil.DecimalNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetDecimalNullable));
-            ValueGetterCache[ReflectionUtil.FloatNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetFloatNullable));
-            ValueGetterCache[ReflectionUtil.DoubleNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetDoubleNullable));
-            ValueGetterCache[ReflectionUtil.DateTimeNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetDateTimeNullable));
-            ValueGetterCache[ReflectionUtil.GuidNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetGuidNullable));
-            ValueGetterCache[ReflectionUtil.BooleanNullableType] = typeof(MemberValueGetter).GetMethod(nameof(GetBooleanNullable));
         }
 
-        public MethodInfo GetValueGetterMethod(Type memberType)
+        static MemberValueGetterProvider()
+        {
+            ValueGetterCache = new Dictionary<Type, MethodInfo>
+            {
+                [ReflectionUtil.StringType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetString)),
+                [ReflectionUtil.CharType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetChar)),
+                [ReflectionUtil.ByteType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetByte)),
+                [ReflectionUtil.IntType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt32)),
+                [ReflectionUtil.UIntType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt32)),
+                [ReflectionUtil.ShortType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt16)),
+                [ReflectionUtil.UShortType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt16)),
+                [ReflectionUtil.LongType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt64)),
+                [ReflectionUtil.ULongType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt64)),
+                [ReflectionUtil.DecimalType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDecimal)),
+                [ReflectionUtil.FloatType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetFloat)),
+                [ReflectionUtil.DoubleType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDouble)),
+                [ReflectionUtil.DateTimeType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDateTime)),
+                [ReflectionUtil.GuidType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetGuid)),
+                [ReflectionUtil.BooleanType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetBoolean)),
+
+                [ReflectionUtil.CharNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetCharNullable)),
+                [ReflectionUtil.ByteNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetByteNullable)),
+                [ReflectionUtil.IntNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt32Nullable)),
+                [ReflectionUtil.UIntNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt32Nullable)),
+                [ReflectionUtil.ShortNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt16Nullable)),
+                [ReflectionUtil.UShortNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt16Nullable)),
+                [ReflectionUtil.LongNullbaleType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt64Nullable)),
+                [ReflectionUtil.ULongNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt64Nullable)),
+                [ReflectionUtil.DecimalNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDecimalNullable)),
+                [ReflectionUtil.FloatNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetFloatNullable)),
+                [ReflectionUtil.DoubleNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDoubleNullable)),
+                [ReflectionUtil.DateTimeNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDateTimeNullable)),
+                [ReflectionUtil.GuidNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetGuidNullable)),
+                [ReflectionUtil.BooleanNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetBooleanNullable))
+            };
+        }
+
+        public MethodInfo GetValueGetter(Type memberType)
         {
             if (!ValueGetterCache.ContainsKey(memberType))
             {

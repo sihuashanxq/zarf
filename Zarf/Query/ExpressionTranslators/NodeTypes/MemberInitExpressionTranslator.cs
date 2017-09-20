@@ -13,21 +13,23 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         public override Expression Translate(IQueryContext context, MemberInitExpression memberInit, ExpressionVisitor transformVisitor)
         {
             var newExpression = transformVisitor.Visit(memberInit.NewExpression).Cast<NewExpression>();
-            var newBindings = new List<MemberBinding>();
+            var bindings = new List<MemberBinding>();
 
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
                 var bindExpression = transformVisitor.Visit(binding.Expression);
-                if (typeof(IEnumerable).IsAssignableFrom(binding.Member.GetMemberInfoType()))
+                var memberInfoType = binding.Member.GetMemberInfoType();
+
+                if (typeof(IEnumerable).IsAssignableFrom(memberInfoType))
                 {
                     throw new NotImplementedException("not supported!");
                 }
 
                 context.EntityMemberMappingProvider.Map(binding.Member, bindExpression);
-                newBindings.Add(Expression.Bind(binding.Member, bindExpression));
+                bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 
-            return memberInit.Update(newExpression, newBindings);
+            return memberInit.Update(newExpression, bindings);
         }
     }
 }
