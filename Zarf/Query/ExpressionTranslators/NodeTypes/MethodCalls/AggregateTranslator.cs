@@ -36,7 +36,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 aggregateKey = context
                     .ProjectionScanner
                     .Scan(transformVisitor.Visit, keySelectorLambda)
-                    .FirstOrDefault();
+                    .FirstOrDefault()
+                    .Expression;
             }
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);

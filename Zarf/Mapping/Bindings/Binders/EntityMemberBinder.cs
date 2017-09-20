@@ -10,7 +10,7 @@ namespace Zarf.Mapping.Bindings.Binders
         {
             var typeInfo = bindingContext.Member.GetMemberInfoType();
 
-            if (!ReflectionUtil.SimpleTypes.Contains(typeInfo))
+            if (!typeInfo.IsPrimtiveType())
             {
                 return BindComplexType(bindingContext, typeInfo);
             }

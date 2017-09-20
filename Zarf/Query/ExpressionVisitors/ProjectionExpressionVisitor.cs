@@ -2,41 +2,57 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Linq;
+using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors
 {
+    public class Projection
+    {
+        public Expression Expression { get; set; }
+
+        public int Ordinal { get; set; }
+    }
+
     public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
     {
-        private List<Expression> _extensionExpressions;
+        private List<Projection> _projections;
 
-        protected override Expression VisitExtension(Expression extension)
+        protected override Expression VisitExtension(Expression node)
         {
-            _extensionExpressions.Add(extension);
-            return extension;
+            if (node.Is<ColumnExpression>() || node.Is<AggregateExpression>())
+            {
+                _projections.Add(new Projection()
+                {
+                    Expression = node,
+                    Ordinal = _projections.Count
+                });
+            }
+            else if (node.Is<FromTableExpression>())
+            {
+                foreach (var item in node.As<FromTableExpression>().GenerateColumns())
+                {
+                    _projections.Add(new Projection()
+                    {
+                        Expression = item,
+                        Ordinal = _projections.Count
+                    });
+                }
+            }
+
+            return node;
         }
 
-        public List<TRefrence> Scan<TRefrence>(Expression node)
-            where TRefrence : Expression
+        public List<Projection> Scan(Expression node)
         {
-            _extensionExpressions = new List<Expression>();
+            _projections = new List<Projection>();
             Visit(node);
-            return _extensionExpressions.OfType<TRefrence>().ToList();
+            return _projections.ToList();
         }
 
-        public List<TRefrence> Scan<TRefrence>(Func<Expression, Expression> preHandle, Expression node)
-            where TRefrence : Expression
+        public List<Projection> Scan(Func<Expression, Expression> preHandle, Expression node)
         {
-            return Scan<TRefrence>(preHandle(node));
-        }
-
-        public List<Expression> Scan(Expression node)
-        {
-            return Scan<Expression>(node);
-        }
-
-        public List<Expression> Scan(Func<Expression, Expression> preHandle, Expression node)
-        {
-            return Scan<Expression>(preHandle, node);
+            return Scan(preHandle(node));
         }
     }
 }

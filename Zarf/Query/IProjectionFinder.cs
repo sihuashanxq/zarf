@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
@@ -9,25 +10,8 @@ namespace Zarf.Query
     /// </summary>
     public interface IProjectionScanner
     {
-        /// <summary>
-        /// </summary>
-        /// <typeparam name="TRefrence">is ExpressionType.Extension</typeparam>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        List<TRefrence> Scan<TRefrence>(Expression node)
-            where TRefrence : Expression;
+        List<Projection> Scan(Func<Expression, Expression> preHandle, Expression node);
 
-        /// <summary>
-        /// </summary>
-        /// <typeparam name="TRefrence">is ExpressionType.Extension</typeparam>
-        /// <param name="preHandle"></param>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        List<TRefrence> Scan<TRefrence>(Func<Expression, Expression> preHandle, Expression node)
-            where TRefrence : Expression;
-
-        List<Expression> Scan(Expression node);
-
-        List<Expression> Scan(Func<Expression, Expression> preHandle, Expression node);
+        List<Projection> Scan(Expression node);
     }
 }

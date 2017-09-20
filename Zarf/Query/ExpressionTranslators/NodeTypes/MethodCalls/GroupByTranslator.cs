@@ -31,7 +31,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Groups.Add(
                 new GroupExpression(
-                    context.ProjectionScanner.Scan<ColumnExpression>(selector))
+                    context
+                    .ProjectionScanner
+                    .Scan(selector)
+                    .Select(item => item.Expression)
+                    .OfType<ColumnExpression>()
+                )
             );
 
             return query;

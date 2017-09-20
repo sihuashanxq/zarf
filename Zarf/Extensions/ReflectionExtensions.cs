@@ -66,6 +66,11 @@ namespace Zarf.Extensions
             return typeof(IEnumerable).IsAssignableFrom(type);
         }
 
+        public static bool IsPrimtiveType(this Type type)
+        {
+            return ReflectionUtil.SimpleTypes.Contains(type);
+        }
+
         public static T As<T>(this object o)
             where T : class
             => o as T;

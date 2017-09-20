@@ -44,7 +44,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
 
             rootQuery.Orders.Add(new OrderExpression(
-                context.ProjectionScanner.Scan<ColumnExpression>(transformVisitor.Visit(lambda)),
+                context
+                .ProjectionScanner
+                .Scan(transformVisitor.Visit(lambda))
+                .Select(item => item.Expression)
+                .OfType<ColumnExpression>(),
                 GetOrderType(methodCall)
                 )
             );

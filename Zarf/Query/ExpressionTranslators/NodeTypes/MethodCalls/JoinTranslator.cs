@@ -45,24 +45,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             var left = transformVisitor.Visit(outer).UnWrap().As<LambdaExpression>().Body;
             var right = transformVisitor.Visit(inner).UnWrap().As<LambdaExpression>().Body;
+
             //只保留Selector中的Columns
             var entityNew = transformVisitor.Visit(selector).UnWrap();
             var projections = context.ProjectionScanner.Scan(entityNew);
 
+            rootQuery.Projections.AddRange(projections.Select(item => item.Expression));
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
-
-            foreach (var item in projections)
-            {
-                if (!item.Is<FromTableExpression>())
-                {
-                    rootQuery.Projections.Add(item);
-                    continue;
-                }
-
-                rootQuery.Projections.AddRange(item.As<FromTableExpression>().GenerateColumns());
-            }
-
             rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
+
             return rootQuery;
         }
 

@@ -20,43 +20,5 @@ namespace Zarf.Mapping.Bindings
             EntityObject = entityObject;
             Member = member;
         }
-
-        internal static int GetExpressionOridinal(Expression node, QueryExpression queryExpression)
-        {
-            if (queryExpression == null || node == null)
-            {
-                return -1;
-            }
-
-            if (queryExpression.Projections.Count == 0 && queryExpression.SubQuery != null)
-            {
-                return GetExpressionOridinal(node, queryExpression.SubQuery);
-            }
-
-            var oridinal = -1;
-
-            foreach (var item in queryExpression.Projections)
-            {
-                if (item == node)
-                {
-                    return oridinal;
-                }
-
-                if (node.Is<ColumnExpression>() && item.Is<ColumnExpression>())
-                {
-                    var column = item.As<ColumnExpression>();
-                    var other = node.As<ColumnExpression>();
-
-                    if (column?.Member == other?.Member)
-                    {
-                        return oridinal;
-                    }
-                }
-
-                oridinal++;
-            }
-
-            return -1;
-        }
     }
 }
