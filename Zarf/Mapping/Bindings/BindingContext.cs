@@ -14,6 +14,12 @@ namespace Zarf.Mapping.Bindings
 
         public MemberInfo Member { get; }
 
+        public Expression BindExpression => throw new NotImplementedException();
+
+        public IEntityProjectionMappingProvider MappingProvider => throw new NotImplementedException();
+
+        public EntityCreationHandleProvider CreationHandleProvider { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public BindingContext(Type entityType, Expression entityObject, MemberInfo member = null)
         {
             Type = entityType;
