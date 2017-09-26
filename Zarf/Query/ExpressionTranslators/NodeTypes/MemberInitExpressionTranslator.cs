@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
                 var bindExpression = transformVisitor.Visit(binding.Expression);
-                var memberInfoType = binding.Member.GetMemberInfoType();
+                var memberInfoType = binding.Member.GetMemberTypeInfo();
 
                 if (typeof(IEnumerable).IsAssignableFrom(memberInfoType))
                 {

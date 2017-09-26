@@ -7,7 +7,7 @@ namespace Zarf.Extensions
 {
     public static class ReflectionExtensions
     {
-        public static Type GetMemberInfoType(this MemberInfo memberInfo)
+        public static Type GetMemberTypeInfo(this MemberInfo memberInfo)
         {
             if (memberInfo.Is<FieldInfo>())
             {
@@ -19,7 +19,7 @@ namespace Zarf.Extensions
                 return memberInfo.Cast<PropertyInfo>().PropertyType;
             }
 
-            return null;
+            throw new NotImplementedException($"{memberInfo.Name} is not a field or property");
         }
 
         public static bool IsStatic(this MemberInfo memberInfo)
@@ -40,25 +40,25 @@ namespace Zarf.Extensions
             }
         }
 
-        public static Type GetCollectionElementType(this Type type)
+        public static Type GetCollectionElementType(this Type typeInfo)
         {
-            if (IsCollection(type))
+            if (IsCollection(typeInfo))
             {
-                var genericArguments = type.GetGenericArguments();
+                var genericArguments = typeInfo.GetGenericArguments();
                 if (genericArguments != null)
                 {
                     return genericArguments.FirstOrDefault();
                 }
 
-                return type.GetElementType();
+                return typeInfo.GetElementType();
             }
 
-            return type;
+            return typeInfo;
         }
 
         public static bool IsCollection(this Type type)
         {
-            if (type == typeof(string))
+            if (type.IsPrimtiveType())
             {
                 return false;
             }
@@ -73,12 +73,18 @@ namespace Zarf.Extensions
 
         public static T As<T>(this object o)
             where T : class
-            => o as T;
+        {
+            return o as T;
+        }
 
         public static T Cast<T>(this object o)
-            => (T)o;
+        {
+            return (T)o;
+        }
 
         public static bool Is<T>(this object o)
-            => o is T;
+        {
+            return o is T;
+        }
     }
 }

@@ -11,6 +11,8 @@ namespace Zarf.Mapping
 
         int GetOrdinal(MemberInfo member);
 
+        int GetOrdinal(Expression bindExpression);
+
         void Map(MemberInfo member, int ordinal);
     }
 }

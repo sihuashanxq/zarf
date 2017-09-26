@@ -92,13 +92,13 @@ namespace Zarf.Mapping
 
             var binding = exp.Bindings.Last().As<MemberAssignment>();
 
-            if (binding.Member.GetMemberInfoType().IsCollection())
+            if (binding.Member.GetMemberTypeInfo().IsCollection())
             {
                 //begin
                 var navigation = _context.PropertyNavigationContext.GetNavigation(binding.Member);
 
                 var condtion = navigation.Relation.UnWrap().As<LambdaExpression>();
-                var elementType = binding.Member.GetMemberInfoType().GetCollectionElementType();
+                var elementType = binding.Member.GetMemberTypeInfo().GetCollectionElementType();
                 condtion = new Query.ExpressionVisitors.InnerNodeUpdateExpressionVisitor(condtion.Parameters.First(), This)
                        .Update(condtion).As<LambdaExpression>();
 

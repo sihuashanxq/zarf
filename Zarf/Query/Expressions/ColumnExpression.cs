@@ -36,7 +36,7 @@ namespace Zarf.Query.Expressions
                     columnName = attribute.Name;
                 }
 
-                Type = member.GetMemberInfoType();
+                Type = member.GetMemberTypeInfo();
                 Column = new Column(columnName);
                 Alias = alias;
             }

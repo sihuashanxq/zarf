@@ -1,15 +1,18 @@
-﻿using Zarf.Extensions;
+﻿using System;
+using System.Data;
 using System.Linq.Expressions;
-using System;
+
+using Zarf.Extensions;
 
 namespace Zarf.Mapping.Bindings.Binders
 {
     public class EntityMemberBinder : IEntityBinder
     {
+        public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader));
+
         public Expression Bind(IBindingContext bindingContext)
         {
-            var typeInfo = bindingContext.Member.GetMemberInfoType();
-
+            var typeInfo = bindingContext.Member.GetMemberTypeInfo();
             if (!typeInfo.IsPrimtiveType())
             {
                 return BindComplexType(bindingContext, typeInfo);
@@ -20,16 +23,11 @@ namespace Zarf.Mapping.Bindings.Binders
 
         private Expression BindComplexType(IBindingContext bindingContext, Type typeInfo)
         {
-            var memberAccess = Expression.MakeMemberAccess(bindingContext.EntityObject, bindingContext.Member);
-            var typeBindingContext = new BindingContext(typeInfo, bindingContext.EntityObject);
+            var memberAccess = Expression.MakeMemberAccess(bindingContext.Entity, bindingContext.Member);
+            var typeBindingContext = new BindingContext(typeInfo, bindingContext.Entity,null,bindingContext.BindExpression);
 
-            var typeBinder = EntityBinderProvider.Default.GetBinder(typeBindingContext);
-            if (typeBinder == null)
-            {
-                return null;
-            }
-
-            var binding = typeBinder.Bind(typeBindingContext);
+            var binder = EntityBinderProviders.GetBinder(typeBindingContext);
+            var binding = binder?.Bind(typeBindingContext);
             if (binding == null)
             {
                 return null;
@@ -38,7 +36,7 @@ namespace Zarf.Mapping.Bindings.Binders
             var creationHandle = bindingContext.CreationHandleProvider.GetPredicate(bindingContext.Member);
             if (creationHandle != null)
             {
-                binding = creationHandle(bindingContext.EntityObject, binding);
+                binding = creationHandle(bindingContext.Entity, binding);
             }
 
             return Expression.Assign(memberAccess, binding);
@@ -46,7 +44,7 @@ namespace Zarf.Mapping.Bindings.Binders
 
         private Expression BindSimpleType(IBindingContext bindingContext)
         {
-            var memberAccess = Expression.MakeMemberAccess(bindingContext.EntityObject, bindingContext.Member);
+            var memberAccess = Expression.MakeMemberAccess(bindingContext.Entity, bindingContext.Member);
             var valueGetter = MemberValueGetterProvider.DefaultProvider.GetValueGetter(memberAccess.Type);
 
             if (valueGetter == null)
@@ -54,13 +52,23 @@ namespace Zarf.Mapping.Bindings.Binders
                 throw new NotImplementedException("not supported!");
             }
 
-            var ordinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.Member);
-            if (ordinal == -1)
+            var mapOrdinal = -1;
+            if (bindingContext.BindExpression != null)
+            {
+                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.BindExpression);
+            }
+
+            if (mapOrdinal == -1)
+            {
+                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.Member);
+            }
+
+            if (mapOrdinal == -1)
             {
                 return null;
             }
 
-            return Expression.Assign(memberAccess, Expression.Call(null, valueGetter, null, Expression.Constant(ordinal)));
+            return Expression.Assign(memberAccess, Expression.Call(null, valueGetter, DataReader, Expression.Constant(mapOrdinal)));
         }
     }
 }

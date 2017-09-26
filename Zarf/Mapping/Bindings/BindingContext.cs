@@ -10,21 +10,31 @@ namespace Zarf.Mapping.Bindings
     {
         public Type Type { get; }
 
-        public Expression EntityObject { get; }
+        public Expression Entity { get; }
 
         public MemberInfo Member { get; }
 
-        public Expression BindExpression => throw new NotImplementedException();
+        public Expression BindExpression { get; }
 
-        public IEntityProjectionMappingProvider MappingProvider => throw new NotImplementedException();
+        public IEntityProjectionMappingProvider MappingProvider { get; private set; }
 
-        public EntityCreationHandleProvider CreationHandleProvider { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public EntityCreationHandleProvider CreationHandleProvider { get; set; }
 
-        public BindingContext(Type entityType, Expression entityObject, MemberInfo member = null)
+        public BindingContext(Type type, Expression entity, MemberInfo member = null, Expression bindExpression = null)
         {
-            Type = entityType;
-            EntityObject = entityObject;
+            Type = type;
+            Entity = entity;
             Member = member;
+            BindExpression = bindExpression;
+        }
+
+        public IBindingContext CreateContext(Type type, Expression entity, MemberInfo member = null, Expression bindExpression = null)
+        {
+            return new BindingContext(type, entity, member, bindExpression)
+            {
+                MappingProvider = MappingProvider,
+                CreationHandleProvider = CreationHandleProvider
+            };
         }
     }
 }

@@ -8,9 +8,13 @@ namespace Zarf.Mapping.Bindings
 {
     public class EntityTypeBinder : ExpressionVisitor, IEntityBinder
     {
+        protected BindingContext BindingContext { get; set; }
+
         public Expression Bind(IBindingContext bindingContext)
         {
-            if (bindingContext.BindExpression != null)
+            BindingContext = bindingContext as BindingContext;
+
+            if (BindingContext.BindExpression != null)
             {
                 return Visit(bindingContext.BindExpression) as BlockExpression;
             }
@@ -48,46 +52,41 @@ namespace Zarf.Mapping.Bindings
                 constructor = node.Type.GetConstructor(Type.EmptyTypes);
             }
 
-            var block = CreateEntityNewExpressionBlock(constructor, node.Type);
+            var eNewBlock = CreateEntityNewExpressionBlock(constructor, node.Type);
             if (node.Arguments.Count == 0)
             {
-                return block;
+                return eNewBlock;
             }
 
-            return BindMembers(block, node.Members.ToList(), node.Arguments.ToList());
+            return BindMembers(eNewBlock, node.Members.ToList(), node.Arguments.ToList());
         }
 
-        protected BlockExpression BindMembers(BlockExpression entityCreationBlock, List<MemberInfo> bindMembers, List<Expression> bindExpressions)
+        protected BlockExpression BindMembers(BlockExpression eNewBlock, List<MemberInfo> bindMembers, List<Expression> bindExpressions)
         {
             var bindings = new List<Expression>();
-            var entity = entityCreationBlock.Variables.FirstOrDefault();
+            var entity = eNewBlock.Variables.FirstOrDefault();
 
             for (var i = 0; i < bindMembers.Count; i++)
             {
-                var context = new BindingContext(entity.Type, entity, bindMembers[i], bindExpressions?[i]);
-                var binder = EntityBinderProvider.Default.GetBinder(context);
-                var binding = binder?.Bind(context);
+                var bindingContext = BindingContext.CreateContext(entity.Type, entity, bindMembers[i], bindExpressions?[i]);
+                var binder = EntityBinderProviders.GetBinder(bindingContext);
+                var binding = binder?.Bind(bindingContext);
                 if (binding == null)
                 {
                     continue;
                 }
-
                 bindings.Add(binding);
             }
 
-            var expressions = entityCreationBlock.Expressions.ToList();
-            var insertIndex = expressions.FindLastIndex(item => item is GotoExpression);
-            if (insertIndex > 0)
+            var blockExpressions = eNewBlock.Expressions.ToList();
+            var retIndex = blockExpressions.FindLastIndex(item => item is GotoExpression);
+            if (retIndex == -1)
             {
-                expressions.InsertRange(insertIndex, bindings);
+                throw new Exception();
             }
 
-            return entityCreationBlock.Update(entityCreationBlock.Variables, expressions);
-        }
-
-        protected Expression BindMember(Expression entity, MemberInfo bindMember, Expression bindExpression = null)
-        {
-           
+            blockExpressions.InsertRange(retIndex, bindings);
+            return eNewBlock.Update(eNewBlock.Variables, blockExpressions);
         }
 
         /// <summary>
@@ -99,7 +98,7 @@ namespace Zarf.Mapping.Bindings
         /// <param name="constructor"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static BlockExpression CreateEntityNewExpressionBlock(ConstructorInfo constructor, Type type)
+        public static BlockExpression CreateEntityNewExpressionBlock(ConstructorInfo constructor, Type type)
         {
             if (constructor == null)
             {

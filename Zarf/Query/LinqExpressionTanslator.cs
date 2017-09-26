@@ -197,7 +197,7 @@ namespace Zarf.Query
             var innerQuery = queryContext.PropertyNavigationContext.GetNavigation(memberInfo).RefrenceQuery;
             BuildResult(innerQuery, queryContext);
 
-            var propertyElementType = memberInfo.GetMemberInfoType().GetCollectionElementType();
+            var propertyElementType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
             var propertyEnumerableType = typeof(EntityEnumerable<>).MakeGenericType(propertyElementType);
 
             var newPropertyEnumearbles = Expression.Convert(

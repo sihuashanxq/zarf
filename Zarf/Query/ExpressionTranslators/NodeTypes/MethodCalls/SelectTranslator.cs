@@ -23,31 +23,22 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
         {
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            if (query.Sets.Count != 0)
+            if (rootQuery.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(selector.Parameters.First(), query);
+            context.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), rootQuery);
+
             var entityNew = transformVisitor.Visit(selector).UnWrap();
             var projections = context.ProjectionScanner.Scan(entityNew);
 
-            foreach (var item in projections)
-            {
-                if (!item.Is<FromTableExpression>())
-                {
-                    query.Projections.Add(item);
-                    continue;
-                }
-
-                query.Projections.AddRange(item.As<FromTableExpression>().GenerateColumns());
-            }
-
-            query.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
-            return query;
+            rootQuery.Projections.AddRange(projections.Select(item => item.Expression));
+            rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
+            return rootQuery;
         }
     }
 }

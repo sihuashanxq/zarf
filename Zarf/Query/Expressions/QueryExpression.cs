@@ -98,6 +98,12 @@ namespace Zarf.Query.Expressions
             Joins.Add(table);
         }
 
+        public void AddProjections(IEnumerable<Expression> projections)
+        {
+            Projections.Clear();
+            Projections.AddRange(projections);
+        }
+
         public void AddWhere(Expression predicate)
         {
             if (predicate == null)

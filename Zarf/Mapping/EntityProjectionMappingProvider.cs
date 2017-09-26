@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {
@@ -9,6 +10,8 @@ namespace Zarf.Mapping
         private Dictionary<Expression, IEntityProjectionMapping> _maps = new Dictionary<Expression, IEntityProjectionMapping>();
 
         private Dictionary<MemberInfo, int> __maps = new Dictionary<MemberInfo, int>();
+
+        private Dictionary<Expression, int> __maps2 = new Dictionary<Expression, int>();
 
         public void Map(Expression refrenceProjection, Expression source, int ordinal)
         {
@@ -35,9 +38,25 @@ namespace Zarf.Mapping
             return -1;
         }
 
+        public void Map(Projection projection, int ordinal)
+        {
+            __maps[projection.Member] = ordinal;
+            __maps2[projection.Expression] = ordinal;
+        }
+
+        public int GetOrdinal(Expression node)
+        {
+            if (__maps2.ContainsKey(node))
+            {
+                return __maps2[node];
+            }
+
+            return -1;
+        }
+
         public void Map(MemberInfo member, int ordinal)
         {
-            __maps[member] = ordinal;
+            throw new System.NotImplementedException();
         }
     }
 }

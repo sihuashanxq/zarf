@@ -1,11 +1,10 @@
 ﻿using Zarf.Mapping.Bindings.BinderProviders;
+using Zarf.Mapping.Bindings.Binders;
 
 namespace Zarf.Mapping.Bindings
 {
     public class EntityMemberBinderProvider : IEntityBinderProvider
     {
-        private IEntityBinder _binder = new EntityMemberBinder();
-
         public IEntityBinder GetBinder(IBindingContext bindingContext)
         {
             if (bindingContext.Member == null)
@@ -13,7 +12,7 @@ namespace Zarf.Mapping.Bindings
                 return null;
             }
 
-            return _binder;
+            return new EntityMemberBinder();
         }
     }
 }

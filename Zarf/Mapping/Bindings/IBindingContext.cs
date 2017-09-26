@@ -8,7 +8,7 @@ namespace Zarf.Mapping.Bindings
     {
         Type Type { get; }
 
-        Expression EntityObject { get; }
+        Expression Entity { get; }
 
         Expression BindExpression { get; }
 
@@ -21,7 +21,7 @@ namespace Zarf.Mapping.Bindings
 
     public class EntityCreationHandleProvider
     {
-        internal object GetPredicate(MemberInfo member)
+        internal Func<Expression, Expression, Expression> GetPredicate(MemberInfo member)
         {
             throw new NotImplementedException();
         }
