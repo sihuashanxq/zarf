@@ -22,5 +22,30 @@ namespace Zarf.Query.Expressions
             Method = method;
             KeySelector = keySelector;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Method.GetHashCode();
+                hashCode = (hashCode * 397) ^ (KeySelector?.GetHashCode() ?? 0);
+                return hashCode;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is AggregateExpression) && GetHashCode() == obj.GetHashCode();
+        }
     }
 }

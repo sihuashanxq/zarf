@@ -16,5 +16,28 @@ namespace Zarf.Query.Expressions
             Type = typeof(bool);
             Expression = expression;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return Expression.GetHashCode();
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is AllExpression) && GetHashCode() == obj.GetHashCode();
+        }
     }
 }

@@ -43,7 +43,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
 
-            rootQuery.ProjectionCollection.Add(new Projection() { Expression = aggregate });
+            rootQuery.ProjectionCollection.Add(new Projection() { Expression = aggregate, Query = rootQuery });
             rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
 
             return rootQuery;

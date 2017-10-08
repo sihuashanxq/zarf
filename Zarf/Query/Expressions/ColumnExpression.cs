@@ -49,5 +49,32 @@ namespace Zarf.Query.Expressions
             Column = column;
             Type = refType;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = FromTable.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (Column?.Name.GetHashCode() ?? 0);
+                return hashCode;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is ColumnExpression) && GetHashCode() == obj.GetHashCode();
+        }
     }
 }

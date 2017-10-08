@@ -37,5 +37,28 @@ namespace Zarf.Query.Expressions
 
             Predicate = AndAlso(Predicate, condition);
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return Predicate.GetHashCode();
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is WhereExperssion) && GetHashCode() == obj.GetHashCode();
+        }
     }
 }

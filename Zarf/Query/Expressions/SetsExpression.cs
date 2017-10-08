@@ -20,5 +20,7 @@ namespace Zarf.Query.Expressions
         {
             Query = query;
         }
+
+
     }
 }
