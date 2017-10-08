@@ -13,6 +13,8 @@ namespace Zarf.Mapping
 
         private Dictionary<Expression, int> __maps2 = new Dictionary<Expression, int>();
 
+        private Dictionary<Expression, HashSet<Projection>> _maps4 = new Dictionary<Expression, HashSet<Projection>>();
+
         public void Map(Expression refrenceProjection, Expression source, int ordinal)
         {
             _maps[refrenceProjection] = new EntityProjectionMapping(source, refrenceProjection, null, ordinal);
@@ -38,25 +40,50 @@ namespace Zarf.Mapping
             return -1;
         }
 
-        public void Map(Projection projection, int ordinal)
+        public void Map(Projection projection)
         {
-            __maps[projection.Member] = ordinal;
-            __maps2[projection.Expression] = ordinal;
+            if (!_maps4.ContainsKey(projection.Query))
+            {
+                _maps4[projection.Query] = new HashSet<Projection>();
+            }
+
+            _maps4[projection.Query].Add(projection);
         }
 
-        public int GetOrdinal(Expression node)
+        public int GetOrdinal(Expression query, MemberInfo member)
         {
-            if (__maps2.ContainsKey(node))
+            if (!_maps4.ContainsKey(query))
             {
-                return __maps2[node];
+                return -1;
+            }
+
+            foreach (var item in _maps4[query])
+            {
+                if (item.Member == member)
+                {
+                    return item.Ordinal;
+                }
             }
 
             return -1;
         }
 
-        public void Map(MemberInfo member, int ordinal)
+        public int GetOrdinal(Expression query, Expression bindExpression)
         {
-            throw new System.NotImplementedException();
+            if (!_maps4.ContainsKey(query))
+            {
+                return -1;
+            }
+
+            foreach (var item in _maps4[query])
+            {
+                if (item.Expression == bindExpression)
+                {
+                    return item.Ordinal;
+                }
+            }
+
+            return -1;
         }
     }
 }

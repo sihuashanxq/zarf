@@ -1,18 +1,19 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {
     public interface IEntityProjectionMappingProvider
     {
-        void Map(Expression refrenceProjection, Expression source, int ordinal);
-
         IEntityProjectionMapping GetMapping(Expression refrenceProjection);
 
-        int GetOrdinal(MemberInfo member);
+        void Map(Expression bindExpression, Expression source, int ordinal);
 
-        int GetOrdinal(Expression bindExpression);
+        int GetOrdinal(Expression query, MemberInfo member);
 
-        void Map(MemberInfo member, int ordinal);
+        int GetOrdinal(Expression query, Expression bindExpression);
+
+        void Map(Projection projection);
     }
 }

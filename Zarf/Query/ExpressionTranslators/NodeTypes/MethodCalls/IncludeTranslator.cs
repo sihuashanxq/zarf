@@ -41,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var condtion = tranformVisitor.Visit(lambda);
 
             innerQuery.AddJoin(new JoinExpression(rootQuery, condtion));
-            innerQuery.Projections.AddRange(innerQuery.GenerateColumns());
+            innerQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(innerQuery));
 
             context.PropertyNavigationContext.AddPropertyNavigation(
                 propertyPath.Member,

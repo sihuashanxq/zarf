@@ -20,7 +20,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 var bindExpression = transformVisitor.Visit(binding.Expression);
                 var memberInfoType = binding.Member.GetMemberTypeInfo();
 
-                if (typeof(IEnumerable).IsAssignableFrom(memberInfoType))
+                if (typeof(IEnumerable).IsAssignableFrom(memberInfoType) && memberInfoType != typeof(string))
                 {
                     throw new NotImplementedException("not supported!");
                 }

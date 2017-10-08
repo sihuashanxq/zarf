@@ -61,11 +61,13 @@ namespace Zarf
         {
             var db = new DataContext();
 
-            var y = db.DataQuery<User>()
-                .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-                .ToList();
+            //var y = db.DataQuery<User>()
+            //    .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
+            //    .ToList();
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
+
+            var x = db.DataQuery<User>().Select(item => new User { Id = item.Id, Name = item.Name }).ToList();
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
 

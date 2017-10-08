@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
-
 using Zarf.Extensions;
 
 namespace Zarf.Mapping.Bindings.Binders
@@ -24,10 +23,10 @@ namespace Zarf.Mapping.Bindings.Binders
         private Expression BindComplexType(IBindingContext bindingContext, Type typeInfo)
         {
             var memberAccess = Expression.MakeMemberAccess(bindingContext.Entity, bindingContext.Member);
-            var typeBindingContext = new BindingContext(typeInfo, bindingContext.Entity,null,bindingContext.BindExpression);
-
+            var typeBindingContext = bindingContext.CreateMemberBindingContext(typeInfo, bindingContext.Entity);
             var binder = EntityBinderProviders.GetBinder(typeBindingContext);
             var binding = binder?.Bind(typeBindingContext);
+
             if (binding == null)
             {
                 return null;
@@ -55,12 +54,11 @@ namespace Zarf.Mapping.Bindings.Binders
             var mapOrdinal = -1;
             if (bindingContext.BindExpression != null)
             {
-                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.BindExpression);
+                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.Query, bindingContext.BindExpression);
             }
-
-            if (mapOrdinal == -1)
+            else
             {
-                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.Member);
+                mapOrdinal = bindingContext.MappingProvider.GetOrdinal(bindingContext.Query, bindingContext.Member);
             }
 
             if (mapOrdinal == -1)

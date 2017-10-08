@@ -20,12 +20,21 @@ namespace Zarf.Query
             if (translatedExpression.Is<QueryExpression>())
             {
                 var rootQuery = translatedExpression.As<QueryExpression>();
-                if (rootQuery.Projections.Count == 0)
+                if (rootQuery.ProjectionCollection.Count == 0)
                 {
-                    rootQuery.Projections.AddRange(rootQuery.GenerateColumns());
+                    rootQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(rootQuery));
                 }
 
+                var enitty = new Mapping.Bindings.EntityTypeBinder();
+            
                 BuildResult(rootQuery, context);
+                var y = enitty.Bind(new Mapping.Bindings.BindingContext(rootQuery.Type, null, rootQuery, null, translatedExpression)
+                {
+                    MappingProvider = context.ProjectionMappingProvider,
+                    CreationHandleProvider = new Mapping.Bindings.EntityCreationHandleProvider()
+
+                });
+
                 OptimizingColumns(rootQuery);
                 return rootQuery;
             }
@@ -75,39 +84,39 @@ namespace Zarf.Query
                 return;
             }
 
-            var subQueryProjections = new List<Expression>();
+            //var subQueryProjections = new List<Projection>();
 
-            foreach (var p in query.Projections)
-            {
-                var column = p.As<ColumnExpression>();
-                if (column == null)
-                {
-                    var aggreate = p.As<AggregateExpression>();
-                    if (aggreate != null && aggreate.KeySelector.Is<ColumnExpression>())
-                    {
-                        column = aggreate.KeySelector.As<ColumnExpression>();
-                    }
-                }
+            //foreach (var p in query.ProjectionCollection)
+            //{
+            //    var column = p.As<ColumnExpression>();
+            //    if (column == null)
+            //    {
+            //        var aggreate = p.As<AggregateExpression>();
+            //        if (aggreate != null && aggreate.KeySelector.Is<ColumnExpression>())
+            //        {
+            //            column = aggreate.KeySelector.As<ColumnExpression>();
+            //        }
+            //    }
 
-                foreach (var sColumn in query.SubQuery.Projections.OfType<ColumnExpression>())
-                {
-                    if (sColumn.Alias == column.Column.Name)
-                    {
-                        subQueryProjections.Add(sColumn);
-                        break;
-                    }
-                }
-            }
+            //    foreach (var sColumn in query.SubQuery.ProjectionCollection)
+            //    {
+            //        if (sColumn.Alias == column.Column.Name)
+            //        {
+            //            subQueryProjections.Add(sColumn);
+            //            break;
+            //        }
+            //    }
+            //}
 
-            foreach (var projection in query.SubQuery.Projections.Where(item => !item.Is<ColumnExpression>()))
-            {
-                subQueryProjections.Add(projection);
-            }
+            //foreach (var projection in query.SubQuery.ProjectionCollection.Where(item => !item.Is<ColumnExpression>()))
+            //{
+            //    subQueryProjections.Add(projection);
+            //}
 
-            query.SubQuery.Projections.Clear();
-            query.SubQuery.Projections.AddRange(subQueryProjections);
+            //query.SubQuery.ProjectionExpressions.Clear();
+            //query.SubQuery.ProjectionExpressions.AddRange(subQueryProjections);
 
-            OptimizingColumns(query.SubQuery);
+            //OptimizingColumns(query.SubQuery);
         }
 
         /// <summary>
@@ -136,13 +145,14 @@ namespace Zarf.Query
                     column = context.EntityMemberMappingProvider.GetExpression(memberInfo).As<ColumnExpression>();
                 }
 
-                var ordinal = QueryUtils.FindProjectionOrdinal(rootQuery, column);
-                if (ordinal == -1)
+                var projection = QueryUtils.FindProjection(rootQuery, column);
+                if (projection == null)
                 {
                     continue;
                 }
 
-                context.ProjectionMappingProvider.Map(column, rootQuery, ordinal);
+                context.ProjectionMappingProvider.Map(column, rootQuery, projection.Ordinal);
+                context.ProjectionMappingProvider.Map(projection);
                 entityBindings.Add(Expression.Bind(memberInfo, column));
             }
 
@@ -161,18 +171,18 @@ namespace Zarf.Query
                         continue;
                     }
 
-                    var column = item.As<ColumnExpression>();
-                    var index = -1;
-                    if (column.FromTable == rootQuery)
-                    {
-                        index = QueryUtils.FindProjectionOrdinal(rootQuery, item);
-                        context.ProjectionMappingProvider.Map(item, rootQuery, index);
-                    }
+                    //var column = item.As<ColumnExpression>();
+                    //var index = -1;
+                    //if (column.FromTable == rootQuery)
+                    //{
+                    //    index = QueryUtils.FindProjection(rootQuery, item);
+                    //    context.ProjectionMappingProvider.Map(item, rootQuery, index);
+                    //}
 
-                    if (index == -1)
-                    {
-                        throw new Exception("");
-                    }
+                    //if (index == -1)
+                    //{
+                    //    throw new Exception("");
+                    //}
                 }
 
                 var binding = CreateIncludePropertyBinding(member, context as QueryContext);

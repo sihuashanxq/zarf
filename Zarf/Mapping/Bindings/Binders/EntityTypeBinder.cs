@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {
     public class EntityTypeBinder : ExpressionVisitor, IEntityBinder
     {
-        protected BindingContext BindingContext { get; set; }
+        protected IBindingContext BindingContext { get; set; }
 
         public Expression Bind(IBindingContext bindingContext)
         {
-            BindingContext = bindingContext as BindingContext;
+            BindingContext = bindingContext;
 
-            if (BindingContext.BindExpression != null)
+            if (BindingContext.BindExpression != null && !BindingContext.BindExpression.Is<QueryExpression>())
             {
                 return Visit(bindingContext.BindExpression) as BlockExpression;
             }
@@ -68,7 +70,7 @@ namespace Zarf.Mapping.Bindings
 
             for (var i = 0; i < bindMembers.Count; i++)
             {
-                var bindingContext = BindingContext.CreateContext(entity.Type, entity, bindMembers[i], bindExpressions?[i]);
+                var bindingContext = BindingContext.CreateMemberBindingContext(entity.Type, entity, bindMembers[i], bindExpressions?[i]);
                 var binder = EntityBinderProviders.GetBinder(bindingContext);
                 var binding = binder?.Bind(bindingContext);
                 if (binding == null)

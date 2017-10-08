@@ -1,38 +1,29 @@
 ﻿using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
     public class QueryUtils
     {
-        public static int FindProjectionOrdinal(QueryExpression rootQuery, Expression refProjection)
+        public static Projection FindProjection(QueryExpression rootQuery, Expression projection)
         {
-            if (rootQuery.SubQuery != null && rootQuery.Projections.Count == 0)
+            if (rootQuery.SubQuery != null && rootQuery.ProjectionCollection.Count == 0)
             {
-                return FindProjectionOrdinal(rootQuery.SubQuery, refProjection);
+                return FindProjection(rootQuery.SubQuery, projection);
             }
 
-            for (var index = 0; index < rootQuery.Projections.Count; index++)
+            for (var index = 0; index < rootQuery.ProjectionCollection.Count; index++)
             {
-                if (rootQuery.Projections[index] == refProjection)
+                if (rootQuery.ProjectionCollection[index].Expression == projection ||
+                    rootQuery.ProjectionCollection[index].Member == projection.As<ColumnExpression>()?.Member)
                 {
-                    return index;
-                }
-
-                var projiection = rootQuery.Projections[index].As<ColumnExpression>();
-                if (projiection == null)
-                {
-                    continue;
-                }
-
-                if (projiection.Member == refProjection.As<ColumnExpression>()?.Member)
-                {
-                    return index;
+                    return rootQuery.ProjectionCollection[index];
                 }
             }
 
-            return -1;
+            return null;
         }
     }
 }

@@ -34,9 +34,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             context.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), rootQuery);
 
             var entityNew = transformVisitor.Visit(selector).UnWrap();
-            var projections = context.ProjectionScanner.Scan(entityNew);
 
-            rootQuery.Projections.AddRange(projections.Select(item => item.Expression));
+            rootQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(entityNew));
             rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
             return rootQuery;
         }

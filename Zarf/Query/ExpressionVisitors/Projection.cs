@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors
 {
@@ -10,8 +8,10 @@ namespace Zarf.Query.ExpressionVisitors
     {
         public Expression Expression { get; set; }
 
-        public int Ordinal { get; set; }
+        public int Ordinal { get; set; } = -1;
 
         public MemberInfo Member { get; set; }
+
+        public FromTableExpression Query { get; set; }
     }
 }

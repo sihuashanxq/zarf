@@ -35,17 +35,18 @@ namespace Zarf.Query.ExpressionVisitors
             {
                 if (node.Is<QueryExpression>())
                 {
-                    return _makeObjectNew(_rootQuery, node.Cast<QueryExpression>(),  _queryContext);
+                    return _makeObjectNew(_rootQuery, node.Cast<QueryExpression>(), _queryContext);
                 }
                 else
                 {
-                    var ordinal = QueryUtils.FindProjectionOrdinal(_rootQuery, node);
-                    if (ordinal == -1)
+                    var projection = QueryUtils.FindProjection(_rootQuery, node);
+                    if (projection == null)
                     {
                         throw new Exception("ExpressionMemberMapVisitor");
                     }
 
-                    _queryContext.ProjectionMappingProvider.Map(node, _rootQuery, ordinal);
+                    _queryContext.ProjectionMappingProvider.Map(projection);
+                    _queryContext.ProjectionMappingProvider.Map(node, _rootQuery, projection.Ordinal);
                     return node;
                 }
             }

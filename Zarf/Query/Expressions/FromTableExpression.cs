@@ -19,6 +19,8 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
+        public QueryExpression Parent { get; protected set; }
+
         public FromTableExpression(Type entityType, string alias = "")
         {
             Type = entityType;

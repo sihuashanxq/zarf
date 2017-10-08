@@ -78,10 +78,15 @@ namespace Zarf.Query.ExpressionVisitors
                 return;
             }
 
-            if (node.Is<ColumnExpression>() ||
-                node.Is<AggregateExpression>())
+            if (node.Is<ColumnExpression>())
             {
-                _list.Add(new Projection() { Member = member, Expression = node, Ordinal = _list.Count });
+                _list.Add(new Projection()
+                {
+                    Member = member,
+                    Expression = node,
+                    Ordinal = _list.Count,
+                    Query = node.As<ColumnExpression>().FromTable
+                });
             }
         }
     }

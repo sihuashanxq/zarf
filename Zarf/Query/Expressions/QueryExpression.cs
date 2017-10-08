@@ -4,15 +4,27 @@ using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
+using Zarf.Query.ExpressionVisitors;
+using System.Linq;
 
 namespace Zarf.Query.Expressions
 {
     public class QueryExpression : FromTableExpression
     {
+        public List<Expression> ProjectionExpressionCollection
+        {
+            get
+            {
+                return ProjectionCollection.Select(item => item.Expression).ToList();
+            }
+        }
+
+
+
         /// <summary>
         /// 查询投影
         /// </summary>
-        public List<Expression> Projections { get; }
+        public List<Projection> ProjectionCollection { get; }
 
         /// <summary>
         /// 表连接
@@ -65,8 +77,6 @@ namespace Zarf.Query.Expressions
         /// </summary>
         public QueryExpression SubQuery { get; protected set; }
 
-        public QueryExpression Parent { get; protected set; }
-
         public EntityResult Result { get; set; }
 
         public QueryExpression(Type entityType, string alias = "")
@@ -76,7 +86,7 @@ namespace Zarf.Query.Expressions
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Projections = new List<Expression>();
+            ProjectionCollection = new List<Projection>();
         }
 
         public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
@@ -98,10 +108,10 @@ namespace Zarf.Query.Expressions
             Joins.Add(table);
         }
 
-        public void AddProjections(IEnumerable<Expression> projections)
+        public void AddProjections(IEnumerable<Projection> projections)
         {
-            Projections.Clear();
-            Projections.AddRange(projections);
+            ProjectionCollection.Clear();
+            ProjectionCollection.AddRange(projections);
         }
 
         public void AddWhere(Expression predicate)
@@ -134,7 +144,7 @@ namespace Zarf.Query.Expressions
                 Where == null &&
                 Offset == null &&
                 SubQuery == null &&
-                Projections.Count == 0 &&
+                ProjectionCollection.Count == 0 &&
                 Orders.Count == 0 &&
                 Groups.Count == 0 &&
                 Sets.Count == 0 &&

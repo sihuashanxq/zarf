@@ -10,7 +10,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
     public class AllTranslator : Translator<MethodCallExpression>
     {
-        public static IEnumerable<MethodInfo> SupprotedMethods { get; } 
+        public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
         static AllTranslator()
         {
@@ -22,13 +22,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var rootQuery = tranformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            if (rootQuery.Where != null && (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0))
+            if (rootQuery.Where != null && (rootQuery.ProjectionCollection.Count != 0 || rootQuery.Sets.Count != 0))
             {
                 rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
-            rootQuery.Projections.Clear();
-            rootQuery.Projections.Add(Expression.Constant(1));
+            rootQuery.ProjectionCollection.Clear();
+            rootQuery.ProjectionCollection.Add(new ExpressionVisitors.Projection() { Expression = Expression.Constant(1) });
 
             context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
             var condition = tranformVisitor.Visit(lambda).UnWrap();

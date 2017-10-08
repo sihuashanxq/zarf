@@ -332,13 +332,13 @@ namespace Zarf.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Projections == null)
+            if (query.ProjectionExpressionCollection == null)
             {
                 Append('*');
             }
             else
             {
-                query.Projections.ToList().ForEach(item =>
+                query.ProjectionExpressionCollection.ForEach(item =>
                 {
                     BuildExpression(item);
                     Append(',');

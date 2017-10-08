@@ -14,6 +14,10 @@ namespace Zarf.Mapping.Bindings
 
         MemberInfo Member { get; }
 
+        Expression Query { get; }
+
+        IBindingContext CreateMemberBindingContext(Type type, Expression entity, MemberInfo member = null, Expression bindExpression = null);
+
         IEntityProjectionMappingProvider MappingProvider { get; }
 
         EntityCreationHandleProvider CreationHandleProvider { get; set; }
@@ -23,7 +27,7 @@ namespace Zarf.Mapping.Bindings
     {
         internal Func<Expression, Expression, Expression> GetPredicate(MemberInfo member)
         {
-            throw new NotImplementedException();
+            return null;
         }
     }
 }

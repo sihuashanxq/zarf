@@ -32,13 +32,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Sets.Add(new ExceptExpression(setsQuery));
 
-            if (setsQuery.Projections.Count == 0)
+            if (setsQuery.ProjectionCollection.Count == 0)
             {
-                var entityType = new Mapping.EntityTypeDescriptorFactory().Create(setsQuery.Type);
-                foreach (var item in entityType.GetWriteableMembers())
-                {
-                    setsQuery.Projections.Add(new ColumnExpression(setsQuery, item, item.Name));
-                }
+                setsQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(setsQuery));
             }
 
             return query;

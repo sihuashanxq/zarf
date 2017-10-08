@@ -63,7 +63,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return ValueGetterCache[memberType];
         }
 
-        internal static bool GetBoolean(IDataReader dataReader, int ordianl)
+        public static bool GetBoolean(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -73,7 +73,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetBoolean(ordianl);
         }
 
-        internal static byte GetByte(IDataReader dataReader, int ordianl)
+        public static byte GetByte(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -83,7 +83,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetByte(ordianl);
         }
 
-        internal static char GetChar(IDataReader dataReader, int ordianl)
+        public static char GetChar(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -93,7 +93,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetChar(ordianl);
         }
 
-        internal static DateTime GetDateTime(IDataReader dataReader, int ordianl)
+        public static DateTime GetDateTime(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -103,7 +103,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDateTime(ordianl);
         }
 
-        internal static decimal GetDecimal(IDataReader dataReader, int ordianl)
+        public static decimal GetDecimal(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -113,7 +113,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDecimal(ordianl);
         }
 
-        internal static double GetDouble(IDataReader dataReader, int ordianl)
+        public static double GetDouble(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -123,7 +123,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDouble(ordianl);
         }
 
-        internal static float GetFloat(IDataReader dataReader, int ordianl)
+        public static float GetFloat(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -133,7 +133,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetFloat(ordianl);
         }
 
-        internal static Guid GetGuid(IDataReader dataReader, int ordianl)
+        public static Guid GetGuid(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -143,7 +143,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetGuid(ordianl);
         }
 
-        internal static short GetInt16(IDataReader dataReader, int ordianl)
+        public static short GetInt16(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -153,7 +153,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt16(ordianl);
         }
 
-        internal static int GetInt32(IDataReader dataReader, int ordianl)
+        public static int GetInt32(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -163,7 +163,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt32(ordianl);
         }
 
-        internal static long GetInt64(IDataReader dataReader, int ordianl)
+        public static long GetInt64(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -173,7 +173,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt64(ordianl);
         }
 
-        internal static bool? GetBooleanNullable(IDataReader dataReader, int ordianl)
+        public static bool? GetBooleanNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -183,7 +183,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetBoolean(ordianl);
         }
 
-        internal static byte? GetByteNullable(IDataReader dataReader, int ordianl)
+        public static byte? GetByteNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -193,7 +193,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetByte(ordianl);
         }
 
-        internal static char? GetCharNullable(IDataReader dataReader, int ordianl)
+        public static char? GetCharNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -203,7 +203,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetChar(ordianl);
         }
 
-        internal static DateTime? GetDateTimeNullable(IDataReader dataReader, int ordianl)
+        public static DateTime? GetDateTimeNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -213,7 +213,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDateTime(ordianl);
         }
 
-        internal static decimal? GetDecimalNullable(IDataReader dataReader, int ordianl)
+        public static decimal? GetDecimalNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -223,7 +223,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDecimal(ordianl);
         }
 
-        internal static double? GetDoubleNullable(IDataReader dataReader, int ordianl)
+        public static double? GetDoubleNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -233,7 +233,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetDouble(ordianl);
         }
 
-        internal static float? GetFloatNullable(IDataReader dataReader, int ordianl)
+        public static float? GetFloatNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -243,7 +243,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetFloat(ordianl);
         }
 
-        internal static Guid? GetGuidNullable(IDataReader dataReader, int ordianl)
+        public static Guid? GetGuidNullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -253,7 +253,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetGuid(ordianl);
         }
 
-        internal static short? GetInt16Nullable(IDataReader dataReader, int ordianl)
+        public static short? GetInt16Nullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -263,7 +263,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt16(ordianl);
         }
 
-        internal static int? GetInt32Nullable(IDataReader dataReader, int ordianl)
+        public static int? GetInt32Nullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -273,7 +273,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt32(ordianl);
         }
 
-        internal static long? GetInt64Nullable(IDataReader dataReader, int ordianl)
+        public static long? GetInt64Nullable(IDataReader dataReader, int ordianl)
         {
             if (dataReader.IsDBNull(ordianl))
             {
@@ -283,7 +283,7 @@ namespace Zarf.Mapping.Bindings.Binders
             return dataReader.GetInt64(ordianl);
         }
 
-        internal static string GetString(IDataReader dataReader, int ordianl)
+        public static string GetString(IDataReader dataReader, int ordianl)
         {
             return dataReader.GetString(ordianl);
         }

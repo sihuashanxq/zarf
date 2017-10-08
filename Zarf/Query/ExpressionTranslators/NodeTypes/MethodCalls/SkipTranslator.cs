@@ -25,12 +25,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
 
-            if (query.Projections.Count == 0)
+            if (query.ProjectionCollection.Count == 0)
             {
-                query.Projections.AddRange(query.GenerateColumns());
+                query.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(query));
             }
 
-            query.Projections.Add(query.Offset);
+            query.ProjectionCollection.Add(new ExpressionVisitors.Projection() { Expression = query.Offset });
             query.Orders.Clear();
             query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
 
