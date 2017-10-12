@@ -40,10 +40,7 @@ namespace Zarf.Query.Expressions
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return Predicate.GetHashCode();
-            }
+            return Predicate.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -59,6 +56,21 @@ namespace Zarf.Query.Expressions
             }
 
             return (obj is WhereExperssion) && GetHashCode() == obj.GetHashCode();
+        }
+
+        public static bool operator ==(WhereExperssion left, WhereExperssion right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(WhereExperssion left, WhereExperssion right)
+        {
+            return !(left == right);
         }
     }
 }

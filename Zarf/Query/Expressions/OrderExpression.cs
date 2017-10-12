@@ -20,5 +20,49 @@ namespace Zarf.Query.Expressions
             Columns = columns;
             OrderType = orderType;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = 0;
+                foreach (var column in Columns)
+                {
+                    hashCode = (hashCode * 397) ^ column.GetHashCode();
+                }
+
+                return hashCode;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is OrderExpression) && GetHashCode() == obj.GetHashCode();
+        }
+
+        public static bool operator ==(OrderExpression left, OrderExpression right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(OrderExpression left, OrderExpression right)
+        {
+            return !(left == right);
+        }
     }
 }

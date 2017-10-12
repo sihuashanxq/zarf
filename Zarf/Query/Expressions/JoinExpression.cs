@@ -25,5 +25,45 @@ namespace Zarf.Query.Expressions
             Table = table;
             JoinType = joinType;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Predicate.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Table?.GetHashCode() ?? 0);
+                return hashCode;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is JoinExpression) && GetHashCode() == obj.GetHashCode();
+        }
+
+        public static bool operator ==(JoinExpression left, JoinExpression right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(JoinExpression left, JoinExpression right)
+        {
+            return !(left == right);
+        }
     }
 }

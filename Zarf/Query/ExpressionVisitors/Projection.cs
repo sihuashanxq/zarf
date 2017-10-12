@@ -25,19 +25,35 @@ namespace Zarf.Query.ExpressionVisitors
             }
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            if (ReferenceEquals(null, obj))
+            if (ReferenceEquals(null, other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            return (obj is Projection) && GetHashCode() == obj.GetHashCode();
+            return (other is Projection) && GetHashCode() == other.GetHashCode();
+        }
+
+
+        public static bool operator ==(Projection left, Projection right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Projection left, Projection right)
+        {
+            return !(left == right);
         }
     }
 }

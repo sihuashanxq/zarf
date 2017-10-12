@@ -62,19 +62,34 @@ namespace Zarf.Query.Expressions
             }
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            if (ReferenceEquals(null, obj))
+            if (ReferenceEquals(null, other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            return (obj is ColumnExpression) && GetHashCode() == obj.GetHashCode();
+            return (other is ColumnExpression) && GetHashCode() == other.GetHashCode();
+        }
+
+        public static bool operator ==(ColumnExpression left, ColumnExpression right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ColumnExpression left, ColumnExpression right)
+        {
+            return !(left == right);
         }
     }
 }

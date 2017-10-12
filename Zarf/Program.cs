@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq.Expressions;
 using Zarf.Mapping.Bindings;
+using Zarf.Query.Expressions;
 
 namespace Zarf
 {
@@ -70,7 +71,14 @@ namespace Zarf
             var x = db.DataQuery<User>().Select(item => new User { Id = item.Id, Name = item.Name }).ToList();
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
+            var t = new FromTableExpression(typeof(User));
+            var id = typeof(User).GetProperty("Id");
 
+            var c = new ColumnExpression(t, id);
+            var d = new ColumnExpression(t, id);
+
+            Console.WriteLine(c.GetHashCode() == d.GetHashCode());
+            Console.WriteLine(c == d);
             Console.ReadKey();
         }
 

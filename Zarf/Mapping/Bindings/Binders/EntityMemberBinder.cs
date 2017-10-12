@@ -5,7 +5,7 @@ using Zarf.Extensions;
 
 namespace Zarf.Mapping.Bindings.Binders
 {
-    public class EntityMemberBinder : IEntityBinder
+    public class EntityMemberBinder : ExpressionVisitor, IEntityBinder
     {
         public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader));
 
@@ -67,6 +67,11 @@ namespace Zarf.Mapping.Bindings.Binders
             }
 
             return Expression.Assign(memberAccess, Expression.Call(null, valueGetter, DataReader, Expression.Constant(mapOrdinal)));
+        }
+
+        protected override Expression VisitExtension(Expression extension)
+        {
+            return null;
         }
     }
 }

@@ -19,5 +19,49 @@ namespace Zarf.Query.Expressions
             Offset = offset;
             Orders = orders;
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Offset.GetHashCode();
+                foreach (var order in Orders)
+                {
+                    hashCode = (hashCode * 397) ^ order.GetHashCode();
+                }
+
+                return hashCode;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return (obj is SkipExpression) && GetHashCode() == obj.GetHashCode();
+        }
+
+        public static bool operator ==(SkipExpression left, SkipExpression right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(SkipExpression left, SkipExpression right)
+        {
+            return !(left == right);
+        }
     }
 }

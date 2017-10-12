@@ -8,8 +8,14 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {
+    /// <summary>
+    /// Member 绑定不科学
+    /// 不可取
+    /// 仍然采用Expression绑定更好些
+    /// </summary>
     public class EntityTypeBinder : ExpressionVisitor, IEntityBinder
     {
+        //TODO
         protected IBindingContext BindingContext { get; set; }
 
         public Expression Bind(IBindingContext bindingContext)
@@ -33,17 +39,19 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitMemberInit(MemberInitExpression node)
         {
-            var block = Visit(node.NewExpression) as BlockExpression;
+            var eNewBlock = Visit(node.NewExpression) as BlockExpression;
             var members = new List<MemberInfo>();
             var expressions = new List<Expression>();
 
             foreach (var binding in node.Bindings.OfType<MemberAssignment>())
             {
+                //translate binding.Expression
+                //Set Member=BindingExpression
                 members.Add(binding.Member);
                 expressions.Add(binding.Expression);
             }
 
-            return BindMembers(block, members, expressions);
+            return BindMembers(eNewBlock, members, expressions);
         }
 
         protected override Expression VisitNew(NewExpression node)
