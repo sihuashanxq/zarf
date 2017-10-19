@@ -14,7 +14,6 @@ namespace Zarf.Query
 
         public IQueryContext CreateContext()
         {
-            //di ProviderFactory
             return new QueryContext(
                     new EntityMemberSourceMappingProvider(),
                     new EntityProjectionMappingProvider(),

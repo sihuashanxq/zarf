@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zarf.Query
+﻿namespace Zarf.Query
 {
     /// <summary>
     /// 别名生成器
@@ -20,7 +16,7 @@ namespace Zarf.Query
 
         public string GetNewColumn()
         {
-            return "C" + _tableRefCount++;
+            return "C" + _columnRefCount++;
         }
 
         /// <summary>

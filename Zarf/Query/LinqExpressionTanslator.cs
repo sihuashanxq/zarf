@@ -29,7 +29,7 @@ namespace Zarf.Query
                 var enitty = new Mapping.Bindings.DefaultEntityBinder(context.ProjectionMappingProvider, rootQuery);
 
                 BuildResult(rootQuery, context);
-                var y = Expression.Lambda(enitty.Bind(new Mapping.Bindings.BindingContext(rootQuery.Type, null, rootQuery, null, rootQuery.Result.EntityNewExpression)
+                var y = Expression.Lambda(enitty.Bind(new BindingContext(rootQuery.Type, rootQuery.Result.EntityNewExpression)
                 {
                     MappingProvider = context.ProjectionMappingProvider,
                     CreationHandleProvider = new Mapping.Bindings.EntityCreationHandleProvider()

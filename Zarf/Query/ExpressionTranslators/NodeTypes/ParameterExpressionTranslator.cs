@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -7,14 +6,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public override Expression Translate(IQueryContext context, ParameterExpression parameter, ExpressionVisitor transformVisitor)
         {
-            var refrenceQuery = context.QuerySourceProvider.GetSource(parameter);
-
-            if (refrenceQuery == null)
-            {
-                return parameter;
-            }
-
-            return refrenceQuery;
+            return context.QuerySourceProvider.GetSource(parameter) ?? parameter;
         }
     }
 }
