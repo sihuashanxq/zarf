@@ -2,7 +2,7 @@
 
 namespace Zarf.Mapping.Bindings
 {
-    public interface IEntityBinder
+    public interface IBinder
     {
         Expression Bind(IBindingContext bindingContext);
     }

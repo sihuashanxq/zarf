@@ -8,15 +8,7 @@ namespace Zarf.Mapping.Bindings
     {
         Type Type { get; }
 
-        Expression Entity { get; }
-
         Expression BindExpression { get; }
-
-        MemberInfo Member { get; }
-
-        Expression Query { get; }
-
-        IBindingContext CreateMemberBindingContext(Type type, Expression entity, MemberInfo member = null, Expression bindExpression = null);
 
         IEntityProjectionMappingProvider MappingProvider { get; }
 

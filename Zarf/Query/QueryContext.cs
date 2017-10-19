@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using System;
+using System.Data;
 
 namespace Zarf.Query
 {
@@ -21,6 +23,8 @@ namespace Zarf.Query
         public IAliasGenerator Alias { get; }
 
         public Dictionary<MemberInfo, object> SubQueryInstance { get; set; }
+
+        public Delegate func { get; set; }
 
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,

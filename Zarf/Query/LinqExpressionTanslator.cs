@@ -6,6 +6,7 @@ using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
+using Zarf.Mapping.Bindings;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionTranslators;
 using Zarf.Query.ExpressionVisitors;
@@ -25,15 +26,17 @@ namespace Zarf.Query
                     rootQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(rootQuery));
                 }
 
-                var enitty = new Mapping.Bindings.EntityTypeBinder();
-            
+                var enitty = new Mapping.Bindings.DefaultEntityBinder(context.ProjectionMappingProvider, rootQuery);
+
                 BuildResult(rootQuery, context);
-                var y = enitty.Bind(new Mapping.Bindings.BindingContext(rootQuery.Type, null, rootQuery, null, translatedExpression)
+                var y = Expression.Lambda(enitty.Bind(new Mapping.Bindings.BindingContext(rootQuery.Type, null, rootQuery, null, rootQuery.Result.EntityNewExpression)
                 {
                     MappingProvider = context.ProjectionMappingProvider,
                     CreationHandleProvider = new Mapping.Bindings.EntityCreationHandleProvider()
 
-                });
+                }).As<LambdaExpression>().Body, DefaultEntityBinder.DataReader).Compile();
+
+                context.func = y;
 
                 OptimizingColumns(rootQuery);
                 return rootQuery;

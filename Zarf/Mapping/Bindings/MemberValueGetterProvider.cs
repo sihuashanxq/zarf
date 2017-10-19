@@ -9,7 +9,7 @@ namespace Zarf.Mapping.Bindings.Binders
     {
         private static Dictionary<Type, MethodInfo> ValueGetterCache;
 
-        public static readonly MemberValueGetterProvider DefaultProvider = new MemberValueGetterProvider();
+        public static readonly MemberValueGetterProvider Default = new MemberValueGetterProvider();
 
         private MemberValueGetterProvider()
         {

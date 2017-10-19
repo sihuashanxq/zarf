@@ -89,6 +89,8 @@ namespace Zarf
                 ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery);
             }
 
+            ObjectActivate = context.func;
+
             _sqlCommandText = sqlCommdText;
             _cacheItems = new List<T>();
         }
