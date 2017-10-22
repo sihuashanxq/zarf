@@ -10,10 +10,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         public override Expression Translate(IQueryContext context, MemberExpression memExpression, ExpressionVisitor transformVisitor)
         {
             //new {item.User.Id,} item.User
-            var refrenceExpression = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
-            if (refrenceExpression != null)
+            var exp = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
+            if (exp != null)
             {
-                return refrenceExpression;
+                return exp;
             }
 
             var typeInfo = memExpression.Member.GetMemberTypeInfo();
@@ -23,10 +23,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
 
             var belongInstance = transformVisitor.Visit(memExpression.Expression);
-            var evalValue = TryEvalMemberValue(memExpression.Member, belongInstance);
-            if (evalValue != null)
+            var value = TryEvalMemberValue(memExpression.Member, belongInstance);
+            if (value != null)
             {
-                return evalValue;
+                return value;
             }
 
             if (belongInstance.Is<QueryExpression>())

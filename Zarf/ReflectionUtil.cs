@@ -77,13 +77,13 @@ namespace Zarf
 
         public static readonly Type DateTimeNullableType = typeof(DateTime?);
 
-        public static readonly Type GuidType = typeof(DateTime);
+        public static readonly Type GuidType = typeof(Guid);
 
-        public static readonly Type GuidNullableType = typeof(DateTime?);
+        public static readonly Type GuidNullableType = typeof(Guid?);
 
-        public static readonly Type BooleanType = typeof(DateTime);
+        public static readonly Type BooleanType = typeof(bool);
 
-        public static readonly Type BooleanNullableType = typeof(DateTime?);
+        public static readonly Type BooleanNullableType = typeof(bool?);
 
         /// <summary>
         /// 简单类型
@@ -135,7 +135,7 @@ namespace Zarf
 
         public static IEnumerable<TEntity> Where<TOtherEntity, TEntity>(
             this IEnumerable<TEntity> collection,
-            TOtherEntity oEntity, 
+            TOtherEntity oEntity,
             Func<TOtherEntity, TEntity, bool> predicate)
         {
             foreach (var element in collection)

@@ -28,6 +28,17 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitExtension(Expression node)
         {
+            if (node.Is<FromTableExpression>())
+            {
+                foreach (var item in node
+                 .As<FromTableExpression>()
+                 .GenerateColumns()
+                 .OfType<ColumnExpression>())
+                {
+                    AddProjection(item.Member, item);
+                }
+            }
+
             return node;
         }
 

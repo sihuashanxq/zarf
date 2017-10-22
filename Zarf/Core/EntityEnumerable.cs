@@ -80,14 +80,14 @@ namespace Zarf
         {
 
             DelegateFactory = new ObjectActivateDelegateFactory();
-            if (rootQuery.Is<QueryExpression>())
-            {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.Cast<QueryExpression>().Result.EntityNewExpression, rootQuery, context);
-            }
-            else
-            {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery);
-            }
+            //if (rootQuery.Is<QueryExpression>())
+            //{
+            //    ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.Cast<QueryExpression>().Result.EntityNewExpression, rootQuery, context);
+            //}
+            //else
+            //{
+            //    ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery);
+            //}
 
             ObjectActivate = context.func;
 

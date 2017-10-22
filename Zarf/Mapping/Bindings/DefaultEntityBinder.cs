@@ -11,6 +11,7 @@ using Zarf.Query.Expressions;
 namespace Zarf.Mapping.Bindings
 {
     /// <summary>
+    /// 默认实体绑定实现
     /// </summary>
     public class DefaultEntityBinder : ExpressionVisitor, IBinder
     {
@@ -66,7 +67,7 @@ namespace Zarf.Mapping.Bindings
 
             if (exp.Is<FromTableExpression>())
             {
-                return null;
+                return BindQueryExpression(exp.As<QueryExpression>());
             }
             else
             {
@@ -114,6 +115,31 @@ namespace Zarf.Mapping.Bindings
             return eNewBlock.Update(eNewBlock.Variables, nodes);
         }
 
+        protected Expression BindQueryExpression(QueryExpression query)
+        {
+            if (query == null)
+            {
+                return null;
+            }
+
+            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(query.Type);
+            var memExpressions = new List<Expression>();
+            var members = new List<MemberInfo>();
+            var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
+
+            foreach (var item in typeDescriptor.GetWriteableMembers())
+            {
+                var bindExpression = FindMemberRelatedExpression(query, item);
+                if (bindExpression != null)
+                {
+                    memExpressions.Add(bindExpression);
+                    members.Add(item);
+                }
+            }
+
+            return BindMembers(eNewBlock, members, memExpressions);
+        }
+
         /// <summary>
         /// {
         ///     var entity=new Entity();
@@ -138,6 +164,17 @@ namespace Zarf.Mapping.Bindings
 
             var end = Expression.Label(begin, var);
             return Expression.Block(new[] { var }, varValue, retVar, end);
+        }
+
+        public static Expression FindMemberRelatedExpression(QueryExpression query, MemberInfo member)
+        {
+            if (query.ProjectionCollection?.Count == 0 &&
+                query.SubQuery != null)
+            {
+                return FindMemberRelatedExpression(query.SubQuery, member);
+            }
+
+            return query.ProjectionCollection.FirstOrDefault(item => item.Member == member)?.Expression;
         }
     }
 }

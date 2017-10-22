@@ -56,6 +56,13 @@ namespace Zarf
         public int Count;
     }
 
+
+    public class C
+    {
+        public User User { get; set; }
+
+        public int Id { get; set; }
+    }
     class Program
     {
         static void Main(string[] args)
@@ -68,7 +75,8 @@ namespace Zarf
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 
-            var x = db.DataQuery<User>().Select(item => new User { Id = item.Id, Name = item.Name }).ToList();
+            var x = db.DataQuery<User>().Select(item => new C { User = item, Id = 2 })
+                .ToList();
 
             //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
             var t = new FromTableExpression(typeof(User));

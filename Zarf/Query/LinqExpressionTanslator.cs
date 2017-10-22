@@ -26,16 +26,20 @@ namespace Zarf.Query
                     rootQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(rootQuery));
                 }
 
-                var enitty = new Mapping.Bindings.DefaultEntityBinder(context.ProjectionMappingProvider, rootQuery);
+                var enitty = new DefaultEntityBinder(context.ProjectionMappingProvider, rootQuery);
 
-                BuildResult(rootQuery, context);
+                foreach (var item in rootQuery.ProjectionCollection)
+                {
+                    context.ProjectionMappingProvider.Map(item);
+                }
+
                 var y = Expression.Lambda(enitty.Bind(new BindingContext(rootQuery.Type, rootQuery.Result.EntityNewExpression)
                 {
                     MappingProvider = context.ProjectionMappingProvider,
-                    CreationHandleProvider = new Mapping.Bindings.EntityCreationHandleProvider()
+                    CreationHandleProvider = new EntityCreationHandleProvider()
 
                 }).As<LambdaExpression>().Body, DefaultEntityBinder.DataReader).Compile();
-
+                BuildResult(rootQuery, context);
                 context.func = y;
 
                 OptimizingColumns(rootQuery);
