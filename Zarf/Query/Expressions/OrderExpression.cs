@@ -47,7 +47,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is OrderExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as OrderExpression)?.GetHashCode();
         }
 
         public static bool operator ==(OrderExpression left, OrderExpression right)

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 
@@ -99,7 +100,7 @@ namespace Zarf.Mapping
 
             foreach (var item in _maps4[query])
             {
-                if (item.Expression == bindExpression)
+                if (item.Expression.Equals(bindExpression))
                 {
                     return item.Ordinal;
                 }

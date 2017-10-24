@@ -55,7 +55,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is WhereExperssion) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as WhereExperssion)?.GetHashCode();
         }
 
         public static bool operator ==(WhereExperssion left, WhereExperssion right)

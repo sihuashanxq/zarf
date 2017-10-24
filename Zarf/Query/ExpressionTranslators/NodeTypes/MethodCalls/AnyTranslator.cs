@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
@@ -27,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             rootQuery.ProjectionCollection.Clear();
-            rootQuery.ProjectionCollection.Add(new ExpressionVisitors.Projection() { Expression = Expression.Constant(1) });
+            rootQuery.ProjectionCollection.Add(new Projection() { Expression = Expression.Constant(1) });
 
             context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
 

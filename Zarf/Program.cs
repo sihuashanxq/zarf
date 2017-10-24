@@ -69,24 +69,26 @@ namespace Zarf
         {
             var db = new DataContext();
 
-            //var y = db.DataQuery<User>()
-            //    .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-            //    .ToList();
+            var y = db.DataQuery<User>()
+                .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
+                .Select(item => item)
+                .ToList();
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 
-            var x = db.DataQuery<User>().Select(item => new C { User = item, Id = 2 })
-                .ToList();
+            //var x = db.DataQuery<User>().Select(item => new C { User = item, Id = 2 })
+            //    .Select(item => new User { Id = item.User.Id })
+            //    .ToList();
 
-            //Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
-            var t = new FromTableExpression(typeof(User));
-            var id = typeof(User).GetProperty("Id");
+            ////Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
+            //var t = new FromTableExpression(typeof(User));
+            //var id = typeof(User).GetProperty("Id");
 
-            var c = new ColumnExpression(t, id);
-            var d = new ColumnExpression(t, id);
+            //var c = new ColumnExpression(t, id);
+            //var d = new ColumnExpression(t, id);
 
-            Console.WriteLine(c.GetHashCode() == d.GetHashCode());
-            Console.WriteLine(c == d);
+            //Console.WriteLine(c.GetHashCode() == d.GetHashCode());
+            //Console.WriteLine(c == d);
             Console.ReadKey();
         }
 

@@ -37,7 +37,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is AnyExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as AnyExpression).GetHashCode();
         }
 
         public static bool operator ==(AnyExpression left, AnyExpression right)

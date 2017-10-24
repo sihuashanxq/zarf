@@ -46,7 +46,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is SkipExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as SkipExpression)?.GetHashCode();
         }
 
         public static bool operator ==(SkipExpression left, SkipExpression right)

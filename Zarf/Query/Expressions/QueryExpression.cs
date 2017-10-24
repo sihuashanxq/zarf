@@ -19,8 +19,6 @@ namespace Zarf.Query.Expressions
             }
         }
 
-
-
         /// <summary>
         /// ²éÑ¯Í¶Ó°
         /// </summary>

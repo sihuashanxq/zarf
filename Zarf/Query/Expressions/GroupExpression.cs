@@ -45,7 +45,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is GroupExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as GroupExpression)?.GetHashCode();
         }
 
         public static bool operator ==(GroupExpression left, GroupExpression right)

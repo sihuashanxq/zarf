@@ -32,6 +32,8 @@ namespace Zarf.Query.Expressions
             {
                 var hashCode = Predicate.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Table?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ JoinType.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Predicate?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
@@ -48,7 +50,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is JoinExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as JoinExpression).GetHashCode();
         }
 
         public static bool operator ==(JoinExpression left, JoinExpression right)

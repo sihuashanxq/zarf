@@ -74,7 +74,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (other is ColumnExpression) && GetHashCode() == other.GetHashCode();
+            return GetHashCode() == (other as ColumnExpression)?.GetHashCode();
         }
 
         public static bool operator ==(ColumnExpression left, ColumnExpression right)

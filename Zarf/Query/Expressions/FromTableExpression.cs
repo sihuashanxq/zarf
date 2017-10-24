@@ -61,7 +61,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is FromTableExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as FromTableExpression)?.GetHashCode();
         }
 
         public static bool operator ==(FromTableExpression left, FromTableExpression right)

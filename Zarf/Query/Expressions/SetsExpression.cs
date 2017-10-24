@@ -20,5 +20,41 @@ namespace Zarf.Query.Expressions
         {
             Query = query;
         }
+
+        public override int GetHashCode()
+        {
+            return Query.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return GetHashCode() == (obj as SetsExpression)?.GetHashCode();
+        }
+
+        public static bool operator ==(SetsExpression left, SetsExpression right)
+        {
+            if (ReferenceEquals(null, left))
+            {
+                return ReferenceEquals(null, right);
+            }
+
+            return Equals(left, right);
+        }
+
+
+        public static bool operator !=(SetsExpression left, SetsExpression right)
+        {
+            return !(left == right);
+        }
     }
 }

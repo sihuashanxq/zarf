@@ -45,7 +45,7 @@ namespace Zarf.Query.Expressions
                 return true;
             }
 
-            return (obj is AggregateExpression) && GetHashCode() == obj.GetHashCode();
+            return GetHashCode() == (obj as AggregateExpression)?.GetHashCode();
         }
 
         public static bool operator ==(AggregateExpression left, AggregateExpression right)
