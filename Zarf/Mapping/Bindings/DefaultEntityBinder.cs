@@ -8,6 +8,7 @@ using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
 using Zarf.Query;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping.Bindings
 {
@@ -24,12 +25,12 @@ namespace Zarf.Mapping.Bindings
 
         public Expression Query { get; }
 
-        public QueryContext Context { get; }
+        public IQueryContext Context { get; }
 
         public DefaultEntityBinder(
             IEntityProjectionMappingProvider projectionMappingProvider,
             IPropertyNavigationContext navigationContext,
-            QueryContext context,
+            IQueryContext context,
             Expression query)
         {
             Query = query;
@@ -40,6 +41,10 @@ namespace Zarf.Mapping.Bindings
 
         public Expression Bind(IBindingContext context)
         {
+            if (context.BindExpression.Is<LambdaExpression>())
+            {
+                return Visit(context.BindExpression.As<LambdaExpression>().Body);
+            }
             return Visit(context.BindExpression);
         }
 
@@ -174,41 +179,56 @@ namespace Zarf.Mapping.Bindings
         {
             var navigation = NavigationContext.GetNavigation(memberInfo);
             var innerQuery = navigation.RefrenceQuery;
-            var propertyElementType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
-            var propertyEnumerableType = typeof(EntityEnumerable<>).MakeGenericType(propertyElementType);
+            var propertyEleType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
+            var propertyType = typeof(SubEntityEnumerable<>).MakeGenericType(propertyEleType);
 
-            var newPropertyEnumearbles = Expression.Convert(
-                    Expression.New(propertyEnumerableType.GetConstructor(new Type[] { typeof(Expression), typeof(QueryContext) }),
+            ////TODO :1
+            var i = 0;
+            foreach (var m in innerQuery.GenerateColumns())
+            {
+                ProjectionMappingProvider.Map(new Projection()
+                {
+                    Query = innerQuery,
+                    Expression = m,
+                    Ordinal = i++,
+                });
+            }
+
+            var makeNewPropertyValue = Expression.Convert(
+                    Expression.New(propertyType.GetConstructor(new Type[] { typeof(Expression), typeof(QueryContext) }),
                     Expression.Constant(innerQuery), Expression.Constant(Context)),
-                    propertyEnumerableType
+                    propertyType
                 );
 
             var contextInstance = Expression.Constant(Context);
-            var propertyInstnance = Expression.Constant(memberInfo);
-            var getEnumerables = Expression.Call(null, GetIncludeMemberInstanceMethodInfo, contextInstance, propertyInstnance, ownner);
-            var setEnumerables = Expression.Call(null, SetIncludeMemberInstanceMethodInfo, contextInstance, propertyInstnance, newPropertyEnumearbles);
+            var getStoredPropertyValue = Expression.Call(null, GetIncludeMemberInstanceMethodInfo, contextInstance, Expression.Constant(memberInfo));
+            var toStorePropertyValue = Expression.Call(null, SetIncludeMemberInstanceMethodInfo, contextInstance, Expression.Constant(memberInfo), makeNewPropertyValue);
 
-            var begin = Expression.Label(ownner.Type);
-            var variable = Expression.Variable(propertyEnumerableType);
+            var blockBegin = Expression.Label(ownner.Type);
+            var propertyValueVar = Expression.Variable(propertyType);
 
-            var isNull = Expression.Equal(getEnumerables, Expression.Constant(null));
+            var isStoredPropertyValueNull = Expression.Equal(getStoredPropertyValue, Expression.Constant(null));
+            var toStorePropertyValueIfNull = Expression.IfThen(isStoredPropertyValueNull, toStorePropertyValue);
+            var setPropertyValueVar = Expression.Assign(propertyValueVar, Expression.Convert(getStoredPropertyValue, makeNewPropertyValue.Type));
 
-            var condtion = Expression.IfThen(isNull, setEnumerables);
-            var setLocal = Expression.Assign(variable, Expression.Convert(getEnumerables, newPropertyEnumearbles.Type));
+            var condtion = navigation.Relation.UnWrap().As<LambdaExpression>();
+            var updatedCondtion = new InnerNodeUpdateExpressionVisitor(condtion.Parameters.First(), ownner)
+                 .Update(condtion)
+                 .As<LambdaExpression>();
 
-            var relation = navigation.Relation.UnWrap().As<LambdaExpression>();
-            var elementType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
+            var propertyValue = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(ownner.Type, propertyEleType), propertyValueVar, ownner, updatedCondtion);
+            var setPropertyValue = Expression.Call(ownner, memberInfo.As<PropertyInfo>().SetMethod, propertyValue);
+            var blockEnd = Expression.Label(blockBegin, ownner);
 
-            relation = new Query.ExpressionVisitors.InnerNodeUpdateExpressionVisitor(relation.Parameters.First(), ownner).Update(relation).As<LambdaExpression>();
-
-            var filter = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(ownner.Type, elementType), variable, ownner, relation);
-            var setMember = Expression.Call(ownner, memberInfo.As<PropertyInfo>().SetMethod, filter);
-            var end = Expression.Label(begin, ownner);
-
-            return Expression.Block(new[] { variable }, condtion, setLocal, setMember, end);
+            return Expression.Block(
+                new[] { propertyValueVar },
+                toStorePropertyValueIfNull,
+                setPropertyValueVar,
+                setPropertyValue,
+                blockEnd);
         }
 
-        public static object GetIncludeMemberInstance(QueryContext queryContext, MemberInfo member, User i)
+        public static object GetIncludeMemberInstance(IQueryContext queryContext, MemberInfo member)
         {
             if (queryContext.SubQueryInstance.TryGetValue(member, out object instance))
             {
@@ -218,7 +238,7 @@ namespace Zarf.Mapping.Bindings
             return null;
         }
 
-        public static void SetIncludeMemberInstance(QueryContext queryContext, MemberInfo member, object instance)
+        public static void SetIncludeMemberInstance(IQueryContext queryContext, MemberInfo member, object instance)
         {
             queryContext.SubQueryInstance[member] = instance;
         }

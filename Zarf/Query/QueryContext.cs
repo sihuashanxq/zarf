@@ -24,8 +24,6 @@ namespace Zarf.Query
 
         public Dictionary<MemberInfo, object> SubQueryInstance { get; set; }
 
-        public Delegate func { get; set; }
-
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,
             IEntityProjectionMappingProvider projectionMappingProvider,

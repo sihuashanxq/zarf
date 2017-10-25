@@ -1,6 +1,9 @@
 ﻿using Zarf.Mapping;
 using System.Linq.Expressions;
 using Zarf.Query.Expressions;
+using System;
+using System.Reflection;
+using System.Collections.Generic;
 
 namespace Zarf.Query
 {
@@ -19,5 +22,7 @@ namespace Zarf.Query
         IAliasGenerator Alias { get; }
 
         QueryExpression UpdateRefrenceSource(QueryExpression query);
+
+        Dictionary<MemberInfo, object> SubQueryInstance { get; }
     }
 }

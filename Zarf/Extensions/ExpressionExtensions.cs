@@ -41,7 +41,7 @@ namespace Zarf.Extensions
             return constant.Value.Cast<T>();
         }
 
-        public static IEnumerable<Expression> GenerateColumns(this FromTableExpression table)
+        public static IEnumerable<ColumnExpression> GenerateColumns(this FromTableExpression table)
         {
             var entityType = EntityTypeDescriptorFactory.Factory.Create(table.Type);
             foreach (var member in entityType.GetWriteableMembers())

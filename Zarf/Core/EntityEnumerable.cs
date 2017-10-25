@@ -10,46 +10,66 @@ using Zarf.Builders;
 using Zarf.Query.Expressions;
 using Zarf.Extensions;
 using System.Data.SqlClient;
+using Zarf.Mapping.Bindings;
 
 namespace Zarf
 {
+    public class SubEntityEnumerable<T> : EntityEnumerable<T>
+    {
+        private IQueryContext _context;
+
+        public SubEntityEnumerable(Expression linq, QueryContext context)
+            : base(linq)
+        {
+            _context = context;
+        }
+
+        protected override IQueryContext CreateQueryContext()
+        {
+            return _context;
+        }
+    }
+
     public class EntityEnumerable<T> : IEnumerable<T>
     {
         protected ISqlTextBuilder SqlBuilder { get; }
 
-        private Expression _linq;
+        protected Expression Expression { get; set; }
 
-        private IEnumerator<T> _enumerator;
+        protected IEnumerator<T> Enumerator { get; set; }
 
-        private QueryContext _context;
-
-        public EntityEnumerable(Expression linq, QueryContext context)
+        public EntityEnumerable(Expression linq)
         {
-            _linq = linq;
-            _context = context;
+            Expression = linq;
             SqlBuilder = new SqlServerTextBuilder();
         }
 
-        public IEnumerator<T> GetEnumerator()
+        protected virtual IQueryContext CreateQueryContext()
         {
-            if (_enumerator == null)
+            return QueryContextFacotry.Factory.CreateContext();
+        }
+
+        public virtual IEnumerator<T> GetEnumerator()
+        {
+            if (Enumerator == null)
             {
-                var sqlCommandText = SqlBuilder.Build(_linq);
-                _enumerator = new EntityEnumerator<T>(_linq, sqlCommandText, _context);
+                var context = CreateQueryContext();
+
+                if (Expression.NodeType != ExpressionType.Extension)
+                {
+                    Expression = new LinqExpressionTanslator(context).Build(Expression, context);
+                }
+
+                var sqlCommandText = SqlBuilder.Build(Expression);
+                Enumerator = new EntityEnumerator<T>(Expression, sqlCommandText, context);
             }
 
-            return _enumerator;
+            return Enumerator;
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            if (_enumerator == null)
-            {
-                var sqlCommandText = SqlBuilder.Build(_linq);
-                _enumerator = new EntityEnumerator<T>(_linq, sqlCommandText, _context);
-            }
-
-            return _enumerator;
+            return ((IEnumerable<T>)this).GetEnumerator();
         }
     }
 
@@ -71,25 +91,26 @@ namespace Zarf
 
         protected Delegate ObjectActivate { get; set; }
 
+        protected IBinder Binder { get; }
+
         private string _sqlCommandText;
 
         public EntityEnumerator(
             Expression rootQuery,
             string sqlCommdText,
-            QueryContext context)
+            IQueryContext context)
         {
-
             DelegateFactory = new ObjectActivateDelegateFactory();
-            //if (rootQuery.Is<QueryExpression>())
-            //{
-            //    ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.Cast<QueryExpression>().Result.EntityNewExpression, rootQuery, context);
-            //}
-            //else
-            //{
-            //    ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery);
-            //}
+            Binder = new DefaultEntityBinder(context.ProjectionMappingProvider, context.PropertyNavigationContext, context, rootQuery);
 
-            ObjectActivate = context.func;
+            var body = Binder.Bind(
+                new BindingContext(
+                    rootQuery.Type.GetCollectionElementType(),
+                    rootQuery.As<QueryExpression>().Result?.EntityNewExpression ?? rootQuery)
+                    );
+
+            ObjectActivate = Expression.Lambda(body, DefaultEntityBinder.DataReader)
+                .Compile();
 
             _sqlCommandText = sqlCommdText;
             _cacheItems = new List<T>();
@@ -130,7 +151,6 @@ namespace Zarf
         {
             _currentIndex = 0;
         }
-
 
         /// <summary>
         /// 暂时 写死 SqlServer  测试用

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Linq.Expressions;
-using Zarf.Mapping.Bindings;
-using Zarf.Query.Expressions;
 
 namespace Zarf
 {
@@ -73,22 +69,11 @@ namespace Zarf
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
                 .Select(item => item)
                 .ToList();
+
+            var x = db.DataQuery<User>().Where(item => item.Id < 10).ToList();
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 
-            //var x = db.DataQuery<User>().Select(item => new C { User = item, Id = 2 })
-            //    .Select(item => new User { Id = item.User.Id })
-            //    .ToList();
-
-            ////Console.WriteLine(typeof(User[]).GetTypeInfo().IsGenericType);
-            //var t = new FromTableExpression(typeof(User));
-            //var id = typeof(User).GetProperty("Id");
-
-            //var c = new ColumnExpression(t, id);
-            //var d = new ColumnExpression(t, id);
-
-            //Console.WriteLine(c.GetHashCode() == d.GetHashCode());
-            //Console.WriteLine(c == d);
             Console.ReadKey();
         }
 

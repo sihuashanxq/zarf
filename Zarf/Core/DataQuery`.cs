@@ -46,10 +46,7 @@ namespace Zarf
         /// <returns></returns>
         public IEnumerator<TEntity> GetEnumerator()
         {
-            var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
-            var queryBuilder = new LinqExpressionTanslator(context);
-
-            return new EntityEnumerable<TEntity>(queryBuilder.Build(Expression, context), context)
+            return new EntityEnumerable<TEntity>(Expression)
                 .GetEnumerator();
         }
 
@@ -59,10 +56,7 @@ namespace Zarf
         /// <returns></returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            var context = QueryContextFacotry.Factory.CreateContext() as QueryContext;
-            var queryBuilder = new LinqExpressionTanslator(context);
-
-            return new EntityEnumerable<object>(queryBuilder.Build(Expression, context), context)
+            return new EntityEnumerable<object>(Expression)
                 .GetEnumerator();
         }
     }

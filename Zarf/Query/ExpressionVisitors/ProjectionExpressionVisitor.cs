@@ -38,6 +38,10 @@ namespace Zarf.Query.ExpressionVisitors
                     AddProjection(item.Member, item);
                 }
             }
+            else if (node.Is<ColumnExpression>())
+            {
+                AddProjection(null, node);
+            }
 
             return node;
         }
