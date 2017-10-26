@@ -3,11 +3,36 @@ using System.Collections.Generic;
 
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
-using System;
-using System.Data;
 
 namespace Zarf.Query
 {
+    public interface IMemberValueCache
+    {
+        void SetValue(MemberInfo mem, object value);
+
+        object GetValue(MemberInfo mem);
+    }
+
+    public class MemberValueCache : IMemberValueCache
+    {
+        private Dictionary<MemberInfo, object> _memValues = new Dictionary<MemberInfo, object>();
+
+        public object GetValue(MemberInfo mem)
+        {
+            if (_memValues.TryGetValue(mem, out object value))
+            {
+                return value;
+            }
+
+            return null;
+        }
+
+        public void SetValue(MemberInfo mem, object value)
+        {
+            _memValues[mem] = value;
+        }
+    }
+
     public class QueryContext : IQueryContext
     {
         public IEntityMemberSourceMappingProvider EntityMemberMappingProvider { get; }
@@ -22,7 +47,7 @@ namespace Zarf.Query
 
         public IAliasGenerator Alias { get; }
 
-        public Dictionary<MemberInfo, object> SubQueryInstance { get; set; }
+        public IMemberValueCache MemberValueCache { get; }
 
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,
@@ -30,7 +55,8 @@ namespace Zarf.Query
             IPropertyNavigationContext navigationContext,
             IQuerySourceProvider sourceProvider,
             IProjectionScanner projectionFinder,
-            IAliasGenerator aliasGenerator
+            IAliasGenerator aliasGenerator,
+            IMemberValueCache memValueCache
             )
         {
             EntityMemberMappingProvider = memberMappingProvider;
@@ -39,7 +65,7 @@ namespace Zarf.Query
             QuerySourceProvider = sourceProvider;
             ProjectionScanner = projectionFinder;
             Alias = aliasGenerator;
-            SubQueryInstance = new Dictionary<MemberInfo, object>();
+            MemberValueCache = memValueCache;
         }
 
         public QueryExpression UpdateRefrenceSource(QueryExpression query)

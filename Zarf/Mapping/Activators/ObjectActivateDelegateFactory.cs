@@ -39,19 +39,19 @@ namespace Zarf.Mapping
 
         private Expression GetMemberValue(Expression node)
         {
-            var map = _context.ProjectionMappingProvider.GetMapping(node);
-            if (map != null)
-            {
-                var entityMemberActivator = EntityMemberValueProvider.CreateProvider(map);
-                return Expression.Convert(
-                        Expression.Call(
-                            Expression.Constant(entityMemberActivator),
-                            EntityMemberValueProvider.ActivateMethod,
-                            EntityMemberValueProvider.ActivateMethodParameter
-                          ),
-                        node.Type
-                       );
-            }
+            //var map = _context.ProjectionMappingProvider.GetMapping(node);
+            //if (map != null)
+            //{
+            //    var entityMemberActivator = EntityMemberValueProvider.CreateProvider(map);
+            //    return Expression.Convert(
+            //            Expression.Call(
+            //                Expression.Constant(entityMemberActivator),
+            //                EntityMemberValueProvider.ActivateMethod,
+            //                EntityMemberValueProvider.ActivateMethodParameter
+            //              ),
+            //            node.Type
+            //           );
+            //}
 
             return null;
         }

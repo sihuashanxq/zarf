@@ -20,8 +20,30 @@ namespace Zarf.Query
                     new PropertyNavigationContext(),
                     new QuerySourceProvider(),
                     new ProjectionExpressionVisitor(),
-                    new AliasGenerator()
+                    new AliasGenerator(),
+                    new MemberValueCache()
                 );
+        }
+
+        public IQueryContext CreateContext(
+            IEntityMemberSourceMappingProvider sourceMappingProvider = null,
+            IEntityProjectionMappingProvider mappingProvider = null,
+            IPropertyNavigationContext navigationContext = null,
+            IQuerySourceProvider sourceProvider = null,
+            IProjectionScanner scanner = null,
+            IAliasGenerator aliasGenerator = null,
+            IMemberValueCache memValue = null
+            )
+        {
+            return new QueryContext(
+                sourceMappingProvider ?? new EntityMemberSourceMappingProvider(),
+                mappingProvider ?? new EntityProjectionMappingProvider(),
+                navigationContext ?? new PropertyNavigationContext(),
+                sourceProvider ?? new QuerySourceProvider(),
+                scanner ?? new ProjectionExpressionVisitor(),
+                aliasGenerator ?? new AliasGenerator(),
+                memValue ?? new MemberValueCache()
+            );
         }
     }
 }

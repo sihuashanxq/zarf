@@ -23,13 +23,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var joinQuery = transformVisitor.Visit(methodCall.Arguments[1]).As<QueryExpression>();
 
-            if (rootQuery.ProjectionCollection.Count != 0)
+            if (rootQuery.Projections.Count != 0)
             {
                 rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
 
             //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
-            if (joinQuery.ProjectionCollection.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
+            if (joinQuery.Projections.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
             {
                 joinQuery = joinQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
             }
@@ -49,7 +49,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             //只保留Selector中的Columns
             var entityNew = transformVisitor.Visit(selector).UnWrap();
 
-            rootQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(entityNew));
+            rootQuery.Projections.AddRange(context.ProjectionScanner.Scan(entityNew));
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
             rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
 

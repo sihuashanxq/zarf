@@ -20,31 +20,11 @@ namespace Zarf.Query
             var translatedExpression = new SqlTranslatingExpressionVisitor(context, NodeTypeTranslatorProvider.Default).Visit(node);
             if (translatedExpression.Is<QueryExpression>())
             {
-                var qExpression = translatedExpression.As<QueryExpression>();
-                if (qExpression.ProjectionCollection.Count == 0)
-                {
-                    foreach (var item in qExpression.GenerateColumns())
-                    {
-                        qExpression.ProjectionCollection.Add(new Projection()
-                        {
-                            Member = item.Member,
-                            Expression = item,
-                            Query = qExpression,
-                            Ordinal = qExpression.ProjectionCollection.Count
-                        });
-                    }
-                }
-
-                foreach (var item in qExpression.ProjectionCollection)
-                {
-                    context.ProjectionMappingProvider.Map(item);
-                }
-
-                return qExpression;
+                return translatedExpression;
             }
             else
             {
-                context.ProjectionMappingProvider.Map(translatedExpression, translatedExpression, 0);
+                //context.ProjectionMappingProvider.Map(translatedExpression, translatedExpression, 0);
                 return translatedExpression;
             }
         }

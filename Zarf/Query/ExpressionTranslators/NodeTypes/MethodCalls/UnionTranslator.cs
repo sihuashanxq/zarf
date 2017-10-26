@@ -34,18 +34,18 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             //UNION 默认比较 Concat 不比较
             if (methodCall.Method.Name == "Union")
             {
-                if (query.ProjectionCollection.Count == 0)
+                if (query.Projections.Count == 0)
                 {
-                    query.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(query));
+                    query.Projections.AddRange(context.ProjectionScanner.Scan(query));
                 }
 
                 query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
                 query.IsDistinct = true;
             }
 
-            if (setsQuery.ProjectionCollection.Count == 0)
+            if (setsQuery.Projections.Count == 0)
             {
-                setsQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(setsQuery));
+                setsQuery.Projections.AddRange(context.ProjectionScanner.Scan(setsQuery));
             }
 
             return query;

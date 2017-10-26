@@ -23,6 +23,6 @@ namespace Zarf.Query
 
         QueryExpression UpdateRefrenceSource(QueryExpression query);
 
-        Dictionary<MemberInfo, object> SubQueryInstance { get; }
+        IMemberValueCache MemberValueCache { get; }
     }
 }

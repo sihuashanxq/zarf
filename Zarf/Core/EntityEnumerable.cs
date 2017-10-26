@@ -14,29 +14,33 @@ using Zarf.Mapping.Bindings;
 
 namespace Zarf
 {
-    public class SubEntityEnumerable<T> : EntityEnumerable<T>
+    public class EntityPropertyEnumerable<TEntity> : EntityEnumerable<TEntity>
     {
-        private IQueryContext _context;
+        private IMemberValueCache _memValueCache;
 
-        public SubEntityEnumerable(Expression linq, QueryContext context)
+        public EntityPropertyEnumerable(Expression linq, IMemberValueCache memValueCache)
             : base(linq)
         {
-            _context = context;
+            _memValueCache = memValueCache;
         }
 
         protected override IQueryContext CreateQueryContext()
         {
-            return _context;
+            return QueryContextFacotry.Factory.CreateContext(memValue: _memValueCache);
         }
     }
 
-    public class EntityEnumerable<T> : IEnumerable<T>
+    public class EntityEnumerable<TEntity> : IEnumerable<TEntity>
     {
         protected ISqlTextBuilder SqlBuilder { get; }
 
         protected Expression Expression { get; set; }
 
-        protected IEnumerator<T> Enumerator { get; set; }
+        protected IEnumerator<TEntity> Enumerator { get; set; }
+
+        protected Delegate ObjectActivator { get; set; }
+
+        protected string CommandText { get; set; }
 
         public EntityEnumerable(Expression linq)
         {
@@ -49,19 +53,26 @@ namespace Zarf
             return QueryContextFacotry.Factory.CreateContext();
         }
 
-        public virtual IEnumerator<T> GetEnumerator()
+        public virtual IEnumerator<TEntity> GetEnumerator()
         {
             if (Enumerator == null)
             {
+                //TODO
                 var context = CreateQueryContext();
-
                 if (Expression.NodeType != ExpressionType.Extension)
                 {
                     Expression = new LinqExpressionTanslator(context).Build(Expression, context);
                 }
 
-                var sqlCommandText = SqlBuilder.Build(Expression);
-                Enumerator = new EntityEnumerator<T>(Expression, sqlCommandText, context);
+                if (ObjectActivator == null)
+                {
+                    var binder = new DefaultEntityBinder(context.ProjectionMappingProvider, context.PropertyNavigationContext, context, Expression);
+                    var body = binder.Bind(new BindingContext(Expression.Type.GetCollectionElementType(), Expression.As<QueryExpression>().Result?.EntityNewExpression ?? Expression));
+                    ObjectActivator = Expression.Lambda(body, DefaultEntityBinder.DataReader).Compile();
+                }
+
+                CommandText = SqlBuilder.Build(Expression);
+                Enumerator = new EntityEnumerator<TEntity>(ObjectActivator, CommandText);
             }
 
             return Enumerator;
@@ -69,51 +80,32 @@ namespace Zarf
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<T>)this).GetEnumerator();
+            return ((IEnumerable<TEntity>)this).GetEnumerator();
         }
     }
 
-    public class EntityEnumerator<T> : IEnumerator<T>
+    public class EntityEnumerator<TEntity> : IEnumerator<TEntity>
     {
-        private List<T> _cacheItems;
+        private List<TEntity> _cacheItems = new List<TEntity>();
 
         private IDataReader _dbDataReader;
 
-        private T _current;
+        private TEntity _current;
 
-        public T Current => _current;
+        public TEntity Current => _current;
 
         object IEnumerator.Current => _current;
 
         private int _currentIndex = 0;
 
-        protected ObjectActivateDelegateFactory DelegateFactory { get; }
+        protected Delegate ObjectActivator { get; }
 
-        protected Delegate ObjectActivate { get; set; }
+        protected string CommandText { get; }
 
-        protected IBinder Binder { get; }
-
-        private string _sqlCommandText;
-
-        public EntityEnumerator(
-            Expression rootQuery,
-            string sqlCommdText,
-            IQueryContext context)
+        public EntityEnumerator(Delegate activator, string commdText)
         {
-            DelegateFactory = new ObjectActivateDelegateFactory();
-            Binder = new DefaultEntityBinder(context.ProjectionMappingProvider, context.PropertyNavigationContext, context, rootQuery);
-
-            var body = Binder.Bind(
-                new BindingContext(
-                    rootQuery.Type.GetCollectionElementType(),
-                    rootQuery.As<QueryExpression>().Result?.EntityNewExpression ?? rootQuery)
-                    );
-
-            ObjectActivate = Expression.Lambda(body, DefaultEntityBinder.DataReader)
-                .Compile();
-
-            _sqlCommandText = sqlCommdText;
-            _cacheItems = new List<T>();
+            ObjectActivator = activator;
+            CommandText = commdText;
         }
 
         public bool MoveNext()
@@ -132,12 +124,12 @@ namespace Zarf
 
             if (_dbDataReader == null || _dbDataReader.IsClosed)
             {
-                _dbDataReader = ExecuteSql(_sqlCommandText);
+                _dbDataReader = ExecuteSql(CommandText);
             }
 
             if (_dbDataReader.Read())
             {
-                _current = (T)ObjectActivate.DynamicInvoke(_dbDataReader);
+                _current = (TEntity)ObjectActivator.DynamicInvoke(_dbDataReader);
                 _currentIndex++;
                 _cacheItems.Add(_current);
                 return true;

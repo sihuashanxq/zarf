@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.Expressions;
+
 using Zarf.Mapping;
-using System.Reflection;
-using System.Linq;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Extensions
 {
@@ -21,11 +18,11 @@ namespace Zarf.Extensions
             return expression;
         }
 
-        public static bool IsNullValueConstant(this Expression expression)
+        public static bool IsNullValueConstant(this Expression node)
         {
-            if (expression.Is<ConstantExpression>())
+            if (node.Is<ConstantExpression>())
             {
-                return expression.As<ConstantExpression>().Value == null;
+                return node.As<ConstantExpression>().Value == null;
             }
 
             return false;
@@ -43,8 +40,8 @@ namespace Zarf.Extensions
 
         public static IEnumerable<ColumnExpression> GenerateColumns(this FromTableExpression table)
         {
-            var entityType = EntityTypeDescriptorFactory.Factory.Create(table.Type);
-            foreach (var member in entityType.GetWriteableMembers())
+            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(table.Type);
+            foreach (var member in typeDescriptor.GetWriteableMembers())
             {
                 yield return new ColumnExpression(table, member, member.Name);
             }

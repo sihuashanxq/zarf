@@ -21,7 +21,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
             var condition = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            if (query.Where != null && (query.ProjectionCollection.Count != 0 || query.Sets.Count != 0))
+            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
                 query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
                 query.Result = query.SubQuery.Result;

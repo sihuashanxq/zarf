@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
-using Zarf.Extensions;
-using Zarf.Mapping;
 using Zarf.Query.ExpressionVisitors;
 using System.Linq;
 
@@ -11,18 +9,10 @@ namespace Zarf.Query.Expressions
 {
     public class QueryExpression : FromTableExpression
     {
-        public List<Expression> ProjectionExpressionCollection
-        {
-            get
-            {
-                return ProjectionCollection.Select(item => item.Expression).ToList();
-            }
-        }
-
         /// <summary>
         /// 查询投影
         /// </summary>
-        public List<Projection> ProjectionCollection { get; }
+        public List<Projection> Projections { get; }
 
         /// <summary>
         /// 表连接
@@ -84,7 +74,7 @@ namespace Zarf.Query.Expressions
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            ProjectionCollection = new List<Projection>();
+            Projections = new List<Projection>();
         }
 
         public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
@@ -108,8 +98,8 @@ namespace Zarf.Query.Expressions
 
         public void AddProjections(IEnumerable<Projection> projections)
         {
-            ProjectionCollection.Clear();
-            ProjectionCollection.AddRange(projections);
+            Projections.Clear();
+            Projections.AddRange(projections);
         }
 
         public void AddWhere(Expression predicate)
@@ -142,7 +132,7 @@ namespace Zarf.Query.Expressions
                 Where == null &&
                 Offset == null &&
                 SubQuery == null &&
-                ProjectionCollection.Count == 0 &&
+                Projections.Count == 0 &&
                 Orders.Count == 0 &&
                 Groups.Count == 0 &&
                 Sets.Count == 0 &&

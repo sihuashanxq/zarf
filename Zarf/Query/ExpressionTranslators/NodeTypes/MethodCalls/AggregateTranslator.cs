@@ -28,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             if (methodCall.Arguments.Count == 2)
             {
                 var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-                if (rootQuery.ProjectionCollection.Count != 0 || rootQuery.Sets.Count != 0)
+                if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
                 {
                     rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable());
                 }
@@ -43,7 +43,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
 
-            rootQuery.ProjectionCollection.Add(new Projection() { Expression = aggregate, Query = rootQuery });
+            rootQuery.Projections.Add(new Projection() { Expression = aggregate, Query = rootQuery });
             rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
 
             return rootQuery;

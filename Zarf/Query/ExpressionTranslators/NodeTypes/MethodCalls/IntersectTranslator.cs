@@ -32,9 +32,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Sets.Add(new IntersectExpression(setsQuery));
 
-            if (setsQuery.ProjectionCollection.Count == 0)
+            if (setsQuery.Projections.Count == 0)
             {
-                setsQuery.ProjectionCollection.AddRange(context.ProjectionScanner.Scan(setsQuery));
+                setsQuery.Projections.AddRange(context.ProjectionScanner.Scan(setsQuery));
             }
 
             return query;
