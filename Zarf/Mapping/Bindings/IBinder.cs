@@ -1,10 +1,10 @@
-﻿using System.Linq.Expressions;
-using System;
+﻿using System;
+using System.Data;
 
 namespace Zarf.Mapping.Bindings
 {
     public interface IBinder
     {
-        Delegate Bind(IBindingContext bindingContext);
+        Func<IDataReader, TEntity> Bind<TEntity>(IBindingContext bindingContext);
     }
 }

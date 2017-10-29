@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using Zarf.Mapping;
+using System.Linq.Expressions;
+using Zarf.Entities;
 
 namespace Zarf
 {
@@ -59,66 +63,136 @@ namespace Zarf
 
         public int Id { get; set; }
     }
+
+    public class PP
+    {
+        [AutoIncrement]
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            var db = new DataContext();
+            var db = new DbContext();
 
-            var y = db.DataQuery<User>()
+            var y = db.DbQuery<User>()
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
                 .Select(item => item)
                 .ToList();
 
-            var x = db.DataQuery<User>().Sum(item => item.Id);
-
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
+            var p = new PP
+            {
+                Name = "333"
+            };
+
+            db.Add(p);
 
             Console.ReadKey();
         }
 
-        static void BasicTest(DataContext db)
+        public static MethodInfo Method = typeof(Dictionary<,>).MakeGenericType(
+            new Type[] { typeof(MemberInfo), typeof(object) }).GetMethod("Add");
+
+        public static Dictionary<MemberInfo, object> GetDictionary(object typeOf)
+        {
+            var mem = EntityTypeDescriptorFactory.Factory.Create(typeOf.GetType());
+            var dic = new Dictionary<MemberInfo, object>();
+            var mems = new List<Expression>();
+            var dd = Expression.Parameter(typeof(Dictionary<MemberInfo, object>));
+            foreach (var item in mem.GetExpandMembers())
+            {
+                mems.Add(Expression.Call(dd,
+                    Method,
+                    Expression.Constant(item),
+                   Expression.Convert(Expression.MakeMemberAccess(Expression.Constant(typeOf), item), typeof(object))
+                    ));
+            }
+
+            var begin = Expression.Label();
+            var end = Expression.Label(begin);
+            mems.Add(end);
+            var st = new System.Diagnostics.Stopwatch();
+            var d = new Dictionary<MemberInfo, object>();
+
+            st.Start();
+
+            for (var i = 0; i < 10000; i++)
+            {
+                d = new Dictionary<MemberInfo, object>();
+                foreach (var item in mem.GetExpandMembers())
+                {
+                    if (item is PropertyInfo)
+                    {
+                        d[item] = (item as PropertyInfo).GetValue(typeOf);
+                    }
+                    else
+                    {
+                        d[item] = (item as FieldInfo).GetValue(typeOf);
+                    }
+                }
+            }
+            st.Stop();
+            Console.WriteLine(st.ElapsedMilliseconds);
+
+            st.Reset();
+            var x = (Action<Dictionary<MemberInfo, object>>)Expression.Lambda(Expression.Block(mems), dd).Compile();
+            st.Start();
+            for (var i = 0; i < 10000; i++)
+            {
+                dic = new Dictionary<MemberInfo, object>();
+                x(dic);
+            }
+            st.Stop();
+            Console.WriteLine(st.ElapsedMilliseconds);
+            return dic;
+        }
+
+        static void BasicTest(DbContext db)
         {
             Console.WriteLine("All..........................");
-            db.DataQuery<User>().ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("First..........................");
-            Console.WriteLine(db.DataQuery<User>().First());
+            Console.WriteLine(db.DbQuery<User>().First());
 
             Console.WriteLine();
             Console.WriteLine("First id=2.......................");
-            Console.WriteLine(db.DataQuery<User>().First(item => item.Id == 2));
+            Console.WriteLine(db.DbQuery<User>().First(item => item.Id == 2));
 
             Console.WriteLine();
             Console.WriteLine("Skip 2..........................");
-            db.DataQuery<User>().Skip(2).ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().Skip(2).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Take 2..........................");
-            db.DataQuery<User>().Take(2).ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().Take(2).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Count..........................");
-            Console.WriteLine(db.DataQuery<User>().Count());
+            Console.WriteLine(db.DbQuery<User>().Count());
 
             Console.WriteLine();
             Console.WriteLine("Sum..........................");
-            Console.WriteLine(db.DataQuery<User>().Sum(item => item.Id));
+            Console.WriteLine(db.DbQuery<User>().Sum(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Sum..........................");
-            Console.WriteLine(db.DataQuery<User>().Sum(item => item.Id));
+            Console.WriteLine(db.DbQuery<User>().Sum(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Where Id>1..........................");
-            db.DataQuery<User>().Where(item => item.Id > 1).ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().Where(item => item.Id > 1).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Inner Join..........................");
-            db.DataQuery<User>().Join(
-                db.DataQuery<Address>(),
+            db.DbQuery<User>().Join(
+                db.DbQuery<Address>(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -126,8 +200,8 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("LEFT Join..........................");
-            db.DataQuery<User>().Join(
-                db.DataQuery<Address>().DefaultIfEmpty(),
+            db.DbQuery<User>().Join(
+                db.DbQuery<Address>().DefaultIfEmpty(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -135,13 +209,13 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Order By DESC..........................");
-            db.DataQuery<User>().OrderByDescending(item => item.Id)
+            db.DbQuery<User>().OrderByDescending(item => item.Id)
                 .ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("RIGHT Join..........................");
-            db.DataQuery<User>().DefaultIfEmpty().Join(
-                db.DataQuery<Address>(),
+            db.DbQuery<User>().DefaultIfEmpty().Join(
+                db.DbQuery<Address>(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -149,8 +223,8 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-            db.DataQuery<User>().DefaultIfEmpty().Join(
-                db.DataQuery<Address>().DefaultIfEmpty(),
+            db.DbQuery<User>().DefaultIfEmpty().Join(
+                db.DbQuery<Address>().DefaultIfEmpty(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -158,27 +232,27 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
-            db.DataQuery<User>().Concat(db.DataQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().Concat(db.DbQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("UNION..........................");
-            db.DataQuery<User>().Union(db.DataQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
+            db.DbQuery<User>().Union(db.DbQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("All Id>0..........................");
-            Console.WriteLine(db.DataQuery<User>().All(item => item.Id > 0));
+            Console.WriteLine(db.DbQuery<User>().All(item => item.Id > 0));
 
             Console.WriteLine();
             Console.WriteLine("All Id>10000..........................");
-            Console.WriteLine(db.DataQuery<User>().All(item => item.Id > 10000));
+            Console.WriteLine(db.DbQuery<User>().All(item => item.Id > 10000));
 
             Console.WriteLine();
             Console.WriteLine("All Id MAX..........................");
-            Console.WriteLine(db.DataQuery<User>().Max(item => item.Id));
+            Console.WriteLine(db.DbQuery<User>().Max(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Any Id>0..........................");
-            Console.WriteLine(db.DataQuery<User>().Any(item => item.Id > 0));
+            Console.WriteLine(db.DbQuery<User>().Any(item => item.Id > 0));
         }
     }
 

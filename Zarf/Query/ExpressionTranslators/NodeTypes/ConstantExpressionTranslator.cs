@@ -10,7 +10,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public override Expression Translate(IQueryContext context, ConstantExpression constant, IQueryCompiler queryCompiler)
         {
-            if (!typeof(IDataQuery).IsAssignableFrom(constant.Type))
+            if (!typeof(IDbQuery).IsAssignableFrom(constant.Type))
             {
                 return constant;
             }

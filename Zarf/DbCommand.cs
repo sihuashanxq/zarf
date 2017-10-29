@@ -22,5 +22,31 @@ namespace Zarf
             dbConnection.Open();
             return dbCommand.ExecuteReader();
         }
+
+        public object ExecuteScalar(string commandText, params DbParameter[] dbParams)
+        {
+            var dbConnection = new SqlConnection(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True");
+            var dbCommand = new SqlCommand(commandText, dbConnection);
+            foreach (var dbParam in dbParams)
+            {
+                dbCommand.Parameters.AddWithValue(dbParam.Name, dbParam.Value);
+            }
+
+            dbConnection.Open();
+            return dbCommand.ExecuteScalar();
+        }
+
+        public void ExecuteNonQuery(string commandText, params DbParameter[] dbParams)
+        {
+            var dbConnection = new SqlConnection(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True");
+            var dbCommand = new SqlCommand(commandText, dbConnection);
+            foreach (var dbParam in dbParams)
+            {
+                dbCommand.Parameters.AddWithValue(dbParam.Name, dbParam.Value);
+            }
+
+            dbConnection.Open();
+            dbCommand.ExecuteNonQuery();
+        }
     }
 }

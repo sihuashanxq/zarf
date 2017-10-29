@@ -25,23 +25,14 @@ namespace Zarf.Query.Expressions
         {
             Type = type;
             Alias = alias;
-
-            var attribute = type.GetTypeInfo().GetCustomAttribute<TableAttribute>();
-            if (attribute == null)
-            {
-                Table = new Table(type.Name);
-            }
-            else
-            {
-                Table = new Table(attribute.Name, attribute.Schema.IsNullOrEmpty() ? "dbo" : attribute.Schema);
-            }
+            Table = type.ToTable();
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = Table.Name.GetHashCode();
+                var hashCode = Table?.Name?.GetHashCode() ?? 0;
                 hashCode = (hashCode * 397) ^ Type.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Alias?.GetHashCode() ?? 0);
 

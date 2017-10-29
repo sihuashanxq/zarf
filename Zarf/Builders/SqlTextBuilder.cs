@@ -25,47 +25,39 @@ namespace Zarf.Builders
             switch (node)
             {
                 case QueryExpression query:
-                    node = VisitQuery(query);
-                    break;
+                    return VisitQuery(query);
                 case WhereExperssion where:
-                    node = VisitWhere(where);
-                    break;
+                    return VisitWhere(where);
                 case ColumnExpression column:
-                    node = VisitColumn(column);
-                    break;
+                    return VisitColumn(column);
                 case JoinExpression join:
-                    node = VisitJoin(join);
-                    break;
+                    return VisitJoin(join);
                 case OrderExpression order:
-                    node = VisitOrder(order);
-                    break;
+                    return VisitOrder(order);
                 case GroupExpression group:
-                    node = VisitGroup(group);
-                    break;
+                    return VisitGroup(group);
                 case UnionExpression union:
-                    node = VisitUnion(union);
-                    break;
+                    return VisitUnion(union);
                 case ExceptExpression except:
-                    node = VisitExcept(except);
-                    break;
+                    return VisitExcept(except);
                 case IntersectExpression intersect:
-                    node = VisitIntersect(intersect);
-                    break;
+                    return VisitIntersect(intersect);
                 case SqlFunctionExpression function:
-                    node = VisitSqlFunction(function);
-                    break;
+                    return VisitSqlFunction(function);
                 case AggregateExpression aggregate:
-                    node = VisitAggregate(aggregate);
-                    break;
+                    return VisitAggregate(aggregate);
                 case SkipExpression skip:
-                    node = VisitSkip(skip);
-                    break;
+                    return VisitSkip(skip);
                 case AllExpression all:
-                    node = VisitAll(all);
-                    break;
+                    return VisitAll(all);
                 case AnyExpression any:
-                    node = VisitAny(any);
-                    break;
+                    return VisitAny(any);
+                case InsertExpression insert:
+                    return VisitInsert(insert);
+                case UpdateExpression update:
+                    return VisitUpdate(update);
+                case DeleteExpression delete:
+                    return VisitDelete(delete);
             }
             return node;
         }
@@ -97,6 +89,12 @@ namespace Zarf.Builders
         protected abstract Expression VisitAll(AllExpression all);
 
         protected abstract Expression VisitAny(AnyExpression any);
+
+        protected abstract Expression VisitInsert(InsertExpression insert);
+
+        protected abstract Expression VisitUpdate(UpdateExpression update);
+
+        protected abstract Expression VisitDelete(DeleteExpression delete);
 
         public abstract string Build(Expression expression);
     }

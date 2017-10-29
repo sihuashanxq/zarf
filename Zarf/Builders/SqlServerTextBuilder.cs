@@ -450,17 +450,91 @@ namespace Zarf.Builders
             }
         }
 
-        internal virtual void Append(params object[] args)
+        protected virtual SqlServerTextBuilder Append(params object[] args)
         {
             foreach (var arg in args)
             {
                 _builder.Append(arg);
             }
+
+            return this;
         }
 
-        internal virtual void BuildExpression(Expression expression)
+        protected virtual void BuildExpression(Expression expression)
         {
             Visit(expression);
+        }
+
+        protected override Expression VisitInsert(InsertExpression insert)
+        {
+            Append(" INSERT INTO ").
+            Append(insert.Table.Schema.Escape()).
+            Append('.').
+            Append(insert.Table.Name.Escape()).
+            Append("(");
+
+            foreach (var col in insert.Columns)
+            {
+                Append(col.Escape()).Append(',');
+            }
+            _builder.Length--;
+            Append(") VALUES (");
+
+            foreach (var dbParam in insert.DbParams)
+            {
+                Append(dbParam.Name).Append(',');
+            }
+
+            _builder.Length--;
+            Append(");");
+
+            if (insert.HasAutoIncrement)
+            {
+                Append("SELECT SCOPE_IDENTITY() AS ID;");
+            }
+
+            return insert;
+        }
+
+        protected override Expression VisitUpdate(UpdateExpression update)
+        {
+            Append(" UPDATE ").
+             Append(update.Table.Schema.Escape()).
+             Append('.').
+             Append(update.Table.Name.Escape()).
+             Append("SET ");
+
+            for (var i = 0; i < update.Columns.Count; i++)
+            {
+                var col = update.Columns[i];
+                var dbParam = update.DbParams[i];
+                Append(col.Escape()).
+                Append('=').
+                Append(dbParam.Name).
+                Append(',');
+            }
+            _builder.Length--;
+
+            Append(" WHERE ").
+            Append(update.ByKey).
+            Append('=').
+            Append(update.ByKeyValue.Name).
+            Append(";SELECT @@ROWCOUNT AS Count;");
+            return update;
+        }
+
+        protected override Expression VisitDelete(DeleteExpression delete)
+        {
+            Append(" DELETE FROM  ").
+            Append(delete.Table.Schema.Escape()).
+            Append('.').
+            Append(delete.Table.Name.Escape()).
+            Append(" WHERE ").
+            Append(delete.ByKey).
+            Append('=').
+            Append(delete.ByKeyValue.Name).
+            Append(";SELECT @@ROWCOUNT AS Count;");
+            return delete;
         }
     }
 }

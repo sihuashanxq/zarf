@@ -3,15 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Query;
 
 namespace Zarf
 {
-    /// <summary>
-    /// 查询查询集合
-    /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    public class DataQuery<TEntity> : IDataQuery<TEntity>
+    public class DbQuery<TEntity> : IDbQuery<TEntity>
     {
         private EntityEnumerable<TEntity> _entityEnumerable;
 
@@ -34,16 +29,16 @@ namespace Zarf
             }
         }
 
-        public DataQuery(IQueryProvider provider)
+        public DbQuery(IQueryProvider provider)
         {
             Provider = provider;
             Expression = Expression.Constant(this);
         }
 
-        public DataQuery(IQueryProvider provider, Expression exp)
+        public DbQuery(IQueryProvider provider, Expression query)
         {
             Provider = provider;
-            Expression = exp;
+            Expression = query;
         }
 
         public IEnumerator<TEntity> GetEnumerator()

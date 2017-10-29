@@ -1,6 +1,6 @@
 ﻿namespace Zarf
 {
-    public interface IIncludeDataQuery<TEntity, TProperty> : IDataQuery<TEntity>
+    public interface IIncludeDataQuery<TEntity, TProperty> : IDbQuery<TEntity>
     {
 
     }

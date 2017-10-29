@@ -47,7 +47,7 @@ namespace Zarf.Mapping.Bindings
             Context = context;
         }
 
-        public Delegate Bind(IBindingContext context)
+        public Func<IDataReader, TEntity> Bind<TEntity>(IBindingContext context)
         {
             var bindQuery = context.Query.As<QueryExpression>()?.Result?.EntityNewExpression ?? context.Query;
             if (bindQuery.Is<LambdaExpression>())
@@ -70,8 +70,7 @@ namespace Zarf.Mapping.Bindings
                 InitializeQueryColumns(query.As<QueryExpression>());
             }
 
-            var lambdaBody = Visit(bindQuery);
-            return Expression.Lambda(lambdaBody, DataReader).Compile();
+            return (Func<IDataReader, TEntity>)Expression.Lambda(Visit(bindQuery), DataReader).Compile();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
@@ -228,7 +227,7 @@ namespace Zarf.Mapping.Bindings
             var memberExpressions = new List<MemberExpressionPair>();
             var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
 
-            foreach (var item in typeDescriptor.GetWriteableMembers())
+            foreach (var item in typeDescriptor.GetExpandMembers())
             {
                 var mappedExpression = FindMemberRelatedExpression(qExpression, item);
                 if (mappedExpression != null)

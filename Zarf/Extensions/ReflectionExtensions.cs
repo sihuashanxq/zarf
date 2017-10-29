@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.Linq;
 using System.Collections;
+using Zarf.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Zarf.Extensions
 {
@@ -71,20 +73,31 @@ namespace Zarf.Extensions
             return ReflectionUtil.SimpleTypes.Contains(type);
         }
 
-        public static T As<T>(this object o)
-            where T : class
+        public static Table ToTable(this Type type)
         {
-            return o as T;
+            var tableAttribute = type.GetTypeInfo().GetCustomAttribute<TableAttribute>();
+            if (tableAttribute == null)
+            {
+                return new Table(type.Name);
+            }
+       
+            return new Table(tableAttribute.Name, tableAttribute.Schema.IsNullOrEmpty() ? "dbo" : tableAttribute.Schema);
         }
 
-        public static T Cast<T>(this object o)
+        public static TTarget As<TTarget>(this object o)
+            where TTarget : class
         {
-            return (T)o;
+            return o as TTarget;
         }
 
-        public static bool Is<T>(this object o)
+        public static TTarget Cast<TTarget>(this object o)
         {
-            return o is T;
+            return (TTarget)o;
+        }
+
+        public static bool Is<TTarget>(this object o)
+        {
+            return o is TTarget;
         }
     }
 }

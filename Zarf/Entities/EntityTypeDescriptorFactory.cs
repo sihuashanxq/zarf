@@ -7,35 +7,35 @@ namespace Zarf.Mapping
 {
     public class EntityTypeDescriptorFactory
     {
-        private static readonly Dictionary<Type, EntityTypeDescriptor> _entityTypeDescriptors;
+        private static readonly Dictionary<Type, EntityTypeDescriptor> _typeDescriptors;
 
         public static EntityTypeDescriptorFactory Factory { get; }
 
         static EntityTypeDescriptorFactory()
         {
-            _entityTypeDescriptors = new Dictionary<Type, EntityTypeDescriptor>();
+            _typeDescriptors = new Dictionary<Type, EntityTypeDescriptor>();
             Factory = new EntityTypeDescriptorFactory();
         }
 
         public EntityTypeDescriptor Create(Type entityType)
         {
-            if (_entityTypeDescriptors.TryGetValue(entityType, out EntityTypeDescriptor entityTypeDescriptor))
+            if (_typeDescriptors.TryGetValue(entityType, out EntityTypeDescriptor typeDescriptor))
             {
-                return entityTypeDescriptor;
+                return typeDescriptor;
             }
 
-            entityTypeDescriptor = new EntityTypeDescriptor(entityType);
+            typeDescriptor = new EntityTypeDescriptor(entityType);
 
             foreach (var property in entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
                 if (ReflectionUtil.SimpleTypes.Contains(property.PropertyType))
                 {
-                    entityTypeDescriptor.Members.Add(property);
+                    typeDescriptor.Members.Add(property);
                 }
                 else if (!typeof(IEnumerable).IsAssignableFrom(property.PropertyType))
                 {
                     var propertyTypeDescriptor = Create(property.PropertyType);
-                    entityTypeDescriptor.Members.AddRange(propertyTypeDescriptor.Members);
+                    typeDescriptor.Members.AddRange(propertyTypeDescriptor.Members);
                 }
             }
 
@@ -43,16 +43,16 @@ namespace Zarf.Mapping
             {
                 if (ReflectionUtil.SimpleTypes.Contains(field.FieldType))
                 {
-                    entityTypeDescriptor.Members.Add(field);
+                    typeDescriptor.Members.Add(field);
                 }
                 else if (!typeof(IEnumerable).IsAssignableFrom(field.FieldType))
                 {
                     var fieldTypeDescriptor = Create(field.FieldType);
-                    entityTypeDescriptor.Members.AddRange(fieldTypeDescriptor.Members);
+                    typeDescriptor.Members.AddRange(fieldTypeDescriptor.Members);
                 }
             }
 
-            return _entityTypeDescriptors[entityType] = entityTypeDescriptor;
+            return _typeDescriptors[entityType] = typeDescriptor;
         }
     }
 }

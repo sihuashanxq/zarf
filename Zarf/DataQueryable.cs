@@ -28,13 +28,13 @@ namespace Zarf
         /// <param name="propertyRelation">关联关系</param>
         /// <returns></returns>
         public static IIncludeDataQuery<TEntity, TProperty> Include<TEntity, TProperty>(
-             this IDataQuery<TEntity> source,
+             this IDbQuery<TEntity> source,
              Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath,
              Expression<Func<TEntity, TProperty, bool>> propertyRelation
            )
         {
             return new IncludeDataQuery<TEntity, TProperty>(
-                new DataQueryProvider(),
+                new DbQueryProvider(),
                 Expression.Call(
                     IncludeMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
                     source.Expression,
@@ -60,7 +60,7 @@ namespace Zarf
             )
         {
             return new IncludeDataQuery<TEntity, TProperty>(
-                new DataQueryProvider(),
+                new DbQueryProvider(),
                 Expression.Call(
                   ThenIncludeMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
                   source.Expression,

@@ -4,11 +4,11 @@ using Zarf.Query;
 
 namespace Zarf
 {
-    public class DataQueryProvider : IQueryProvider
+    public class DbQueryProvider : IQueryProvider
     {
         private IQueryInterpreter _queryInterpreter;
 
-        public DataQueryProvider()
+        public DbQueryProvider()
         {
             _queryInterpreter = new QueryInterpreter();
         }
@@ -20,7 +20,7 @@ namespace Zarf
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression query)
         {
-            return new DataQuery<TElement>(this, query);
+            return new DbQuery<TElement>(this, query);
         }
 
         public object Execute(Expression query)

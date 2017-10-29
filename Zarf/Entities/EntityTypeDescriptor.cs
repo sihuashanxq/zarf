@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using Zarf.Extensions;
 
 namespace Zarf.Mapping
@@ -21,22 +20,7 @@ namespace Zarf.Mapping
             Constructor = entityType.GetConstructor(Type.EmptyTypes);
         }
 
-        public IEnumerable<MemberInfo> GetReadableMembers()
-        {
-            foreach (var item in Members)
-            {
-                if (item.Is<PropertyInfo>() && item.Cast<PropertyInfo>().GetMethod != null)
-                {
-                    yield return item;
-                }
-                else
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        public IEnumerable<MemberInfo> GetWriteableMembers()
+        public IEnumerable<MemberInfo> GetExpandMembers()
         {
             foreach (var item in Members)
             {

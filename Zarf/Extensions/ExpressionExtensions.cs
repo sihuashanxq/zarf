@@ -41,7 +41,7 @@ namespace Zarf.Extensions
         public static IEnumerable<ColumnExpression> GenerateColumns(this FromTableExpression table)
         {
             var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(table.Type);
-            foreach (var member in typeDescriptor.GetWriteableMembers())
+            foreach (var member in typeDescriptor.GetExpandMembers())
             {
                 yield return new ColumnExpression(table, member, member.Name);
             }

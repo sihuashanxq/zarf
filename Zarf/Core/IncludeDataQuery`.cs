@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Zarf
 {
-    public class IncludeDataQuery<TEntity, TProperty> : DataQuery<TEntity>, IIncludeDataQuery<TEntity, TProperty>
+    public class IncludeDataQuery<TEntity, TProperty> : DbQuery<TEntity>, IIncludeDataQuery<TEntity, TProperty>
     {
         public IncludeDataQuery(IQueryProvider provider)
             : base(provider)

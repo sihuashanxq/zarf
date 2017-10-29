@@ -4,7 +4,6 @@ using Zarf.Query.ExpressionTranslators;
 using Zarf.Mapping.Bindings;
 using Zarf.Builders;
 using System.Collections.Generic;
-using System.Reflection;
 using Zarf.Extensions;
 
 namespace Zarf.Query
@@ -21,7 +20,7 @@ namespace Zarf.Query
             return ExuecteCore<TEntity, TEntity>(query, queryContext);
         }
 
-        public TResult ExuecteCore<TResult, TElement>(Expression query, IQueryContext queryContext)
+        public TResult ExuecteCore<TResult, TEntity>(Expression query, IQueryContext queryContext)
         {
             if (queryContext == null)
             {
@@ -31,18 +30,18 @@ namespace Zarf.Query
             var compiler = new QueryCompiler(queryContext, NodeTypeTranslatorProvider.Default);
             var compiledQuery = compiler.Compile(query);
             var entityBinder = new DefaultEntityBinder(queryContext);
-            var entityCreator = entityBinder.Bind(new BindingContext(compiledQuery));
+            var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
             var commandText = new SqlServerTextBuilder().Build(compiledQuery);
             var dataReader = new DbCommand(commandText).ExecuteReader();
 
-            if (typeof(TResult) != typeof(TElement))
+            if (typeof(TResult) != typeof(TEntity))
             {
-                return new EntityEnumerator<TElement>(entityCreator, dataReader).Cast<TResult>();
+                return new EntityEnumerator<TEntity>(entityCreator, dataReader).Cast<TResult>();
             }
 
             if (dataReader.Read())
             {
-                return entityCreator.DynamicInvoke(dataReader).Cast<TResult>();
+                return entityCreator(dataReader).Cast<TResult>();
             }
 
             return default(TResult);
