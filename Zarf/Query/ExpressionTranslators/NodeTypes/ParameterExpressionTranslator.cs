@@ -4,7 +4,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class ParameterExpressionTranslator : Translator<ParameterExpression>
     {
-        public override Expression Translate(IQueryContext context, ParameterExpression parameter, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, ParameterExpression parameter, IQueryCompiler queryCompiler)
         {
             return context.QuerySourceProvider.GetSource(parameter) ?? parameter;
         }

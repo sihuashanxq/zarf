@@ -16,9 +16,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "GroupBy");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var keySelector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (query.Sets.Count != 0)
@@ -27,7 +27,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             context.QuerySourceProvider.AddSource(keySelector.Parameters.First(), query);
-            var selector = transformVisitor.Visit(keySelector);
+            var selector = queryCompiler.Compile(keySelector);
 
             query.Groups.Add(
                 new GroupExpression(

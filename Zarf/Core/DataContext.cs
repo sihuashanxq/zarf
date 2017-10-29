@@ -59,7 +59,7 @@ namespace Zarf
             sql.Length--;
             sql.Append(")");
 
-            new LinqExpressionInvoker().Add(sql.ToString(), parameterValues);
+            //new LinqExpressionInvoker().Add(sql.ToString(), parameterValues);
         }
 
         public object GetMemberValue(object instance, MemberInfo member)

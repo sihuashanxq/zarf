@@ -17,9 +17,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "All");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = tranformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (rootQuery.Where != null && (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0))
@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             rootQuery.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
 
             context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
-            var condition = tranformVisitor.Visit(lambda).UnWrap();
+            var condition = queryCompiler.Compile(lambda).UnWrap();
             if (condition.Is<LambdaExpression>())
             {
                 rootQuery.AddWhere(Expression.Not(condition.As<LambdaExpression>().Body));

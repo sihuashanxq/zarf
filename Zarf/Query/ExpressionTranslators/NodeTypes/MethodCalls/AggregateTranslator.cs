@@ -21,9 +21,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => methods.Contains(item.Name));
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             Expression aggregateKey = null;
 
             if (methodCall.Arguments.Count == 2)
@@ -37,7 +37,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
                 aggregateKey = context
                     .ProjectionScanner
-                    .Scan(transformVisitor.Visit, keySelectorLambda)
+                    .Scan(queryCompiler.Compile, keySelectorLambda)
                     .FirstOrDefault()
                     .Expression;
             }

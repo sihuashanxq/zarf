@@ -47,29 +47,31 @@ namespace Zarf.Mapping.Bindings
             Context = context;
         }
 
-        public Expression Bind(IBindingContext context)
+        public Delegate Bind(IBindingContext context)
         {
-            var exp = context.Expression;
-            if (exp.Is<LambdaExpression>())
+            var bindQuery = context.Query.As<QueryExpression>()?.Result?.EntityNewExpression ?? context.Query;
+            if (bindQuery.Is<LambdaExpression>())
             {
-                exp = context.Expression.As<LambdaExpression>().Body;
+                bindQuery = bindQuery.As<LambdaExpression>().Body;
             }
 
-            if (exp.Is<AggregateExpression>())
+            var query = context.Query;
+            if (query.Is<AggregateExpression>())
             {
-                var query = exp
+                query = query
                     .As<AggregateExpression>()
                     ?.KeySelector
                     ?.As<ColumnExpression>()
-                    ?.FromTable.As<QueryExpression>();
-                InitializeQueryColumns(query);
+                    ?.FromTable;
+                InitializeQueryColumns(query.As<QueryExpression>());
             }
             else
             {
-                InitializeQueryColumns(exp.As<QueryExpression>());
+                InitializeQueryColumns(query.As<QueryExpression>());
             }
 
-            return Visit(exp);
+            var lambdaBody = Visit(bindQuery);
+            return Expression.Lambda(lambdaBody, DataReader).Compile();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
@@ -268,7 +270,7 @@ namespace Zarf.Mapping.Bindings
                 makeNewMemberValue);
 
             var blockBegin = Expression.Label(eObject.Type);
-            var memValueVar = Expression.Variable(memValueType);
+            var memValueVar = Expression.Variable(memValueType, "memValue");
             var assignMemberVar = Expression.Assign(memValueVar, Expression.Convert(getOrSetCachedMemberValue, makeNewMemberValue.Type));
 
             var filteredMemberValue = Expression.Call(

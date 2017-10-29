@@ -21,9 +21,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Select");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (rootQuery.Sets.Count != 0)
@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             context.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), rootQuery);
 
-            var entityNew = transformVisitor.Visit(selector).UnWrap();
+            var entityNew = queryCompiler.Compile(selector).UnWrap();
 
             rootQuery.Projections.AddRange(context.ProjectionScanner.Scan(entityNew));
             rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());

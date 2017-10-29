@@ -15,9 +15,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Single" || item.Name == "SingleOrDefault");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var query = new WhereTranslator().Translate(context, methodCall, transformVisitor) as QueryExpression;
+            var query = new WhereTranslator().Translate(context, methodCall, queryCompiler) as QueryExpression;
 
             if (methodCall.Method.Name == "SingleOrDefault")
             {

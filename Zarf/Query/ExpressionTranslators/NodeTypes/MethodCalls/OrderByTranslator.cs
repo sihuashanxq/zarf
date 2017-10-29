@@ -31,9 +31,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 : OrderType.Desc;
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (rootQuery.Sets.Count != 0)
@@ -46,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             rootQuery.Orders.Add(new OrderExpression(
                 context
                 .ProjectionScanner
-                .Scan(transformVisitor.Visit(lambda))
+                .Scan(queryCompiler.Compile(lambda))
                 .Select(item => item.Expression)
                 .OfType<ColumnExpression>(),
                 GetOrderType(methodCall)

@@ -7,7 +7,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {
-        public override Expression Translate(IQueryContext context, MemberExpression memExpression, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MemberExpression memExpression, IQueryCompiler queryCompiler)
         {
             //new {item.User.Id,} item.User
             var exp = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
@@ -22,7 +22,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return new QueryExpression(typeInfo, context.Alias.GetNewTable());
             }
 
-            var belongInstance = transformVisitor.Visit(memExpression.Expression);
+            var belongInstance = queryCompiler.Compile(memExpression.Expression);
             var value = TryEvalMemberValue(memExpression.Member, belongInstance);
             if (value != null)
             {

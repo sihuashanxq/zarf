@@ -1,28 +1,36 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
+using Zarf.Query;
 
 namespace Zarf
 {
     public class DataQueryProvider : IQueryProvider
     {
-        public IQueryable CreateQuery(Expression node)
+        private IQueryInterpreter _queryInterpreter;
+
+        public DataQueryProvider()
         {
-            return CreateQuery<object>(node);
+            _queryInterpreter = new QueryInterpreter();
         }
 
-        public IQueryable<TElement> CreateQuery<TElement>(Expression node)
+        public IQueryable CreateQuery(Expression query)
         {
-            return new DataQuery<TElement>(this, node);
+            return CreateQuery<object>(query);
         }
 
-        public object Execute(Expression linqExpression)
+        public IQueryable<TElement> CreateQuery<TElement>(Expression query)
         {
-            return Execute<object>(linqExpression);
+            return new DataQuery<TElement>(this, query);
         }
 
-        public TResult Execute<TResult>(Expression linqExpression)
+        public object Execute(Expression query)
         {
-            return new LinqExpressionInvoker().Invoke<TResult>(linqExpression);
+            return Execute<object>(query);
+        }
+
+        public TResult Execute<TResult>(Expression query)
+        {
+            return _queryInterpreter.ExecuteSingle<TResult>(query);
         }
     }
 }

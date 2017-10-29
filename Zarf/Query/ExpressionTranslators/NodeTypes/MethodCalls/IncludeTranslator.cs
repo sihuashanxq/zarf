@@ -17,9 +17,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = new[] { DataQueryable.IncludeMethodInfo };
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor tranformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = tranformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var propertyPath = methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body.As<MemberExpression>();
 
             if (propertyPath == null)
@@ -35,10 +35,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             context.QuerySourceProvider.AddSource(lambda.Parameters[0], rootQuery);
 
-            var relation = tranformVisitor.Visit(lambda);
+            var relation = queryCompiler.Compile(lambda);
 
             context.QuerySourceProvider.AddSource(lambda.Parameters[1], innerQuery);
-            var condtion = tranformVisitor.Visit(lambda);
+            var condtion = queryCompiler.Compile(lambda);
 
             innerQuery.AddJoin(new JoinExpression(rootQuery, condtion));
             innerQuery.Projections.AddRange(context.ProjectionScanner.Scan(innerQuery));

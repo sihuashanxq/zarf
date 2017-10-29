@@ -17,9 +17,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "First" || item.Name == "FirstOrDefault");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
 
             if (methodCall.Arguments.Count == 2)
             {
@@ -32,7 +32,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 }
 
                 context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), rootQuery);
-                rootQuery.AddWhere(transformVisitor.Visit(condition).UnWrap());
+                rootQuery.AddWhere(queryCompiler.Compile(condition).UnWrap());
             }
 
             if (methodCall.Method.Name == "FirstOrDefault")

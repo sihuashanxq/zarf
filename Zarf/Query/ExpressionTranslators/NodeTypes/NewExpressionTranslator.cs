@@ -10,7 +10,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
-        public override Expression Translate(IQueryContext context, NewExpression newExpression, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, NewExpression newExpression, IQueryCompiler queryCompiler)
         {
             if (newExpression.Arguments == null ||
                 newExpression.Arguments.Count == 0)
@@ -21,7 +21,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var arguments = new List<Expression>();
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var argument = transformVisitor.Visit(newExpression.Arguments[i]);
+                var argument = queryCompiler.Compile(newExpression.Arguments[i]);
                 if (newExpression.Members == null || newExpression.Members[i] == null)
                 {
                     continue;

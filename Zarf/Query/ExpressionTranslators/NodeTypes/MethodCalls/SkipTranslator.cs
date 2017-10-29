@@ -19,9 +19,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Skip");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
 
             query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());

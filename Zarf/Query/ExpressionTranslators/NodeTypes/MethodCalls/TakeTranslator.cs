@@ -17,9 +17,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Take");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
+            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var limit = methodCall.Arguments[1].As<ConstantExpression>().Value;
 
             query.Limit = Convert.ToInt32(limit);

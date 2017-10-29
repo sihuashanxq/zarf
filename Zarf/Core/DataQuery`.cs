@@ -13,20 +13,26 @@ namespace Zarf
     /// <typeparam name="TEntity"></typeparam>
     public class DataQuery<TEntity> : IDataQuery<TEntity>
     {
-        /// <summary>
-        /// 实体类型
-        /// </summary>
+        private EntityEnumerable<TEntity> _entityEnumerable;
+
         public Type ElementType => typeof(TEntity);
 
-        /// <summary>
-        /// 查询表达式
-        /// </summary>
         public Expression Expression { get; }
 
-        /// <summary>
-        /// 查询提供者
-        /// </summary>
         public IQueryProvider Provider { get; }
+
+        public EntityEnumerable<TEntity> EntityEnumerable
+        {
+            get
+            {
+                if (_entityEnumerable == null)
+                {
+                    _entityEnumerable = new EntityEnumerable<TEntity>(Expression);
+                }
+
+                return _entityEnumerable;
+            }
+        }
 
         public DataQuery(IQueryProvider provider)
         {
@@ -34,30 +40,20 @@ namespace Zarf
             Expression = Expression.Constant(this);
         }
 
-        public DataQuery(IQueryProvider provider, Expression expression)
+        public DataQuery(IQueryProvider provider, Expression exp)
         {
             Provider = provider;
-            Expression = expression;
+            Expression = exp;
         }
 
-        /// <summary>
-        /// GetEnumerator
-        /// </summary>
-        /// <returns></returns>
         public IEnumerator<TEntity> GetEnumerator()
         {
-            return new EntityEnumerable<TEntity>(Expression)
-                .GetEnumerator();
+            return EntityEnumerable.GetEnumerator();
         }
 
-        /// <summary>
-        /// GetEnumerator
-        /// </summary>
-        /// <returns></returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return new EntityEnumerable<object>(Expression)
-                .GetEnumerator();
+            return ((IEnumerable<object>)this).GetEnumerator();
         }
     }
 }

@@ -17,15 +17,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Intersect");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
             if (methodCall.Arguments.Count != 2)
             {
                 throw new NotImplementedException("not supproted!");
             }
 
-            var query = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
-            var setsQuery = transformVisitor.Visit(methodCall.Arguments[1]).As<QueryExpression>();
+            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var setsQuery = queryCompiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
 
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Intersect Query Expression");

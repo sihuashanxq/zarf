@@ -10,14 +10,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberInitExpressionTranslator : Translator<MemberInitExpression>
     {
-        public override Expression Translate(IQueryContext context, MemberInitExpression memberInit, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MemberInitExpression memberInit, IQueryCompiler queryCompiler)
         {
-            var newExpression = transformVisitor.Visit(memberInit.NewExpression).Cast<NewExpression>();
+            var newExpression = queryCompiler.Compile(memberInit.NewExpression).As<NewExpression>();
             var bindings = new List<MemberBinding>();
 
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
-                var bindExpression = transformVisitor.Visit(binding.Expression);
+                var bindExpression = queryCompiler.Compile(binding.Expression);
                 var memberInfoType = binding.Member.GetMemberTypeInfo();
 
                 if (typeof(IEnumerable).IsAssignableFrom(memberInfoType) && memberInfoType != typeof(string))

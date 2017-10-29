@@ -18,10 +18,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Join");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = transformVisitor.Visit(methodCall.Arguments[0]).As<QueryExpression>();
-            var joinQuery = transformVisitor.Visit(methodCall.Arguments[1]).As<QueryExpression>();
+            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var joinQuery = queryCompiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
 
             if (rootQuery.Projections.Count != 0)
             {
@@ -43,11 +43,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             context.QuerySourceProvider.AddSource(selector.Parameters.First(), rootQuery);
             context.QuerySourceProvider.AddSource(selector.Parameters.Last(), joinQuery);
 
-            var left = transformVisitor.Visit(outer).UnWrap().As<LambdaExpression>().Body;
-            var right = transformVisitor.Visit(inner).UnWrap().As<LambdaExpression>().Body;
+            var left = queryCompiler.Compile(outer).UnWrap().As<LambdaExpression>().Body;
+            var right = queryCompiler.Compile(inner).UnWrap().As<LambdaExpression>().Body;
 
             //只保留Selector中的Columns
-            var entityNew = transformVisitor.Visit(selector).UnWrap();
+            var entityNew = queryCompiler.Compile(selector).UnWrap();
 
             rootQuery.Projections.AddRange(context.ProjectionScanner.Scan(entityNew));
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));

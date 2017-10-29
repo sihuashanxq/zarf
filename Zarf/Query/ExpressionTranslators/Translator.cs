@@ -6,11 +6,11 @@ namespace Zarf.Query.ExpressionTranslators
 {
     public abstract class Translator<TExpression> : ITranslator<TExpression>, ITranslaor
     {
-        public abstract Expression Translate(IQueryContext context, TExpression expression, ExpressionVisitor tranformVisitor);
+        public abstract Expression Translate(IQueryContext context, TExpression query, IQueryCompiler queryCompiler);
 
-        public Expression Translate(IQueryContext context, Expression expression, ExpressionVisitor tranformVisitor)
+        public Expression Translate(IQueryContext context, Expression query, IQueryCompiler queryCompiler)
         {
-            return Translate(context, expression.Cast<TExpression>(), tranformVisitor);
+            return Translate(context, query.Cast<TExpression>(), queryCompiler);
         }
     }
 }

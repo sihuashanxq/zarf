@@ -6,7 +6,7 @@ namespace Zarf.Mapping.Bindings
 {
     public interface IBindingContext
     {
-        Expression Expression { get; }
+        Expression Query { get; }
 
         IEntityProjectionMappingProvider MappingProvider { get; }
 

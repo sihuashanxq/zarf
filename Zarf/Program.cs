@@ -71,6 +71,7 @@ namespace Zarf
                 .ToList();
 
             var x = db.DataQuery<User>().Sum(item => item.Id);
+
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 

@@ -36,15 +36,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator());
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
             var translator = GetTranslator(methodCall);
             if (translator != null)
             {
-                return translator.Translate(context, methodCall, transformVisitor);
+                return translator.Translate(context, methodCall, queryCompiler);
             }
 
-            return TranslateMethodCall(context, methodCall, transformVisitor);
+            return TranslateMethodCall(context, methodCall, queryCompiler);
         }
 
         private ITranslaor GetTranslator(MethodCallExpression methodCall)
@@ -72,15 +72,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        private Expression TranslateMethodCall(IQueryContext context, MethodCallExpression methodCall, ExpressionVisitor transformVisitor)
+        private Expression TranslateMethodCall(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
             var arguments = new List<Expression>();
-            var @object = transformVisitor.Visit(methodCall.Object);
+            var @object = queryCompiler.Compile(methodCall.Object);
             var methodInfo = methodCall.Method;
 
             foreach (var item in methodCall.Arguments)
             {
-                arguments.Add(transformVisitor.Visit(item));
+                arguments.Add(queryCompiler.Compile(item));
             }
 
             //自定义sql函数
@@ -108,7 +108,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
                 if (canEval)
                 {
-                    return transformVisitor.Visit(Expression.Constant(methodInfo.Invoke(instance, parameters)));
+                    return queryCompiler.Compile(Expression.Constant(methodInfo.Invoke(instance, parameters)));
                 }
             }
 
