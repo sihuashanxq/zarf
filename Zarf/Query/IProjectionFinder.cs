@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Collections.Generic;
 using Zarf.Query.ExpressionVisitors;
+using Zarf.Mapping;
 
 namespace Zarf.Query
 {

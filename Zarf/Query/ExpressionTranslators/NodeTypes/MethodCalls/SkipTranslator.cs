@@ -6,6 +6,7 @@ using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using System.Linq;
 using System.Reflection;
+using Zarf.Mapping;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
@@ -30,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query.Projections.AddRange(context.ProjectionScanner.Scan(query));
             }
 
-            query.Projections.Add(new ExpressionVisitors.Projection() { Expression = query.Offset });
+            query.Projections.Add(new Projection() { Expression = query.Offset });
             query.Orders.Clear();
             query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
 

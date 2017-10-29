@@ -5,6 +5,7 @@ using System.Reflection;
 
 using Zarf.Entities;
 using Zarf.Extensions;
+using Zarf.Mapping;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 
@@ -43,7 +44,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
 
-            rootQuery.Projections.Add(new Projection() { Expression = aggregate, Query = rootQuery });
+            rootQuery.Projections.Add(new Projection() { Expression = aggregate, Ordinal = rootQuery.Projections.Count });
             rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
 
             return rootQuery;

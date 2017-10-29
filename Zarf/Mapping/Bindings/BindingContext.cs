@@ -5,18 +5,15 @@ namespace Zarf.Mapping.Bindings
 {
     public class BindingContext : IBindingContext
     {
-        public Type Type { get; }
-
-        public Expression BindExpression { get; }
+        public Expression Expression { get; }
 
         public IEntityProjectionMappingProvider MappingProvider { get; set; }
 
         public EntityCreationHandleProvider CreationHandleProvider { get; set; }
 
-        public BindingContext(Type type, Expression bindExpression)
+        public BindingContext(Expression exp)
         {
-            Type = type;
-            BindExpression = bindExpression;
+            Expression = exp;
         }
     }
 }

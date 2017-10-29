@@ -8,6 +8,9 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Collections.Generic;
 using Zarf.Query.Expressions;
+using Zarf.Mapping.Bindings;
+using Zarf.Query.ExpressionVisitors;
+using Zarf.Query.ExpressionTranslators;
 
 /// <summary>
 /// 临时文件 执行
@@ -23,43 +26,35 @@ namespace Zarf
     {
         protected IEntityProjectionMappingProvider MappingProvider { get; }
 
-        protected LinqExpressionTanslator QueryExpressionBuilder { get; }
-
         protected ISqlTextBuilder SqlBuilder { get; }
 
-        protected ObjectActivateDelegateFactory DelegateFactory { get; }
-
-        protected Delegate ObjectActivate { get; set; }
+        protected Delegate ObjectActivator { get; set; }
 
         protected IQueryContext Context { get; set; }
 
         public LinqExpressionInvoker()
         {
             Context = QueryContextFacotry.Factory.CreateContext();
-            QueryExpressionBuilder = new LinqExpressionTanslator(Context);
             MappingProvider = Context.ProjectionMappingProvider;
-            DelegateFactory = new ObjectActivateDelegateFactory();
             SqlBuilder = new SqlServerTextBuilder();
         }
 
         public QType Invoke<QType>(Expression linqExpression)
         {
-            var rootQuery = QueryExpressionBuilder.Translate(linqExpression);
-            if (rootQuery == null)
+            var context = QueryContextFacotry.Factory.CreateContext();
+            if (linqExpression.NodeType != ExpressionType.Extension)
             {
-                throw new NullReferenceException(nameof(rootQuery));
+                linqExpression = new SqlTranslatingExpressionVisitor(context, NodeTypeTranslatorProvider.Default).Visit(linqExpression);
             }
 
-            if (rootQuery.Is<QueryExpression>())
+            if (ObjectActivator == null)
             {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery.As<QueryExpression>().Result.EntityNewExpression, rootQuery, Context);
-            }
-            else
-            {
-                ObjectActivate = DelegateFactory.CreateQueryModelActivateDelegate(rootQuery, rootQuery, Context);
+                var binder = new DefaultEntityBinder(context);
+                var body = binder.Bind(new BindingContext(linqExpression.As<QueryExpression>().Result?.EntityNewExpression ?? linqExpression));
+                ObjectActivator = Expression.Lambda(body, DefaultEntityBinder.DataReader).Compile();
             }
 
-            var sqlText = SqlBuilder.Build(rootQuery);
+            var sqlText = SqlBuilder.Build(linqExpression);
             if (sqlText.IsNullOrEmpty())
             {
                 throw new NullReferenceException(nameof(sqlText));
@@ -70,7 +65,7 @@ namespace Zarf
 
             if (dbDataReader.Read())
             {
-                return (QType)ObjectActivate.DynamicInvoke(dbDataReader);
+                return (QType)ObjectActivator.DynamicInvoke(dbDataReader);
             }
 
             return default(QType);

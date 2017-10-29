@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Linq.Expressions;
 using System.Collections.Generic;
-
+using Zarf.Mapping;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -28,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             rootQuery.Projections.Clear();
-            rootQuery.Projections.Add(new ExpressionVisitors.Projection() { Expression = Expression.Constant(1) });
+            rootQuery.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
 
             context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
             var condition = tranformVisitor.Visit(lambda).UnWrap();

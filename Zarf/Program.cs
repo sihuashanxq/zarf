@@ -70,7 +70,7 @@ namespace Zarf
                 .Select(item => item)
                 .ToList();
 
-            var x = db.DataQuery<User>().Where(item => item.Id < 10).ToList();
+            var x = db.DataQuery<User>().Sum(item => item.Id);
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
 

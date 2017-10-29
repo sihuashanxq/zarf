@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,6 +14,19 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping.Bindings
 {
+    public class MemberExpressionPair
+    {
+        public MemberInfo Member { get; set; }
+
+        public Expression Expression { get; set; }
+
+        public MemberExpressionPair(MemberInfo mem, Expression exp)
+        {
+            Member = mem;
+            Expression = exp;
+        }
+    }
+
     /// <summary>
     /// 默认实体绑定实现
     /// </summary>
@@ -23,38 +38,50 @@ namespace Zarf.Mapping.Bindings
 
         public IPropertyNavigationContext NavigationContext { get; }
 
-        public Expression Query { get; }
-
         public IQueryContext Context { get; }
 
-        public DefaultEntityBinder(
-            IEntityProjectionMappingProvider projectionMappingProvider,
-            IPropertyNavigationContext navigationContext,
-            IQueryContext context,
-            Expression query)
+        public DefaultEntityBinder(IQueryContext context)
         {
-            Query = query;
-            NavigationContext = navigationContext;
-            ProjectionMappingProvider = projectionMappingProvider;
+            NavigationContext = context.PropertyNavigationContext;
+            ProjectionMappingProvider = context.ProjectionMappingProvider;
             Context = context;
-            InitializeQueryColumns(Query.As<QueryExpression>());
         }
 
         public Expression Bind(IBindingContext context)
         {
-            if (context.BindExpression.Is<LambdaExpression>())
+            var exp = context.Expression;
+            if (exp.Is<LambdaExpression>())
             {
-                return Visit(context.BindExpression.As<LambdaExpression>().Body);
+                exp = context.Expression.As<LambdaExpression>().Body;
             }
-            return Visit(context.BindExpression);
+
+            if (exp.Is<AggregateExpression>())
+            {
+                var query = exp
+                    .As<AggregateExpression>()
+                    ?.KeySelector
+                    ?.As<ColumnExpression>()
+                    ?.FromTable.As<QueryExpression>();
+                InitializeQueryColumns(query);
+            }
+            else
+            {
+                InitializeQueryColumns(exp.As<QueryExpression>());
+            }
+
+            return Visit(exp);
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
         {
             var eNewBlock = Visit(memInit.NewExpression) as BlockExpression;
-            return BindMembers(eNewBlock,
-                memInit.Bindings.OfType<MemberAssignment>().Select(item => item.Member).ToList(),
-                memInit.Bindings.OfType<MemberAssignment>().Select(item => item.Expression).ToList());
+            var memberExpressions = new List<MemberExpressionPair>();
+            foreach (var memBinding in memInit.Bindings.OfType<MemberAssignment>())
+            {
+                memberExpressions.Add(new MemberExpressionPair(memBinding.Member, memBinding.Expression));
+            }
+
+            return BindMembers(eNewBlock, memberExpressions);
         }
 
         protected override Expression VisitExtension(Expression node)
@@ -94,52 +121,52 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitNew(NewExpression newExp)
         {
-            var constructorInfo = newExp.Constructor;
-            if (newExp.Constructor.GetParameters().Length != 0)
-            {
-                constructorInfo = newExp.Type.GetConstructor(Type.EmptyTypes);
-            }
-
-            var eNewBlock = CreateEntityNewExpressionBlock(constructorInfo, newExp.Type);
+            var eNewBlock = CreateEntityNewExpressionBlock(newExp.Constructor, newExp.Type);
             if (newExp.Arguments.Count == 0)
             {
                 return eNewBlock;
             }
 
-            return BindMembers(eNewBlock, newExp.Members.ToList(), newExp.Arguments.ToList());
+            var memberExpressions = new List<MemberExpressionPair>();
+            for (var i = 0; i < newExp.Arguments.Count; i++)
+            {
+                memberExpressions.Add(new MemberExpressionPair(newExp.Members[i], newExp.Arguments[i]));
+            }
+
+            return BindMembers(eNewBlock, memberExpressions);
         }
 
-        protected BlockExpression BindMembers(BlockExpression eNewBlock, List<MemberInfo> mems, List<Expression> expes)
+        protected BlockExpression BindMembers(BlockExpression eNewBlock, List<MemberExpressionPair> memberExpressions)
         {
+            var eObject = eNewBlock.Variables.FirstOrDefault();
+            var blockVars = new List<ParameterExpression>(eNewBlock.Variables);
             var memBindings = new List<Expression>();
-            var entity = eNewBlock.Variables.FirstOrDefault();
-            var vars = new List<ParameterExpression>(eNewBlock.Variables);
 
-            for (var i = 0; i < mems.Count; i++)
+            foreach (var memberExpression in memberExpressions)
             {
-                if (NavigationContext.IsPropertyNavigation(mems[i]))
+                if (NavigationContext.IsPropertyNavigation(memberExpression.Member))
                 {
-                    var block = CreateIncludePropertyBinding(mems[i], eNewBlock.Variables.FirstOrDefault());
-                    vars.AddRange(block.Variables);
-                    memBindings.AddRange(block.Expressions);
+                    var memValuesBlock = CreateIncludePropertyBinding(memberExpression.Member, eObject);
+                    blockVars.AddRange(memValuesBlock.Variables);
+                    memBindings.AddRange(memValuesBlock.Expressions);
                 }
                 else
                 {
-                    var argument = Visit(expes[i]);
-                    var memAccess = Expression.MakeMemberAccess(eNewBlock.Variables.FirstOrDefault(), mems[i]);
-                    memBindings.Add(Expression.Assign(memAccess, argument));
+                    var memberValue = Visit(memberExpression.Expression);
+                    var memberAccess = Expression.MakeMemberAccess(eObject, memberExpression.Member);
+                    memBindings.Add(Expression.Assign(memberAccess, memberValue));
                 }
             }
 
-            var nodes = eNewBlock.Expressions.ToList();
-            var retIndex = nodes.FindLastIndex(item => item is GotoExpression);
-            if (retIndex == -1)
+            var memValues = eNewBlock.Expressions.ToList();
+            var retIndex = memValues.FindLastIndex(item => item is GotoExpression);
+            if (retIndex != -1)
             {
-                throw new Exception();
+                memValues.InsertRange(retIndex, memBindings);
+                return eNewBlock.Update(blockVars, memValues);
             }
 
-            nodes.InsertRange(retIndex, memBindings);
-            return eNewBlock.Update(vars, nodes);
+            return eNewBlock;
         }
 
         protected void InitializeQueryColumns(QueryExpression qExpression)
@@ -157,8 +184,7 @@ namespace Zarf.Mapping.Bindings
                     {
                         Member = item.Member,
                         Expression = item,
-                        Ordinal = qExpression.Projections.Count,
-                        Query = qExpression
+                        Ordinal = qExpression.Projections.Count
                     };
 
                     qExpression.Projections.Add(projection);
@@ -169,9 +195,21 @@ namespace Zarf.Mapping.Bindings
 
             foreach (var item in qExpression.Projections)
             {
-                if (!Context.ProjectionMappingProvider.IsMapped(item.Expression))
+                var col = item;
+                if (item.Expression.Is<AggregateExpression>())
                 {
-                    Context.ProjectionMappingProvider.Map(item);
+                    var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
+                    col = new Projection()
+                    {
+                        Expression = column,
+                        Member = column.Member,
+                        Ordinal = item.Ordinal
+                    };
+                }
+
+                if (!Context.ProjectionMappingProvider.IsMapped(col.Expression))
+                {
+                    Context.ProjectionMappingProvider.Map(col);
                 }
             }
         }
@@ -183,71 +221,74 @@ namespace Zarf.Mapping.Bindings
                 return null;
             }
 
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(qExpression.Type);
-            var memExpressions = new List<Expression>();
-            var members = new List<MemberInfo>();
+            var eType = qExpression.Type.GetCollectionElementType();
+            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
+            var memberExpressions = new List<MemberExpressionPair>();
             var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
 
             foreach (var item in typeDescriptor.GetWriteableMembers())
             {
-                var bindExpression = FindMemberRelatedExpression(qExpression, item);
-                if (bindExpression != null)
+                var mappedExpression = FindMemberRelatedExpression(qExpression, item);
+                if (mappedExpression != null)
                 {
-                    memExpressions.Add(bindExpression);
-                    members.Add(item);
+                    memberExpressions.Add(new MemberExpressionPair(item, mappedExpression));
                 }
             }
 
             foreach (var item in typeDescriptor.Type.GetProperties().Where(item => item.SetMethod != null))
             {
-                if (!members.Contains(item) && NavigationContext.IsPropertyNavigation(item))
+                if (NavigationContext.IsPropertyNavigation(item))
                 {
-                    members.Add(item);
-                    memExpressions.Add(null);
+                    memberExpressions.Add(new MemberExpressionPair(item, null));
                 }
             }
 
-            return BindMembers(eNewBlock, members, memExpressions);
+            return BindMembers(eNewBlock, memberExpressions);
         }
 
-        public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression ownner)
+        public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression eObject)
         {
-            var navigation = NavigationContext.GetNavigation(memberInfo);
-            var innerQuery = navigation.RefrenceQuery;
-            var propertyEleType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
-            var propertyType = typeof(EntityPropertyEnumerable<>).MakeGenericType(propertyEleType);
+            var memNavigation = NavigationContext.GetNavigation(memberInfo);
+            var memEleType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
+            var memValueType = typeof(EntityPropertyEnumerable<>).MakeGenericType(memEleType);
 
-            var makeNewPropertyValue = Expression.Convert(
-                    Expression.New(propertyType.GetConstructor(new Type[] { typeof(Expression), typeof(IMemberValueCache) }),
-                    Expression.Constant(innerQuery), Expression.Constant(Context.MemberValueCache)),
-                    propertyType
+            var makeNewMemberValue = Expression.Convert(
+                    Expression.New(
+                        memValueType.GetConstructor(new Type[] { typeof(Expression), typeof(IMemberValueCache) }),
+                        Expression.Constant(memNavigation.RefrenceQuery),
+                        Expression.Constant(Context.MemberValueCache)),
+                    memValueType
                 );
 
-            var contextInstance = Expression.Constant(Context);
-            var getStoredPropertyValue = Expression.Call(null, GetMemberValueMethod, contextInstance, Expression.Constant(memberInfo));
-            var toStorePropertyValue = Expression.Call(null, SetMemberValueMethod, contextInstance, Expression.Constant(memberInfo), makeNewPropertyValue);
+            var getOrSetCachedMemberValue = Expression.Call(
+                null,
+                GetOrSetMemberValueMethod,
+                Expression.Constant(Context.MemberValueCache),
+                Expression.Constant(memberInfo),
+                makeNewMemberValue);
 
-            var blockBegin = Expression.Label(ownner.Type);
-            var propertyValueVar = Expression.Variable(propertyType);
+            var blockBegin = Expression.Label(eObject.Type);
+            var memValueVar = Expression.Variable(memValueType);
+            var assignMemberVar = Expression.Assign(memValueVar, Expression.Convert(getOrSetCachedMemberValue, makeNewMemberValue.Type));
 
-            var isStoredPropertyValueNull = Expression.Equal(getStoredPropertyValue, Expression.Constant(null));
-            var toStorePropertyValueIfNull = Expression.IfThen(isStoredPropertyValueNull, toStorePropertyValue);
-            var setPropertyValueVar = Expression.Assign(propertyValueVar, Expression.Convert(getStoredPropertyValue, makeNewPropertyValue.Type));
+            var filteredMemberValue = Expression.Call(
+                null,
+                ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(eObject.Type, memEleType),
+                memValueVar,
+                eObject,
+                memNavigation.Relation.UnWrap().As<LambdaExpression>());
 
-            var condtion = navigation.Relation.UnWrap().As<LambdaExpression>();
-            var updatedCondtion = new InnerNodeUpdateExpressionVisitor(condtion.Parameters.First(), ownner)
-                 .Update(condtion)
-                 .As<LambdaExpression>();
+            var assignMemberValue = Expression.Call(
+                eObject,
+                memberInfo.As<PropertyInfo>().SetMethod,
+                filteredMemberValue);
 
-            var propertyValue = Expression.Call(null, ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(ownner.Type, propertyEleType), propertyValueVar, ownner, updatedCondtion);
-            var setPropertyValue = Expression.Call(ownner, memberInfo.As<PropertyInfo>().SetMethod, propertyValue);
-            var blockEnd = Expression.Label(blockBegin, ownner);
+            var blockEnd = Expression.Label(blockBegin, eObject);
 
             return Expression.Block(
-                new[] { propertyValueVar },
-                toStorePropertyValueIfNull,
-                setPropertyValueVar,
-                setPropertyValue,
+                new[] { memValueVar },
+                assignMemberVar,
+                assignMemberValue,
                 blockEnd);
         }
 
@@ -288,18 +329,18 @@ namespace Zarf.Mapping.Bindings
             return query.Projections.FirstOrDefault(item => item.Member == member)?.Expression;
         }
 
-        public static object GetMemberValue(IQueryContext context, MemberInfo member)
+        public static object GetOrSetMemberValue(IMemberValueCache valueCache, MemberInfo member, object value)
         {
-            return context.MemberValueCache.GetValue(member);
+            var v = valueCache.GetValue(member);
+            if (v == null)
+            {
+                valueCache.SetValue(member, value);
+                return value;
+            }
+
+            return v;
         }
 
-        public static void SetMemberValue(IQueryContext context, MemberInfo member, object instance)
-        {
-            context.MemberValueCache.SetValue(member, instance);
-        }
-
-        public static MethodInfo GetMemberValueMethod = typeof(DefaultEntityBinder).GetMethod(nameof(GetMemberValue));
-
-        public static MethodInfo SetMemberValueMethod = typeof(DefaultEntityBinder).GetMethod(nameof(SetMemberValue));
+        public static MethodInfo GetOrSetMemberValueMethod = typeof(DefaultEntityBinder).GetMethod(nameof(GetOrSetMemberValue));
     }
 }

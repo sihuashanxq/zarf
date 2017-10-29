@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Mapping;
 
 namespace Zarf.Query.ExpressionVisitors
 {
@@ -100,8 +101,7 @@ namespace Zarf.Query.ExpressionVisitors
                 {
                     Member = member,
                     Expression = node,
-                    Ordinal = _list.Count,
-                    Query = node.As<ColumnExpression>().FromTable
+                    Ordinal = _list.Count
                 });
             }
         }

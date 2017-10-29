@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Query.Expressions;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Mapping
 {
     public class Projection
     {
@@ -12,13 +11,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         public MemberInfo Member { get; set; }
 
-        public FromTableExpression Query { get; set; }
-
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = Query.GetHashCode();
+                var hashCode =0;
                 hashCode = (hashCode * 397) ^ (Expression?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 return hashCode;

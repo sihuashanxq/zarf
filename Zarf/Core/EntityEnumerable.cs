@@ -11,6 +11,8 @@ using Zarf.Query.Expressions;
 using Zarf.Extensions;
 using System.Data.SqlClient;
 using Zarf.Mapping.Bindings;
+using Zarf.Query.ExpressionVisitors;
+using Zarf.Query.ExpressionTranslators;
 
 namespace Zarf
 {
@@ -40,12 +42,18 @@ namespace Zarf
 
         protected Delegate ObjectActivator { get; set; }
 
+        protected IBinder Binder { get; set; }
+
         protected string CommandText { get; set; }
+
+        protected IQueryContext Context { get; set; }
 
         public EntityEnumerable(Expression linq)
         {
             Expression = linq;
             SqlBuilder = new SqlServerTextBuilder();
+            Context = CreateQueryContext();
+            Binder = new DefaultEntityBinder(Context);
         }
 
         protected virtual IQueryContext CreateQueryContext()
@@ -57,17 +65,14 @@ namespace Zarf
         {
             if (Enumerator == null)
             {
-                //TODO
-                var context = CreateQueryContext();
                 if (Expression.NodeType != ExpressionType.Extension)
                 {
-                    Expression = new LinqExpressionTanslator(context).Build(Expression, context);
+                    Expression = new SqlTranslatingExpressionVisitor(Context, NodeTypeTranslatorProvider.Default).Visit(Expression);
                 }
 
                 if (ObjectActivator == null)
                 {
-                    var binder = new DefaultEntityBinder(context.ProjectionMappingProvider, context.PropertyNavigationContext, context, Expression);
-                    var body = binder.Bind(new BindingContext(Expression.Type.GetCollectionElementType(), Expression.As<QueryExpression>().Result?.EntityNewExpression ?? Expression));
+                    var body = Binder.Bind(new BindingContext(Expression.As<QueryExpression>().Result?.EntityNewExpression ?? Expression));
                     ObjectActivator = Expression.Lambda(body, DefaultEntityBinder.DataReader).Compile();
                 }
 
