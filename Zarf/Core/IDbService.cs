@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data;
+﻿using System.Data;
 
 namespace Zarf.Core
 {
     public interface IDbService
     {
-        IDbTransaction DbTransaction { get; }
+        IDbCommand CreateDbCommand();
 
-        IDbConnection DbConnection { get; }
+        IDbCommand CreateDbCommand(IDbConnection connection);
 
-        IDbCommand DbCommand { get; }
+        IDbCommand CreateDbCommand(IDbConnection connection, IDbTransaction transaction);
+
+        IDbConnection CreateDbConnection(string connectionString);
+
+        IDbTransaction CreateDbTransaction(IDbConnection connection, IsolationLevel isolationLevel = IsolationLevel.Snapshot);
     }
 }

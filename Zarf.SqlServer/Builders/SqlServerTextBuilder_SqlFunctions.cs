@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Query.Expressions;
+using Zarf.Builders;
 
-namespace Zarf.Builders
+namespace Zarf.SqlServer.Builders
 {
     public partial class SqlServerTextBuilder : SqlTextBuilder
     {

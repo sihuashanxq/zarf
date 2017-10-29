@@ -2,7 +2,6 @@
 using Zarf.Query.ExpressionVisitors;
 using Zarf.Query.ExpressionTranslators;
 using Zarf.Mapping.Bindings;
-using Zarf.Builders;
 using System.Collections.Generic;
 using Zarf.Extensions;
 
@@ -31,7 +30,7 @@ namespace Zarf.Query
             var compiledQuery = compiler.Compile(query);
             var entityBinder = new DefaultEntityBinder(queryContext);
             var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
-            var commandText = new SqlServerTextBuilder().Build(compiledQuery);
+            var commandText = DbContext.SqlBuilder.Build(compiledQuery);
             var dataReader = new DbCommand(commandText).ExecuteReader();
 
             if (typeof(TResult) != typeof(TEntity))

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using Zarf.Query.Expressions;
-using Zarf.Extensions;
-using System.Linq;
+using Zarf.Builders;
 using Zarf.Entities;
+using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Builders
+namespace Zarf.SqlServer.Builders
 {
     public partial class SqlServerTextBuilder : SqlTextBuilder
     {

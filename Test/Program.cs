@@ -8,7 +8,6 @@ using Zarf.Entities;
 
 namespace Zarf
 {
-
     public class User
     {
         public int Id { get; set; }
@@ -76,7 +75,8 @@ namespace Zarf
     {
         static void Main(string[] args)
         {
-            var db = new DbContext();
+            DbContext.SqlBuilder = new SqlServer.Builders.SqlServerTextBuilder();
+            var db = new SqlServerDbContext();
 
             var y = db.DbQuery<User>()
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
@@ -97,60 +97,6 @@ namespace Zarf
 
         public static MethodInfo Method = typeof(Dictionary<,>).MakeGenericType(
             new Type[] { typeof(MemberInfo), typeof(object) }).GetMethod("Add");
-
-        public static Dictionary<MemberInfo, object> GetDictionary(object typeOf)
-        {
-            var mem = EntityTypeDescriptorFactory.Factory.Create(typeOf.GetType());
-            var dic = new Dictionary<MemberInfo, object>();
-            var mems = new List<Expression>();
-            var dd = Expression.Parameter(typeof(Dictionary<MemberInfo, object>));
-            foreach (var item in mem.GetExpandMembers())
-            {
-                mems.Add(Expression.Call(dd,
-                    Method,
-                    Expression.Constant(item),
-                   Expression.Convert(Expression.MakeMemberAccess(Expression.Constant(typeOf), item), typeof(object))
-                    ));
-            }
-
-            var begin = Expression.Label();
-            var end = Expression.Label(begin);
-            mems.Add(end);
-            var st = new System.Diagnostics.Stopwatch();
-            var d = new Dictionary<MemberInfo, object>();
-
-            st.Start();
-
-            for (var i = 0; i < 10000; i++)
-            {
-                d = new Dictionary<MemberInfo, object>();
-                foreach (var item in mem.GetExpandMembers())
-                {
-                    if (item is PropertyInfo)
-                    {
-                        d[item] = (item as PropertyInfo).GetValue(typeOf);
-                    }
-                    else
-                    {
-                        d[item] = (item as FieldInfo).GetValue(typeOf);
-                    }
-                }
-            }
-            st.Stop();
-            Console.WriteLine(st.ElapsedMilliseconds);
-
-            st.Reset();
-            var x = (Action<Dictionary<MemberInfo, object>>)Expression.Lambda(Expression.Block(mems), dd).Compile();
-            st.Start();
-            for (var i = 0; i < 10000; i++)
-            {
-                dic = new Dictionary<MemberInfo, object>();
-                x(dic);
-            }
-            st.Stop();
-            Console.WriteLine(st.ElapsedMilliseconds);
-            return dic;
-        }
 
         static void BasicTest(DbContext db)
         {
@@ -254,6 +200,59 @@ namespace Zarf
             Console.WriteLine("Any Id>0..........................");
             Console.WriteLine(db.DbQuery<User>().Any(item => item.Id > 0));
         }
-    }
 
+        public static Dictionary<MemberInfo, object> GetDictionary(object typeOf)
+        {
+            var mem = EntityTypeDescriptorFactory.Factory.Create(typeOf.GetType());
+            var dic = new Dictionary<MemberInfo, object>();
+            var mems = new List<Expression>();
+            var dd = Expression.Parameter(typeof(Dictionary<MemberInfo, object>));
+            foreach (var item in mem.GetExpandMembers())
+            {
+                mems.Add(Expression.Call(dd,
+                    Method,
+                    Expression.Constant(item),
+                   Expression.Convert(Expression.MakeMemberAccess(Expression.Constant(typeOf), item), typeof(object))
+                    ));
+            }
+
+            var begin = Expression.Label();
+            var end = Expression.Label(begin);
+            mems.Add(end);
+            var st = new System.Diagnostics.Stopwatch();
+            var d = new Dictionary<MemberInfo, object>();
+
+            st.Start();
+
+            for (var i = 0; i < 10000; i++)
+            {
+                d = new Dictionary<MemberInfo, object>();
+                foreach (var item in mem.GetExpandMembers())
+                {
+                    if (item is PropertyInfo)
+                    {
+                        d[item] = (item as PropertyInfo).GetValue(typeOf);
+                    }
+                    else
+                    {
+                        d[item] = (item as FieldInfo).GetValue(typeOf);
+                    }
+                }
+            }
+            st.Stop();
+            Console.WriteLine(st.ElapsedMilliseconds);
+
+            st.Reset();
+            var x = (Action<Dictionary<MemberInfo, object>>)Expression.Lambda(Expression.Block(mems), dd).Compile();
+            st.Start();
+            for (var i = 0; i < 10000; i++)
+            {
+                dic = new Dictionary<MemberInfo, object>();
+                x(dic);
+            }
+            st.Stop();
+            Console.WriteLine(st.ElapsedMilliseconds);
+            return dic;
+        }
+    }
 }
