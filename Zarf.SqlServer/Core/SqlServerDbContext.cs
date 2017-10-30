@@ -1,20 +1,18 @@
-﻿using System.Text;
-using System.Linq;
-using System.Reflection;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Linq.Expressions;
+using System.Reflection;
+using Zarf.Entities;
+using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
-using Zarf.Extensions;
-using Zarf.Builders;
-using Zarf.Entities;
 using Zarf.SqlServer.Builders;
 
 namespace Zarf
 {
     public class SqlServerDbContext : DbContext
     {
-        public override  void Add<TEntity>(TEntity entity)
+        public override void Add<TEntity>(TEntity entity)
         {
             var eType = typeof(TEntity);
             var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
@@ -98,6 +96,46 @@ namespace Zarf
             var sql = new SqlServerTextBuilder().Build(delete);
             var dbCommand = new DbCommand(string.Empty);
             return (int)dbCommand.ExecuteScalar(sql, byKeyValue);
+        }
+
+        public override void AddRange<TEntity>(IEnumerable<TEntity> entities)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int AddRange<TEntity>(IEnumerable<TEntity> entities, Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Add<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Update<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Delete<TEntity>(Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Delete<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key)
+        {
+            throw new NotImplementedException();
         }
     }
 }

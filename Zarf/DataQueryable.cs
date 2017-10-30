@@ -34,7 +34,7 @@ namespace Zarf
            )
         {
             return new IncludeDataQuery<TEntity, TProperty>(
-                new DbQueryProvider(),
+                new DbQueryProvider(source.Context),
                 Expression.Call(
                     IncludeMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
                     source.Expression,
@@ -60,7 +60,7 @@ namespace Zarf
             )
         {
             return new IncludeDataQuery<TEntity, TProperty>(
-                new DbQueryProvider(),
+                new DbQueryProvider(source.Context),
                 Expression.Call(
                   ThenIncludeMethodInfo.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
                   source.Expression,

@@ -6,11 +6,14 @@ namespace Zarf
 {
     public class DbQueryProvider : IQueryProvider
     {
-        private IQueryInterpreter _queryInterpreter;
+        public DbContext Context { get; }
 
-        public DbQueryProvider()
+        public IQueryInterpreter QueryInterpreter { get; }
+
+        public DbQueryProvider(DbContext dbContext)
         {
-            _queryInterpreter = new QueryInterpreter();
+            Context = dbContext;
+            QueryInterpreter = new QueryInterpreter(DbContext.ServiceProvider);
         }
 
         public IQueryable CreateQuery(Expression query)
@@ -30,7 +33,7 @@ namespace Zarf
 
         public TResult Execute<TResult>(Expression query)
         {
-            return _queryInterpreter.ExecuteSingle<TResult>(query);
+            return QueryInterpreter.ExecuteSingle<TResult>(query);
         }
     }
 }

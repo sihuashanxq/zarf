@@ -4,11 +4,21 @@ using Zarf.Query.ExpressionTranslators;
 using Zarf.Mapping.Bindings;
 using System.Collections.Generic;
 using Zarf.Extensions;
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Zarf.Builders;
 
 namespace Zarf.Query
 {
     public class QueryInterpreter : IQueryInterpreter
     {
+        private IServiceProvider _serviceProvider;
+
+        public QueryInterpreter(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext queryContext = null)
         {
             return ExuecteCore<IEnumerator<TEntity>, TEntity>(query, queryContext);
@@ -30,7 +40,8 @@ namespace Zarf.Query
             var compiledQuery = compiler.Compile(query);
             var entityBinder = new DefaultEntityBinder(queryContext);
             var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
-            var commandText = DbContext.SqlBuilder.Build(compiledQuery);
+
+            var commandText = _serviceProvider.GetService<ISqlTextBuilder>().Build(compiledQuery);
             var dataReader = new DbCommand(commandText).ExecuteReader();
 
             if (typeof(TResult) != typeof(TEntity))

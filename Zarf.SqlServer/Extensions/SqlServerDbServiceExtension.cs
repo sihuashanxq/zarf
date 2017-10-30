@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Zarf.Builders;
+using Zarf.SqlServer.Builders;
 
 namespace Zarf.SqlServer.Extensions
 {
     public static class SqlServerDbServiceExtension
     {
-        //public static IServiceCollection AddZarfSqlServer( this IServiceCollection serviceCollection)
-        //{
-        //}
+        public static IServiceCollection AddZarfSqlServer(this IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddTransient<ISqlTextBuilder, SqlServerTextBuilder>();
+            return serviceCollection;
+        }
     }
 }

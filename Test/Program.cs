@@ -5,6 +5,8 @@ using System.Reflection;
 using Zarf.Mapping;
 using System.Linq.Expressions;
 using Zarf.Entities;
+using Microsoft.Extensions.DependencyInjection;
+using Zarf.SqlServer.Extensions;
 
 namespace Zarf
 {
@@ -75,10 +77,13 @@ namespace Zarf
     {
         static void Main(string[] args)
         {
-            DbContext.SqlBuilder = new SqlServer.Builders.SqlServerTextBuilder();
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddZarfSqlServer();
+            DbContext.ServiceProvider = serviceCollection.BuildServiceProvider();
+
             var db = new SqlServerDbContext();
 
-            var y = db.DbQuery<User>()
+            var y = db.Query<User>()
                 .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
                 .Select(item => item)
                 .ToList();
@@ -89,6 +94,7 @@ namespace Zarf
             {
                 Name = "333"
             };
+
 
             db.Add(p);
 
@@ -101,44 +107,44 @@ namespace Zarf
         static void BasicTest(DbContext db)
         {
             Console.WriteLine("All..........................");
-            db.DbQuery<User>().ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("First..........................");
-            Console.WriteLine(db.DbQuery<User>().First());
+            Console.WriteLine(db.Query<User>().First());
 
             Console.WriteLine();
             Console.WriteLine("First id=2.......................");
-            Console.WriteLine(db.DbQuery<User>().First(item => item.Id == 2));
+            Console.WriteLine(db.Query<User>().First(item => item.Id == 2));
 
             Console.WriteLine();
             Console.WriteLine("Skip 2..........................");
-            db.DbQuery<User>().Skip(2).ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().Skip(2).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Take 2..........................");
-            db.DbQuery<User>().Take(2).ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().Take(2).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Count..........................");
-            Console.WriteLine(db.DbQuery<User>().Count());
+            Console.WriteLine(db.Query<User>().Count());
 
             Console.WriteLine();
             Console.WriteLine("Sum..........................");
-            Console.WriteLine(db.DbQuery<User>().Sum(item => item.Id));
+            Console.WriteLine(db.Query<User>().Sum(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Sum..........................");
-            Console.WriteLine(db.DbQuery<User>().Sum(item => item.Id));
+            Console.WriteLine(db.Query<User>().Sum(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Where Id>1..........................");
-            db.DbQuery<User>().Where(item => item.Id > 1).ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().Where(item => item.Id > 1).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("Inner Join..........................");
-            db.DbQuery<User>().Join(
-                db.DbQuery<Address>(),
+            db.Query<User>().Join(
+                db.Query<Address>(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -146,8 +152,8 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("LEFT Join..........................");
-            db.DbQuery<User>().Join(
-                db.DbQuery<Address>().DefaultIfEmpty(),
+            db.Query<User>().Join(
+                db.Query<Address>().DefaultIfEmpty(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -155,13 +161,13 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Order By DESC..........................");
-            db.DbQuery<User>().OrderByDescending(item => item.Id)
+            db.Query<User>().OrderByDescending(item => item.Id)
                 .ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("RIGHT Join..........................");
-            db.DbQuery<User>().DefaultIfEmpty().Join(
-                db.DbQuery<Address>(),
+            db.Query<User>().DefaultIfEmpty().Join(
+                db.Query<Address>(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -169,8 +175,8 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-            db.DbQuery<User>().DefaultIfEmpty().Join(
-                db.DbQuery<Address>().DefaultIfEmpty(),
+            db.Query<User>().DefaultIfEmpty().Join(
+                db.Query<Address>().DefaultIfEmpty(),
                 item => item.AddressId,
                 item => item.Id,
                 (user, address) => new { user.Name, address.Street })
@@ -178,27 +184,27 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
-            db.DbQuery<User>().Concat(db.DbQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().Concat(db.Query<User>()).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("UNION..........................");
-            db.DbQuery<User>().Union(db.DbQuery<User>()).ToList().ForEach(item => Console.WriteLine(item));
+            db.Query<User>().Union(db.Query<User>()).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("All Id>0..........................");
-            Console.WriteLine(db.DbQuery<User>().All(item => item.Id > 0));
+            Console.WriteLine(db.Query<User>().All(item => item.Id > 0));
 
             Console.WriteLine();
             Console.WriteLine("All Id>10000..........................");
-            Console.WriteLine(db.DbQuery<User>().All(item => item.Id > 10000));
+            Console.WriteLine(db.Query<User>().All(item => item.Id > 10000));
 
             Console.WriteLine();
             Console.WriteLine("All Id MAX..........................");
-            Console.WriteLine(db.DbQuery<User>().Max(item => item.Id));
+            Console.WriteLine(db.Query<User>().Max(item => item.Id));
 
             Console.WriteLine();
             Console.WriteLine("Any Id>0..........................");
-            Console.WriteLine(db.DbQuery<User>().Any(item => item.Id > 0));
+            Console.WriteLine(db.Query<User>().Any(item => item.Id > 0));
         }
 
         public static Dictionary<MemberInfo, object> GetDictionary(object typeOf)

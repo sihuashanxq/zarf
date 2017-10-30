@@ -39,7 +39,7 @@ namespace Zarf
         public EntityEnumerable(Expression query)
         {
             Expression = query;
-            QueryInterpreter = new QueryInterpreter();
+            QueryInterpreter = new QueryInterpreter(DbContext.ServiceProvider);
         }
 
         public virtual IEnumerator<TEntity> GetEnumerator()

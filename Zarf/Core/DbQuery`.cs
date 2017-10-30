@@ -10,6 +10,8 @@ namespace Zarf
     {
         private EntityEnumerable<TEntity> _entityEnumerable;
 
+        public DbContext Context => (Provider as DbQueryProvider)?.Context;
+
         public Type ElementType => typeof(TEntity);
 
         public Expression Expression { get; }
