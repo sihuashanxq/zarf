@@ -13,39 +13,7 @@ namespace Zarf
     public class SqlServerDbContext : DbContext
     {
         public override void Add<TEntity>(TEntity entity)
-        {
-            var eType = typeof(TEntity);
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
-            var table = eType.ToTable();
-            var dbParams = new List<DbParameter>();
-            var dbColumns = new List<string>();
-            MemberInfo autoIncrement = null;
-
-            foreach (var item in typeDescriptor.GetExpandMembers())
-            {
-                if (item.GetCustomAttribute<AutoIncrementAttribute>() != null)
-                {
-                    autoIncrement = item;
-                    continue;
-                }
-
-                dbColumns.Add(item.Name);
-                dbParams.Add(new DbParameter("@" + item.Name, GetMemberValue(entity, item)));
-            }
-
-            var insert = new InsertExpression(table, dbParams, dbColumns, autoIncrement != null);
-            var sql = new SqlServerTextBuilder().Build(insert);
-            var dbCommand = new DbCommand(string.Empty);
-            if (autoIncrement == null)
-            {
-                dbCommand.ExecuteNonQuery(sql, dbParams.ToArray());
-            }
-            else
-            {
-                var id = dbCommand.ExecuteScalar(sql, dbParams.ToArray());
-                autoIncrement.As<PropertyInfo>().SetValue(entity, int.Parse(id.ToString()));
-            }
-        }
+            => Add(entity, null);
 
         public override int Update<TEntity>(TEntity entity)
         {
@@ -110,15 +78,42 @@ namespace Zarf
 
         public override int Add<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
         {
-            throw new NotImplementedException();
+            var eType = typeof(TEntity);
+            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
+            var table = eType.ToTable();
+            var dbParams = new List<DbParameter>();
+            var dbColumns = new List<string>();
+            MemberInfo autoIncrement = null;
+
+            foreach (var item in typeDescriptor.GetExpandMembers())
+            {
+                if (item.GetCustomAttribute<AutoIncrementAttribute>() != null)
+                {
+                    autoIncrement = item;
+                    continue;
+                }
+
+                dbColumns.Add(item.Name);
+                dbParams.Add(new DbParameter("@" + item.Name, GetMemberValue(entity, item)));
+            }
+
+            var insert = new InsertExpression(table, dbParams, dbColumns, autoIncrement != null);
+            var sql = new SqlServerTextBuilder().Build(insert);
+            var dbCommand = new DbCommand(string.Empty);
+            if (autoIncrement == null)
+            {
+                dbCommand.ExecuteNonQuery(sql, dbParams.ToArray());
+            }
+            else
+            {
+                var id = dbCommand.ExecuteScalar(sql, dbParams.ToArray());
+                autoIncrement.As<PropertyInfo>().SetValue(entity, int.Parse(id.ToString()));
+            }
+
+            return 0;
         }
 
         public override int Update<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key)
         {
             throw new NotImplementedException();
         }
@@ -129,11 +124,6 @@ namespace Zarf
         }
 
         public override int Delete<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key)
         {
             throw new NotImplementedException();
         }

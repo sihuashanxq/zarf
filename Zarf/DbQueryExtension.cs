@@ -36,11 +36,6 @@ namespace Zarf
             return dbQuery.Context?.Update(entity, predicate) ?? 0;
         }
 
-        public static int Update<TEntity, TProperty>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, TProperty>> key)
-        {
-            return dbQuery.Context?.Update(entity, key) ?? 0;
-        }
-
         public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, Expression<Func<TEntity, bool>> predicate)
         {
             return dbQuery.Context?.Delete(predicate) ?? 0;
@@ -49,11 +44,6 @@ namespace Zarf
         public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
         {
             return dbQuery.Context?.Delete(entity, predicate) ?? 0;
-        }
-
-        public static int Delete<TEntity, TProperty>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, TProperty>> key)
-        {
-            return dbQuery.Context?.Delete(entity) ?? 0;
         }
 
         public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)

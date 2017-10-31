@@ -31,13 +31,9 @@ namespace Zarf
 
         public abstract int Update<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate);
 
-        public abstract int Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key);
-
         public abstract int Delete<TEntity>(Expression<Func<TEntity, bool>> predicate);
 
         public abstract int Delete<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate);
-
-        public abstract int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> key);
 
         public abstract int Delete<TEntity>(TEntity entity);
 
