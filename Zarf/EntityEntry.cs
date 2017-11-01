@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Zarf.Update;
-using System.Linq.Expressions;
 using Zarf.Entities;
 using System.Linq;
 using Zarf.Extensions;
 
 namespace Zarf
 {
+    /*
+    如果说有byKey
+    那么就解析一个Member
+    把这个Member作为这次的PrimaryMember
+    */
     public class EntityEntry
     {
         public Type Type { get; }
@@ -18,16 +22,16 @@ namespace Zarf
 
         public IEnumerable<MemberDescriptor> Members { get; }
 
-        public MemberDescriptor IncrementMember => Members?.FirstOrDefault(item => item.IsIncrement);
+        public MemberDescriptor Increment => Members?.FirstOrDefault(item => item.IsIncrement);
 
-        public MemberDescriptor PrimaryMember => Members?.FirstOrDefault(item => item.IsPrimary);
+        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary);
     }
 
     public class DbModifyOperation
     {
         public IEnumerable<EntityEntry> Entities { get; }
 
-        public LambdaExpression Predicate { get; }
+        public MemberDescriptor OperationKey { get; }
     }
 
     public class DbModifyCommand
@@ -36,8 +40,6 @@ namespace Zarf
 
         public IEnumerable<Column> Columns { get; }
 
-        public LambdaExpression Predicate { get; }
-
         public IEnumerable<DbParameter> Parameters { get; }
 
         public EntityEntry Entity { get; }
@@ -45,14 +47,12 @@ namespace Zarf
         public DbModifyCommand(
             EntityEntry entity,
             IEnumerable<Column> columns,
-            IEnumerable<DbParameter> dbParams,
-            LambdaExpression predicate)
+            IEnumerable<DbParameter> dbParams)
         {
             Entity = entity;
             Table = Entity.Type.ToTable();
             Columns = columns;
             Parameters = dbParams;
-            Predicate = predicate;
         }
     }
 

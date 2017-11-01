@@ -11,19 +11,9 @@ namespace Zarf
             dbQuery.Context?.AddRange(entities);
         }
 
-        public static void AddRange<TEntity>(this IDbQuery<TEntity> dbQuery, IEnumerable<TEntity> entities, Expression<Func<TEntity, bool>> predicate)
-        {
-            dbQuery.Context?.AddRange(entities, predicate);
-        }
-
         public static void Add<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
         {
             dbQuery.Context?.Add(entity);
-        }
-
-        public static int Add<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            return dbQuery.Context?.Add(entity, predicate) ?? 0;
         }
 
         public static int Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)

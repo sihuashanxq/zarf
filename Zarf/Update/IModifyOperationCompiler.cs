@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Zarf.Update
@@ -8,55 +6,84 @@ namespace Zarf.Update
     public interface IModifyOperationCompiler
     {
         IEnumerable<DbModifyCommand> Compile(DbModifyOperation modifyOperation);
+
+        DbModifyCommand Compile(EntityEntry entry, MemberDescriptor operationKey);
     }
 
-    public class ModifyOperationCompiler : IModifyOperationCompiler
+    public abstract class ModifyOperationCompiler : IModifyOperationCompiler
     {
-        public IEnumerable<DbModifyCommand> Compile(DbModifyOperation modifyOperation)
+        public virtual IEnumerable<DbModifyCommand> Compile(DbModifyOperation modifyOperation)
         {
-            var modifyCommands = new List<DbModifyCommand>();
-            foreach (var entity in modifyOperation.Entities)
+            foreach (var entry in modifyOperation.Entities)
             {
-                var modifyCommand = Compile(entity, modifyOperation.Predicate);
+                var modifyCommand = Compile(entry, modifyOperation.OperationKey);
                 if (modifyCommand != null)
                 {
-                    modifyCommands.Add(modifyCommand);
+                    yield return modifyCommand;
                 }
             }
-
-            return modifyCommands;
         }
 
-        public DbModifyCommand Compile(EntityEntry entity, LambdaExpression predicate)
-        {
-            if (predicate == null)
-            {
+        public abstract DbModifyCommand Compile(EntityEntry entry, MemberDescriptor operationKey);
+    }
 
-            }
-            return null;
+    public class CompositeModifyOperationCompiler : ModifyOperationCompiler
+    {
+        protected static Dictionary<EntityState, IModifyOperationCompiler> InternalCompilers { get; }
+
+        static CompositeModifyOperationCompiler()
+        {
+            InternalCompilers = new Dictionary<EntityState, IModifyOperationCompiler>
+            {
+                [EntityState.Add] = new AddOperationCompiler(),
+                [EntityState.Update] = new UpdateOperationCompiler(),
+                [EntityState.Delete] = new DeleteOperationCompiler()
+            };
         }
 
-        public LambdaExpression BuildModifyPredicate(EntityEntry entity, LambdaExpression predicate)
+        public override DbModifyCommand Compile(EntityEntry entity, MemberDescriptor operationKey)
         {
-            //TODO BUILD Predicate
-            //alone visit
-            //alone sql builder
-            if (predicate == null)
+            if (operationKey == null)
             {
-                return predicate;
+                operationKey = entity.Primary ?? entity.Increment ?? entity.Members.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
             }
 
-            if (entity.PrimaryMember != null)
+            if (operationKey == null)
             {
-                var primaryEqual = Expression.Equal(
-                    Expression.MakeMemberAccess(Expression.Constant(entity.Entity), entity.PrimaryMember.Member),
-                    Expression.Constant(entity.PrimaryMember.GetValue(entity.Entity))
-                );
+                throw new KeyNotFoundException($"Type {entity.Entity.GetType().Name} should be set an member as primary!");
+            }
 
-                return Expression.Lambda(primaryEqual);
+            if (InternalCompilers.TryGetValue(entity.State, out IModifyOperationCompiler internalCompiler))
+            {
+                return internalCompiler.Compile(entity, operationKey);
             }
 
             return null;
+        }
+    }
+
+    //TODO TABLE 1 TABLE 2 TOTABLE
+    public class AddOperationCompiler : ModifyOperationCompiler
+    {
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor operationKey)
+        {
+
+        }
+    }
+
+    public class UpdateOperationCompiler : ModifyOperationCompiler
+    {
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor operationKey)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
+    public class DeleteOperationCompiler : ModifyOperationCompiler
+    {
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor operationKey)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

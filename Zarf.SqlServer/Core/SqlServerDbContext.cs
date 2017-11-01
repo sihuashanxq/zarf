@@ -13,7 +13,9 @@ namespace Zarf
     public class SqlServerDbContext : DbContext
     {
         public override void Add<TEntity>(TEntity entity)
-            => Add(entity, null);
+        {
+
+        }
 
         public override int Update<TEntity>(TEntity entity)
         {
@@ -66,64 +68,23 @@ namespace Zarf
             return (int)dbCommand.ExecuteScalar(sql, byKeyValue);
         }
 
-        public override void AddRange<TEntity>(IEnumerable<TEntity> entities)
+        public override int AddRange<TEntity>(IEnumerable<TEntity> entities)
         {
             throw new NotImplementedException();
         }
 
-        public override int AddRange<TEntity>(IEnumerable<TEntity> entities, Expression<Func<TEntity, bool>> predicate)
+        public override int Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> keyMember)
         {
-            throw new NotImplementedException();
-        }
-
-        public override int Add<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            var eType = typeof(TEntity);
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
-            var table = eType.ToTable();
-            var dbParams = new List<DbParameter>();
-            var dbColumns = new List<string>();
-            MemberInfo autoIncrement = null;
-
-            foreach (var item in typeDescriptor.GetExpandMembers())
+            var member = keyMember?.As<LambdaExpression>()?.Body?.As<MemberExpression>()?.Member;
+            if (keyMember != null && member == null)
             {
-                if (item.GetCustomAttribute<AutoIncrementAttribute>() != null)
-                {
-                    autoIncrement = item;
-                    continue;
-                }
-
-                dbColumns.Add(item.Name);
-                dbParams.Add(new DbParameter("@" + item.Name, GetMemberValue(entity, item)));
-            }
-
-            var insert = new InsertExpression(table, dbParams, dbColumns, autoIncrement != null);
-            var sql = new SqlServerTextBuilder().Build(insert);
-            var dbCommand = new DbCommand(string.Empty);
-            if (autoIncrement == null)
-            {
-                dbCommand.ExecuteNonQuery(sql, dbParams.ToArray());
-            }
-            else
-            {
-                var id = dbCommand.ExecuteScalar(sql, dbParams.ToArray());
-                autoIncrement.As<PropertyInfo>().SetValue(entity, int.Parse(id.ToString()));
+                throw new NotImplementedException("argument keyMember must as a MemberAccessExpression!");
             }
 
             return 0;
         }
 
-        public override int Update<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Delete<TEntity>(Expression<Func<TEntity, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Delete<TEntity>(TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        public override int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> keyMember)
         {
             throw new NotImplementedException();
         }

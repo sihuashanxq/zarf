@@ -90,13 +90,8 @@ namespace Zarf
 
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
             //BasicTest(db);
-            var p = new PP
-            {
-                Name = "333"
-            };
 
-
-            db.Add(p);
+            db.Update(new PP() { }, p => p.Id == 2);
 
             Console.ReadKey();
         }
