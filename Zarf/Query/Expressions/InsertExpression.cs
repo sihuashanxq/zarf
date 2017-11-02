@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using Zarf.Entities;
 
@@ -18,14 +19,14 @@ namespace Zarf.Query.Expressions
 
         public Table Table { get; }
 
-        public bool HasAutoIncrement { get; }
+        public MemberInfo IncrementMember { get; }
 
-        public InsertExpression(Table table, List<DbParameter> dbParams, List<string> columns, bool hasAutoIncrement = false)
+        public InsertExpression(Table table, List<DbParameter> dbParams, List<string> columns, MemberInfo incrementMember = null)
         {
             Table = table;
             DbParams = dbParams;
             Columns = columns;
-            HasAutoIncrement = hasAutoIncrement;
+            IncrementMember = incrementMember;
         }
     }
 }
