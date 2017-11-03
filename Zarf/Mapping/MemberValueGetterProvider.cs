@@ -285,6 +285,11 @@ namespace Zarf.Mapping.Bindings.Binders
 
         public static string GetString(IDataReader dataReader, int ordianl)
         {
+            if (dataReader.IsDBNull(ordianl))
+            {
+                return null;
+            }
+
             return dataReader.GetString(ordianl);
         }
     }

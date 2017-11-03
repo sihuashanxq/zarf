@@ -54,7 +54,7 @@ namespace Zarf.Query.Expressions
         {
             unchecked
             {
-                var hashCode = FromTable.GetHashCode();
+                var hashCode = FromTable?.GetHashCode() ?? 0;
                 hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Column?.Name.GetHashCode() ?? 0);

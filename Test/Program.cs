@@ -83,15 +83,19 @@ namespace Zarf
 
             var db = new SqlServerDbContext();
 
-            var y = db.Query<User>()
-                .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-                .Select(item => item)
-                .ToList();
+            //var y = db.Query<User>()
+            //    .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
+            //    .Select(item => item)
+            //    .ToList();
 
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+            BasicTest(db);
             //BasicTest(db);
 
-            db.Update(new PP() { }, p => p.Id == 2);
+            var z = db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId)
+                .ToList();
+
+            //db.Update(new PP() { }, p => p.Id == 2);
 
             Console.ReadKey();
         }
@@ -138,11 +142,11 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Inner Join..........................");
-            db.Query<User>().Join(
+            db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId).Join(
                 db.Query<Address>(),
                 item => item.AddressId,
                 item => item.Id,
-                (user, address) => new { user.Name, address.Street })
+                (user, address) => new { user.Name, address.Street, user.Address })
                 .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
 
             Console.WriteLine();
@@ -170,7 +174,8 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-            db.Query<User>().DefaultIfEmpty().Join(
+            db.Query<User>().DefaultIfEmpty()
+                .Join(
                 db.Query<Address>().DefaultIfEmpty(),
                 item => item.AddressId,
                 item => item.Id,

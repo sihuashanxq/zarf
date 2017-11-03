@@ -25,7 +25,7 @@ namespace Zarf.SqlServer.Builders
             if (Utils.AggregateFunctionMap.TryGetValue(aggregate.Method.Name, out string funcName))
             {
                 Append(funcName, '(');
-                if (aggregate.KeySelector == null)
+                if (aggregate.KeySelector == null || aggregate.Method.Name.Contains("Count"))
                 {
                     Append("1");
                 }
@@ -489,7 +489,7 @@ namespace Zarf.SqlServer.Builders
             _builder.Length--;
             Append(");");
 
-            if (insert.HasAutoIncrement)
+            //if (insert.HasAutoIncrement)
             {
                 Append("SELECT SCOPE_IDENTITY() AS ID;");
             }

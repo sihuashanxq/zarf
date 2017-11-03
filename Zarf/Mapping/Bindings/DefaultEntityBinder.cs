@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,7 +8,6 @@ using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
 using Zarf.Query;
 using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping.Bindings
 {
@@ -65,6 +62,14 @@ namespace Zarf.Mapping.Bindings
                     ?.FromTable;
                 InitializeQueryColumns(query.As<QueryExpression>());
             }
+            else if (query.Is<AllExpression>())
+            {
+                InitializeQueryColumns(query.As<AllExpression>().Expression.As<QueryExpression>());
+            }
+            else if (query.Is<AnyExpression>())
+            {
+                InitializeQueryColumns(query.As<AnyExpression>().Expression.As<QueryExpression>());
+            }
             else
             {
                 InitializeQueryColumns(query.As<QueryExpression>());
@@ -87,54 +92,69 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitExtension(Expression node)
         {
-            ColumnExpression col = null;
-            if (node.Is<ColumnExpression>())
-            {
-                col = node.As<ColumnExpression>();
-            }
-
-            if (node.Is<AggregateExpression>())
-            {
-                col = node.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
-            }
-
-            if (col != null)
-            {
-                var ordinal = ProjectionMappingProvider.GetOrdinal(col);
-                var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(col.Type);
-                if (ordinal == -1 || valueSetter == null)
-                {
-                    throw new NotImplementedException($"列{col.Column.Name} 未包含在查询中!");
-                }
-
-                return Expression.Call(null, valueSetter, DataReader, Expression.Constant(ordinal));
-            }
-
             if (node.Is<FromTableExpression>())
             {
                 return BindQueryExpression(node.As<QueryExpression>());
             }
-            else
+
+            var col = node;
+            if (node.Is<AggregateExpression>())
             {
-                throw new NotImplementedException($"不支持{node.GetType().Name} 到 {node.Type.Name}的转换!!!");
+                col = node.As<AggregateExpression>().KeySelector;
             }
+            else if (node.Is<AllExpression>() || node.Is<AnyExpression>())
+            {
+                return Expression.Call(
+                    null,
+                    MemberValueGetterProvider.Default.GetValueGetter(typeof(bool)),
+                    DataReader,
+                    Expression.Constant(0));
+            }
+
+            if (!ReflectionUtil.SimpleTypes.Contains(col?.Type))
+            {
+                if (!node.Type.IsValueType)
+                {
+                    return Expression.Constant(null);
+                }
+                else
+                {
+                    return Expression.Constant(Activator.CreateInstance(node.Type));
+                }
+            }
+
+            var ordinal = ProjectionMappingProvider.GetOrdinal(col);
+            var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(col.Type);
+            if (ordinal == -1 || valueSetter == null)
+            {
+                throw new NotImplementedException($"列{col.As<ColumnExpression>()?.Column?.Name} 未包含在查询中!");
+            }
+
+            return Expression.Call(null, valueSetter, DataReader, Expression.Constant(ordinal));
         }
 
         protected override Expression VisitNew(NewExpression newExp)
         {
-            var eNewBlock = CreateEntityNewExpressionBlock(newExp.Constructor, newExp.Type);
             if (newExp.Arguments.Count == 0)
             {
-                return eNewBlock;
+                return CreateEntityNewExpressionBlock(newExp.Constructor, newExp.Type);
             }
 
-            var memberExpressions = new List<MemberExpressionPair>();
+            var arguments = new List<Expression>();
             for (var i = 0; i < newExp.Arguments.Count; i++)
             {
-                memberExpressions.Add(new MemberExpressionPair(newExp.Members[i], newExp.Arguments[i]));
+                var argument = newExp.Arguments[i];
+                var member = newExp.Members[i];
+
+                if (Context.PropertyNavigationContext.IsPropertyNavigation(member))
+                {
+                    throw new Exception("Class Refrence A Navigation Property Must Have A Default Constructor!");
+                }
+
+                arguments.Add(Expression.Convert(Visit(newExp.Arguments[i]), argument.Type));
             }
 
-            return BindMembers(eNewBlock, memberExpressions);
+            return CreateEntityNewExpressionBlock(newExp.Constructor, newExp.Type, arguments);
         }
 
         protected BlockExpression BindMembers(BlockExpression eNewBlock, List<MemberExpressionPair> memberExpressions)
@@ -202,8 +222,8 @@ namespace Zarf.Mapping.Bindings
                     var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
                     col = new Projection()
                     {
-                        Expression = column,
-                        Member = column.Member,
+                        Expression = column ?? item.Expression,
+                        Member = column?.Member,
                         Ordinal = item.Ordinal
                     };
                 }
@@ -302,7 +322,7 @@ namespace Zarf.Mapping.Bindings
         /// <param name="constructor"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static BlockExpression CreateEntityNewExpressionBlock(ConstructorInfo constructor, Type type)
+        public static BlockExpression CreateEntityNewExpressionBlock(ConstructorInfo constructor, Type type, IEnumerable<Expression> arguments = null)
         {
             if (constructor == null)
             {
@@ -310,9 +330,8 @@ namespace Zarf.Mapping.Bindings
             }
 
             var begin = Expression.Label(type);
-
             var var = Expression.Variable(type);
-            var varValue = Expression.Assign(var, Expression.New(constructor));
+            var varValue = Expression.Assign(var, Expression.New(constructor, arguments));
             var retVar = Expression.Return(begin, var);
 
             var end = Expression.Label(begin, var);

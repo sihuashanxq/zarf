@@ -2,12 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
@@ -40,6 +38,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                     .Scan(queryCompiler.Compile, keySelectorLambda)
                     .FirstOrDefault()
                     .Expression;
+            }
+            else
+            {
+                aggregateKey = new ColumnExpression(rootQuery, null, methodCall.Method.ReturnType, "1");
             }
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
