@@ -505,10 +505,12 @@ namespace Zarf.SqlServer.Builders
              Append(update.Table.Name.Escape()).
              Append("SET ");
 
-            for (var i = 0; i < update.Columns.Count; i++)
+            var columns = update.Columns.ToList();
+            var dbParams = update.DbParams.ToList();
+            for (var i = 0; i < columns.Count; i++)
             {
-                var col = update.Columns[i];
-                var dbParam = update.DbParams[i];
+                var col = columns[i];
+                var dbParam = dbParams[i];
                 Append(col.Escape()).
                 Append('=').
                 Append(dbParam.Name).
@@ -517,9 +519,9 @@ namespace Zarf.SqlServer.Builders
             _builder.Length--;
 
             Append(" WHERE ").
-            Append(update.ByKey).
+            Append(update.Identity).
             Append('=').
-            Append(update.ByKeyValue.Name).
+            Append(update.IdentityValue.Name).
             Append(";SELECT @@ROWCOUNT AS Count;");
             return update;
         }
@@ -531,9 +533,9 @@ namespace Zarf.SqlServer.Builders
             Append('.').
             Append(delete.Table.Name.Escape()).
             Append(" WHERE ").
-            Append(delete.ByKey).
+            Append(delete.Identity).
             Append('=').
-            Append(delete.ByKeyValue.Name).
+            Append(delete.IdentityValue.Name).
             Append(";SELECT @@ROWCOUNT AS Count;");
             return delete;
         }

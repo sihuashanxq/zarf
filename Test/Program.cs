@@ -67,7 +67,7 @@ namespace Zarf
 
     public class PP
     {
-        [AutoIncrement]
+        [PrimaryKey]
         public int Id { get; set; }
 
         public string Name { get; set; }

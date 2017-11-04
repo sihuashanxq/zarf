@@ -10,7 +10,7 @@ namespace Zarf.Update.Compilers
     {
         public virtual IEnumerable<DbModifyCommand> Compile(DbModifyOperation modifyOperation)
         {
-            foreach (var entry in modifyOperation.Entities)
+            foreach (var entry in modifyOperation.Entries)
             {
                 var modifyCommand = Compile(entry, modifyOperation.Identity);
                 if (modifyCommand != null)

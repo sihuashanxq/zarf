@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Zarf.Extensions;
 using System.Data;
+using Zarf.Entities;
+
 namespace Zarf.Update
 {
     public class MemberDescriptor
@@ -24,6 +26,25 @@ namespace Zarf.Update
             return Member.MemberType == MemberTypes.Field
                 ? (Member as FieldInfo)?.GetValue(obj)
                 : (Member as PropertyInfo)?.GetValue(obj);
+        }
+
+        public void SetValue(object entity, object value)
+        {
+            if (Member.MemberType == MemberTypes.Field)
+            {
+                (Member as FieldInfo)?.SetValue(entity, value);
+            }
+            else
+            {
+                (Member as PropertyInfo)?.SetValue(entity, value);
+            }
+        }
+
+        public MemberDescriptor(MemberInfo member)
+        {
+            Member = member;
+            IsPrimary = Member.GetCustomAttribute<PrimaryKeyAttribute>() != null;
+            IsIncrement = Member.GetCustomAttribute<AutoIncrementAttribute>() != null;
         }
     }
 }

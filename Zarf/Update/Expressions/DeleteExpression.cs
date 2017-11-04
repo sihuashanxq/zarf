@@ -10,17 +10,17 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public string ByKey { get; }
+        public string Identity { get; }
 
-        public DbParameter ByKeyValue { get; }
+        public DbParameter IdentityValue { get; }
 
         public Table Table { get; }
 
-        public DeleteExpression(Table table,  string byKey, DbParameter byKeyValue)
+        public DeleteExpression(Table table,  string identity, DbParameter identityValue)
         {
             Table = table;
-            ByKey = byKey;
-            ByKeyValue = byKeyValue;
+            Identity = identity;
+            IdentityValue = identityValue;
         }
     }
 }

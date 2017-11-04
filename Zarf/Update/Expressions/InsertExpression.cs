@@ -13,15 +13,15 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public List<DbParameter> DbParams { get; }
+        public IEnumerable<DbParameter> DbParams { get; }
 
-        public List<string> Columns { get; }
+        public IEnumerable<string> Columns { get; }
 
         public Table Table { get; }
 
         public MemberInfo IncrementMember { get; }
 
-        public InsertExpression(Table table, List<DbParameter> dbParams, List<string> columns, MemberInfo incrementMember = null)
+        public InsertExpression(Table table, IEnumerable<DbParameter> dbParams, IEnumerable<string> columns, MemberInfo incrementMember = null)
         {
             Table = table;
             DbParams = dbParams;

@@ -24,11 +24,11 @@ namespace Zarf
 
         public virtual int AddRange(IEnumerable<object> entities) => AddRange<object>(entities);
 
-        public abstract void Add<TEntity>(TEntity entity);
+        public virtual int Add<TEntity>(TEntity entity) => AddRange(new[] { entity });
 
-        public virtual void Add(object entity) => Add<object>(entity);
+        public virtual int Add(object entity) => Add<object>(entity);
 
-        public abstract int Update<TEntity>(TEntity entity);
+        public virtual int Update<TEntity>(TEntity entity) => Update<TEntity, TEntity>(entity, null);
 
         public virtual int Update(object entity) => Update<object>(entity);
 
@@ -36,19 +36,9 @@ namespace Zarf
 
         public abstract int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> byKey);
 
-        public abstract int Delete<TEntity>(TEntity entity);
+        public virtual int Delete<TEntity>(TEntity entity) => Delete<TEntity, TEntity>(entity, null);
 
         public virtual int Delete(object entity) => Delete<object>(entity);
-
-        public object GetMemberValue(object instance, MemberInfo member)
-        {
-            if (member is PropertyInfo)
-            {
-                return (member as PropertyInfo).GetValue(instance);
-            }
-
-            return (member as FieldInfo).GetValue(instance);
-        }
 
         public void Dispose()
         {
