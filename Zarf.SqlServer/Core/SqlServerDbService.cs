@@ -6,33 +6,40 @@ namespace Zarf.SqlServer.Core
 {
     public class SqlServerDbService : IDbService
     {
-        public IDbCommand CreateDbCommand()
+        protected virtual string ConnectionString { get; }
+
+        public SqlServerDbService(string connectionString)
         {
-            return CreateDbCommand(null);
+            ConnectionString = connectionString;
         }
 
-        public IDbCommand CreateDbCommand(IDbConnection connection)
+        public IDbConnection GetDbConnection(string connectionString = "")
         {
-            return CreateDbCommand(connection, null);
+            return new SqlConnection(string.IsNullOrEmpty(connectionString) ? ConnectionString : connectionString);
         }
 
-        public IDbCommand CreateDbCommand(IDbConnection connection, IDbTransaction transaction)
+        public IDbCommand GetDbCommand()
+        {
+            return GetDbCommand(GetDbConnection());
+        }
+
+        public IDbCommand GetDbCommand(IDbConnection dbConnection)
+        {
+            return GetDbCommand(dbConnection, null);
+        }
+
+        public IDbCommand GetDbCommand(IDbConnection dbConnection, IDbTransaction dbTransaction)
         {
             return new SqlCommand()
             {
-                Connection = (SqlConnection)connection,
-                Transaction = (SqlTransaction)transaction
+                Connection = (SqlConnection)dbConnection,
+                Transaction = (SqlTransaction)dbTransaction
             };
         }
 
-        public IDbConnection CreateDbConnection(string connectionString)
+        public IDbTransaction GetDbTransaction(IDbConnection dbConnection, IsolationLevel isolationLevel = IsolationLevel.Snapshot)
         {
-            return new SqlConnection(connectionString);
-        }
-
-        public IDbTransaction CreateDbTransaction(IDbConnection connection, IsolationLevel isolationLevel = IsolationLevel.Snapshot)
-        {
-            return connection.BeginTransaction(isolationLevel);
+            return dbConnection.BeginTransaction(isolationLevel);
         }
     }
 }

@@ -68,6 +68,7 @@ namespace Zarf
     public class PP
     {
         [PrimaryKey]
+        [AutoIncrement]
         public int Id { get; set; }
 
         public string Name { get; set; }
@@ -81,7 +82,7 @@ namespace Zarf
             serviceCollection.AddZarfSqlServer();
             DbContext.ServiceProvider = serviceCollection.BuildServiceProvider();
 
-            var db = new SqlServerDbContext();
+            var db = new SqlServerDbContext(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True");
 
             //var y = db.Query<User>()
             //    .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
@@ -89,13 +90,16 @@ namespace Zarf
             //    .ToList();
 
             //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-            BasicTest(db);
             //BasicTest(db);
+            ////BasicTest(db);
 
-            var z = db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId)
-                .ToList();
+            //var z = db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId)
+            //    .ToList();
 
-            //db.Update(new PP() { }, p => p.Id == 2);
+            //db.Update(new PP() { }, p => p.Id);
+
+            var p = new PP { Name = "张三" };
+            db.Add(p);
 
             Console.ReadKey();
         }

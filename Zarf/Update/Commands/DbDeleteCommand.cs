@@ -12,7 +12,7 @@ namespace Zarf.Update.Commands
             : base(entity)
         {
             IdentityColumn = identityColumn;
-            IdentityColumnValue = IdentityColumnValue;
+            IdentityColumnValue = identityColumnValue;
         }
     }
 }

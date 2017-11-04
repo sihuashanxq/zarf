@@ -32,7 +32,7 @@ namespace Zarf.Query.Expressions
             DbParams = dbParams;
             Columns = columns;
             Identity = identity;
-            IdentityValue = IdentityValue;
+            IdentityValue = identityValue;
         }
     }
 }

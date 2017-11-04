@@ -489,9 +489,13 @@ namespace Zarf.SqlServer.Builders
             _builder.Length--;
             Append(");");
 
-            //if (insert.HasAutoIncrement)
+            if (insert.IncrementMember != null)
             {
                 Append("SELECT SCOPE_IDENTITY() AS ID;");
+            }
+            else
+            {
+                Append("SELECT -1 AS ID");
             }
 
             return insert;

@@ -9,8 +9,6 @@ namespace Zarf.Update.Commands
 
         public IEnumerable<DbParameter> DbParams { get; }
 
-        public MemberDescriptor Increment { get; }
-
         public DbInsertCommand(
             EntityEntry entity,
             IEnumerable<string> columns,

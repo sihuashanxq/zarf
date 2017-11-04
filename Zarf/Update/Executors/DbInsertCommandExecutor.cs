@@ -21,7 +21,7 @@ namespace Zarf.Update.Executors
                 modifyCommand.Entity.Type.ToTable(),
                 modifyCommand.DbParams,
                 modifyCommand.Columns,
-                modifyCommand.Increment?.Member);
+                modifyCommand.Entity.Increment?.Member);
 
             return SqlBuilder.Build(insertExpression);
         }

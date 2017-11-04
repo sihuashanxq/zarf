@@ -4,14 +4,14 @@ namespace Zarf.Core
 {
     public interface IDbService
     {
-        IDbCommand CreateDbCommand();
+        IDbCommand GetDbCommand();
 
-        IDbCommand CreateDbCommand(IDbConnection connection);
+        IDbCommand GetDbCommand(IDbConnection connection);
 
-        IDbCommand CreateDbCommand(IDbConnection connection, IDbTransaction transaction);
+        IDbCommand GetDbCommand(IDbConnection connection, IDbTransaction transaction);
 
-        IDbConnection CreateDbConnection(string connectionString);
+        IDbConnection GetDbConnection(string connectionString = "");
 
-        IDbTransaction CreateDbTransaction(IDbConnection connection, IsolationLevel isolationLevel = IsolationLevel.Snapshot);
+        IDbTransaction GetDbTransaction(IDbConnection connection, IsolationLevel isolationLevel = IsolationLevel.Snapshot);
     }
 }
