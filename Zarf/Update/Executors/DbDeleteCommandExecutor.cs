@@ -1,5 +1,6 @@
 ﻿using Zarf.Builders;
 using Zarf.Core;
+using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Update.Commands;
 
@@ -7,8 +8,8 @@ namespace Zarf.Update.Executors
 {
     public class DbDeleteCommandExecutor : DbCommandExecutor<DbDeleteCommand>
     {
-        public DbDeleteCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder)
-            : base(dataBase, sqlBuilder)
+        public DbDeleteCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+            : base(dataBase, sqlBuilder, compiler)
         {
 
         }

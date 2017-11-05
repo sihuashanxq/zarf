@@ -82,30 +82,32 @@ namespace Zarf
             serviceCollection.AddZarfSqlServer();
             DbContext.ServiceProvider = serviceCollection.BuildServiceProvider();
 
-            var db = new SqlServerDbContext(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True");
+            using (var db = new SqlServerDbContext(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True"))
+            {
+                BasicTest(db);
+               
+                var user = new User()
+                {
+                    Name = "张三",
+                    Age = 33,
+                    BDay = DateTime.Now,
+                    Id = 999
+                };
 
-            //var y = db.Query<User>()
-            //    .Include(item => item.Address, (user, address) => user.Id == address.UserId && user.Id != 1)
-            //    .Select(item => item)
-            //    .ToList();
+                db.Add(user);
 
-            //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-            //BasicTest(db);
-            ////BasicTest(db);
+                user.Name = "李四";
+                db.Update(user, item => item.Id);
 
-            //var z = db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId)
-            //    .ToList();
+                user.Age = 22;
+                db.Update(user);
 
-            //db.Update(new PP() { }, p => p.Id);
+                db.Delete(user);
+                db.Delete(user, item => user.Age);
 
-            var p = new PP { Name = "张三" };
-            db.Add(p);
-
-            Console.ReadKey();
+                Console.ReadKey();
+            }
         }
-
-        public static MethodInfo Method = typeof(Dictionary<,>).MakeGenericType(
-            new Type[] { typeof(MemberInfo), typeof(object) }).GetMethod("Add");
 
         static void BasicTest(DbContext db)
         {
@@ -209,60 +211,13 @@ namespace Zarf
             Console.WriteLine();
             Console.WriteLine("Any Id>0..........................");
             Console.WriteLine(db.Query<User>().Any(item => item.Id > 0));
-        }
 
-        public static Dictionary<MemberInfo, object> GetDictionary(object typeOf)
-        {
-            var mem = EntityTypeDescriptorFactory.Factory.Create(typeOf.GetType());
-            var dic = new Dictionary<MemberInfo, object>();
-            var mems = new List<Expression>();
-            var dd = Expression.Parameter(typeof(Dictionary<MemberInfo, object>));
-            foreach (var item in mem.GetExpandMembers())
-            {
-                mems.Add(Expression.Call(dd,
-                    Method,
-                    Expression.Constant(item),
-                   Expression.Convert(Expression.MakeMemberAccess(Expression.Constant(typeOf), item), typeof(object))
-                    ));
-            }
-
-            var begin = Expression.Label();
-            var end = Expression.Label(begin);
-            mems.Add(end);
-            var st = new System.Diagnostics.Stopwatch();
-            var d = new Dictionary<MemberInfo, object>();
-
-            st.Start();
-
-            for (var i = 0; i < 10000; i++)
-            {
-                d = new Dictionary<MemberInfo, object>();
-                foreach (var item in mem.GetExpandMembers())
-                {
-                    if (item is PropertyInfo)
-                    {
-                        d[item] = (item as PropertyInfo).GetValue(typeOf);
-                    }
-                    else
-                    {
-                        d[item] = (item as FieldInfo).GetValue(typeOf);
-                    }
-                }
-            }
-            st.Stop();
-            Console.WriteLine(st.ElapsedMilliseconds);
-
-            st.Reset();
-            var x = (Action<Dictionary<MemberInfo, object>>)Expression.Lambda(Expression.Block(mems), dd).Compile();
-            st.Start();
-            for (var i = 0; i < 10000; i++)
-            {
-                dic = new Dictionary<MemberInfo, object>();
-                x(dic);
-            }
-            st.Stop();
-            Console.WriteLine(st.ElapsedMilliseconds);
-            return dic;
+            Console.WriteLine("Include Test");
+            var users = db.Query<User>()
+                .Include(item => item.Address, (usr, address) => usr.Id == address.UserId && usr.Id != 1)
+                //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+                .Select(item => item)
+                .ToList();
         }
     }
 }

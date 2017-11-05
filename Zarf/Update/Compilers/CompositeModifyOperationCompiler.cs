@@ -4,7 +4,6 @@ using Zarf.Update.Commands;
 
 namespace Zarf.Update.Compilers
 {
-
     public class CompositeModifyOperationCompiler : ModifyOperationCompiler
     {
         protected static Dictionary<EntityState, IModifyOperationCompiler> InternalCompilers { get; }

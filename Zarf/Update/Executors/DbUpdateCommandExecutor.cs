@@ -8,8 +8,8 @@ namespace Zarf.Update.Executors
 {
     public class DbUpdateCommandExecutor : DbCommandExecutor<DbUpdateCommand>
     {
-        public DbUpdateCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder)
-            : base(dataBase, sqlBuilder)
+        public DbUpdateCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+            : base(dataBase, sqlBuilder, compiler)
         {
 
         }

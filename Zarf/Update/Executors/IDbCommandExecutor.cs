@@ -2,9 +2,14 @@
 
 namespace Zarf.Update
 {
-    public interface IDbCommandExecutor<in TCommand>
-        where TCommand : DbModifyCommand
+    public interface IDbCommandExecutor<TModifyCommand>
+        where TModifyCommand : DbModifyCommand
     {
-        int Execute(TCommand modifyCommand);
+        int Execute(DbModifyOperation modifyOperation);
+    }
+
+    public interface IDbCommandExecutor : IDbCommandExecutor<DbModifyCommand>
+    {
+
     }
 }

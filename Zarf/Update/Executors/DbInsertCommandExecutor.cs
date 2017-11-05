@@ -9,8 +9,8 @@ namespace Zarf.Update.Executors
 {
     public class DbInsertCommandExecutor : DbCommandExecutor<DbInsertCommand>
     {
-        public DbInsertCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder)
-            : base(dataBase, sqlBuilder)
+        public DbInsertCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+            : base(dataBase, sqlBuilder, compiler)
         {
 
         }

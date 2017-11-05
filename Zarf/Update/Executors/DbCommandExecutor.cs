@@ -1,32 +1,44 @@
 ﻿using System;
-using Zarf.Update.Commands;
-using System.Data;
+using System.Linq;
+using System.Linq.Expressions;
 using Zarf.Builders;
-using Zarf.Entities;
 using Zarf.Core;
+using Zarf.Extensions;
+using Zarf.Update.Commands;
 
 namespace Zarf.Update.Executors
 {
-    public abstract class DbCommandExecutor<TCommand> : IDbCommandExecutor<TCommand>
-        where TCommand : DbModifyCommand
+    public abstract class DbCommandExecutor<TModifyCommand> : IDbCommandExecutor<TModifyCommand>
+        where TModifyCommand : DbModifyCommand
     {
         public IDataBaseFacade DataBase { get; }
 
         public ISqlTextBuilder SqlBuilder { get; }
 
-        public DbCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder)
+        public IModifyOperationCompiler Compiler { get; }
+
+        public DbCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
         {
             DataBase = dataBase;
             SqlBuilder = sqlBuilder;
+            Compiler = compiler;
         }
 
-        public virtual int Execute(TCommand modifyCommand)
+        public virtual int Execute(DbModifyOperation modifyOperation)
         {
-            return ExecuteCore(GetCommandText(modifyCommand), modifyCommand);
+            var modifyCommand = GetModifyCommand(modifyOperation);
+            var commandText = GetCommandText(modifyCommand);
+
+            return ExecuteCore(commandText, modifyCommand);
         }
 
-        public abstract int ExecuteCore(string commandText, TCommand modifyCommand);
+        public abstract int ExecuteCore(string commandText, TModifyCommand modifyCommand);
 
-        public abstract string GetCommandText(TCommand modifyCommand);
+        public abstract string GetCommandText(TModifyCommand modifyCommand);
+
+        protected virtual TModifyCommand GetModifyCommand(DbModifyOperation modifyOperation)
+        {
+            return Compiler.Compile(modifyOperation).FirstOrDefault().As<TModifyCommand>();
+        }
     }
 }

@@ -16,8 +16,12 @@ namespace Zarf.SqlServer.Builders
 
         public override string Build(Expression expression)
         {
-            BuildExpression(expression);
-            return _builder.ToString();
+            lock (this)
+            {
+                _builder.Clear();
+                BuildExpression(expression);
+                return _builder.ToString();
+            }
         }
 
         protected override Expression VisitAggregate(AggregateExpression aggregate)
