@@ -7,6 +7,7 @@ using Zarf.Extensions;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Zarf.Builders;
+using Zarf.Core;
 
 namespace Zarf.Query
 {
@@ -14,9 +15,12 @@ namespace Zarf.Query
     {
         private IServiceProvider _serviceProvider;
 
+        private IDbCommandFacade _dbCommand;
+
         public QueryInterpreter(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _dbCommand = serviceProvider.GetService<IDbCommandFacade>();
         }
 
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext queryContext = null)
@@ -42,7 +46,7 @@ namespace Zarf.Query
             var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
 
             var commandText = _serviceProvider.GetService<ISqlTextBuilder>().Build(compiledQuery);
-            var dataReader = new DbCommand(commandText).ExecuteReader();
+            var dataReader = _dbCommand.ExecuteReader(commandText);
 
             if (typeof(TResult) != typeof(TEntity))
             {

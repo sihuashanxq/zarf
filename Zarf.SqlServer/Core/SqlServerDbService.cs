@@ -6,12 +6,7 @@ namespace Zarf.SqlServer.Core
 {
     public class SqlServerDbService : IDbService
     {
-        protected virtual string ConnectionString { get; }
-
-        public SqlServerDbService(string connectionString)
-        {
-            ConnectionString = connectionString;
-        }
+        protected virtual string ConnectionString { get; set; }
 
         public IDbConnection GetDbConnection(string connectionString = "")
         {
@@ -40,6 +35,11 @@ namespace Zarf.SqlServer.Core
         public IDbTransaction GetDbTransaction(IDbConnection dbConnection, IsolationLevel isolationLevel = IsolationLevel.Snapshot)
         {
             return dbConnection.BeginTransaction(isolationLevel);
+        }
+
+        public void SetConnectionString(string connectionString)
+        {
+            ConnectionString = connectionString;
         }
     }
 }

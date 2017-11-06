@@ -4,6 +4,8 @@ namespace Zarf.Core
 {
     public interface IDbService
     {
+        void SetConnectionString(string connectionString);
+
         IDbCommand GetDbCommand();
 
         IDbCommand GetDbCommand(IDbConnection connection);

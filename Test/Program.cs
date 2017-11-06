@@ -74,18 +74,23 @@ namespace Zarf
         public string Name { get; set; }
     }
 
+    public class DbUserContext : SqlServerDbContext
+    {
+        public DbUserContext() : base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
+        {
+            Users = this.Query<User>();
+        }
+
+        public IDbQuery<User> Users { get; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddZarfSqlServer();
-            DbContext.ServiceProvider = serviceCollection.BuildServiceProvider();
-
-            using (var db = new SqlServerDbContext(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True"))
+            using (var db = new DbUserContext())
             {
                 BasicTest(db);
-               
                 var user = new User()
                 {
                     Name = "张三",
@@ -94,15 +99,30 @@ namespace Zarf
                     Id = 999
                 };
 
+                var user2 = new User
+                {
+                    Name = "王五",
+                    Age = 44,
+                    BDay = DateTime.Now,
+                    Id = 1001
+                };
+
+                db.AddRange(new[] { user, user2 });
                 db.Add(user);
+                db.Users.Add(user);
+                db.Users.AddRange(new[] { user, user2 });
 
                 user.Name = "李四";
+
+                db.Users.Update(user);
                 db.Update(user, item => item.Id);
 
                 user.Age = 22;
                 db.Update(user);
 
                 db.Delete(user);
+                db.Users.Delete(user);
+
                 db.Delete(user, item => user.Age);
 
                 Console.ReadKey();

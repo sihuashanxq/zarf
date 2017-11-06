@@ -1,22 +1,36 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Update;
+using Zarf.Update.Executors;
+using Zarf.Update.Compilers;
+using Zarf.Builders;
 
 namespace Zarf
 {
     public abstract class DbContext : IDisposable
     {
+        public DbContext(string connectionString)
+        {
+
+        }
+
+        public virtual void Config()
+        {
+
+        }
+
         public static IServiceProvider ServiceProvider { get; set; }
 
         protected IDbCommandExecutor Executor { get; set; }
 
         protected IDataBaseFacade DataBase { get; set; }
 
-        protected IDbCommandFacade Command { get; set; }
+        public IDbCommandFacade Command { get; protected set; }
 
         protected IDbService DbService { get; set; }
 
