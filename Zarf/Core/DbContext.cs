@@ -1,17 +1,23 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Zarf.Builders;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Update;
-using Zarf.Update.Executors;
-using Zarf.Update.Compilers;
-using Zarf.Builders;
 
 namespace Zarf
 {
+    public class IDbContextService
+    {
+        public ISqlTextBuilder SqlBuilder { get; }
+
+        public IDbConnectionFacotry ConnectionFacotry { get; }
+
+        public IDbCommandFacotry CommandFacotry { get; }
+    }
+
     public abstract class DbContext : IDisposable
     {
         public DbContext(string connectionString)

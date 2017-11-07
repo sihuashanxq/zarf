@@ -6,4 +6,14 @@ namespace Zarf.Core
     {
         IDbCommandFacade GetCommand();
     }
+
+    public interface IDbCommandFacotry
+    {
+        IDbCommand Create(IDbConnection dbConnection);
+    }
+
+    public interface IDbConnectionFacotry
+    {
+        IDbConnection Create();
+    }
 }

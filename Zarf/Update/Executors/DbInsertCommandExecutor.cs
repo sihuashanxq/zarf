@@ -1,9 +1,9 @@
-﻿using Zarf.Builders;
+﻿using System.Linq;
+using Zarf.Builders;
+using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Update.Commands;
-using System.Linq;
-using Zarf.Core;
 
 namespace Zarf.Update.Executors
 {
