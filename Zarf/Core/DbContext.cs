@@ -1,31 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Builders;
 using Zarf.Core;
+using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Update;
 
 namespace Zarf
 {
-    public class IDbContextService
+    public interface IDbContextParts
     {
-        public ISqlTextBuilder SqlBuilder { get; }
+        ISqlTextBuilder SqlBuilder { get; }
 
-        public IDbConnectionFacotry ConnectionFacotry { get; }
-
-        public IDbCommandFacotry CommandFacotry { get; }
+        IDbCommandFacotry CommandFacotry { get; }
     }
 
     public abstract class DbContext : IDisposable
     {
-        public DbContext(string connectionString)
-        {
+        public IDbContextParts DbContextParts { get; protected set; }
 
-        }
-
-        public virtual void Config()
+        public DbContext()
         {
 
         }
