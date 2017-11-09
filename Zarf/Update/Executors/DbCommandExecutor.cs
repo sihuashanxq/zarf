@@ -11,15 +11,15 @@ namespace Zarf.Update.Executors
     public abstract class DbCommandExecutor<TModifyCommand> : IDbCommandExecutor<TModifyCommand>
         where TModifyCommand : DbModifyCommand
     {
-        public IDataBaseFacade DataBase { get; }
+        public IDbCommandFacotry CommandFacotry { get; }
 
         public ISqlTextBuilder SqlBuilder { get; }
 
         public IModifyOperationCompiler Compiler { get; }
 
-        public DbCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+        public DbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
         {
-            DataBase = dataBase;
+            CommandFacotry = commandFacotry;
             SqlBuilder = sqlBuilder;
             Compiler = compiler;
         }

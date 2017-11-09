@@ -41,24 +41,4 @@ namespace Zarf
             return new EntityEntry(entity, state, memberDescriptors);
         }
     }
-
-    public class DbModifyOperation
-    {
-        public IEnumerable<EntityEntry> Entries { get; }
-
-        public MemberDescriptor Identity { get; }
-
-        public DbModifyOperation(IEnumerable<EntityEntry> entries, MemberDescriptor identity)
-        {
-            Entries = entries;
-            Identity = identity;
-        }
-    }
-
-    public enum EntityState
-    {
-        Insert,
-        Update,
-        Delete
-    }
 }

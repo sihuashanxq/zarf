@@ -4,6 +4,7 @@ using Zarf.Query.Expressions;
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using Zarf.Core;
 
 namespace Zarf.Query
 {
@@ -24,5 +25,7 @@ namespace Zarf.Query
         QueryExpression UpdateRefrenceSource(QueryExpression query);
 
         IMemberValueCache MemberValueCache { get; }
+
+        IDbContextParts DbContextParts { get; }
     }
 }

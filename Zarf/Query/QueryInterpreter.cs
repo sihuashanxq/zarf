@@ -13,14 +13,13 @@ namespace Zarf.Query
 {
     public class QueryInterpreter : IQueryInterpreter
     {
-        private IServiceProvider _serviceProvider;
+        private IDbContextParts _dbContextParts;
 
-        private IDbCommandFacade _dbCommand;
-
-        public QueryInterpreter(IServiceProvider serviceProvider)
+        public QueryInterpreter(IDbContextParts dbContextParts)
         {
-            _serviceProvider = serviceProvider;
-            _dbCommand = serviceProvider.GetService<IDbCommandFacade>();
+            _dbContextParts = dbContextParts;
+            //_serviceProvider = dbContextParts;
+            //_dbCommand = dbContextParts.GetService<IDbCommandFacade>();
         }
 
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext queryContext = null)
@@ -35,18 +34,15 @@ namespace Zarf.Query
 
         public TResult ExuecteCore<TResult, TEntity>(Expression query, IQueryContext queryContext)
         {
-            if (queryContext == null)
-            {
-                queryContext = QueryContextFacotry.Factory.CreateContext();
-            }
+            queryContext = queryContext ?? QueryContextFacotry.Factory.CreateContext(dbContextParts: _dbContextParts);
 
             var compiler = new QueryCompiler(queryContext, NodeTypeTranslatorProvider.Default);
             var compiledQuery = compiler.Compile(query);
             var entityBinder = new DefaultEntityBinder(queryContext);
             var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
 
-            var commandText = _serviceProvider.GetService<ISqlTextBuilder>().Build(compiledQuery);
-            var dataReader = _dbCommand.ExecuteReader(commandText);
+            var commandText = _dbContextParts.SqlBuilder.Build(compiledQuery);
+            var dataReader = _dbContextParts.CommandFacotry.Create().ExecuteDataReader(commandText);
 
             if (typeof(TResult) != typeof(TEntity))
             {

@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
 using Zarf.Query;
@@ -275,9 +276,10 @@ namespace Zarf.Mapping.Bindings
 
             var makeNewMemberValue = Expression.Convert(
                     Expression.New(
-                        memValueType.GetConstructor(new Type[] { typeof(Expression), typeof(IMemberValueCache) }),
+                        memValueType.GetConstructor(new Type[] { typeof(Expression), typeof(IMemberValueCache), typeof(IDbContextParts) }),
                         Expression.Constant(memNavigation.RefrenceQuery),
-                        Expression.Constant(Context.MemberValueCache)),
+                        Expression.Constant(Context.MemberValueCache),
+                        Expression.Constant(Context.DbContextParts)),
                     memValueType
                 );
 

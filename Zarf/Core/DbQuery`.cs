@@ -24,7 +24,7 @@ namespace Zarf
             {
                 if (_entityEnumerable == null)
                 {
-                    _entityEnumerable = new EntityEnumerable<TEntity>(Expression);
+                    _entityEnumerable = new EntityEnumerable<TEntity>(Expression, Context.DbContextParts);
                 }
 
                 return _entityEnumerable;

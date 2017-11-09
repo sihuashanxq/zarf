@@ -13,7 +13,7 @@ namespace Zarf
         public DbQueryProvider(DbContext dbContext)
         {
             Context = dbContext;
-            QueryInterpreter = new QueryInterpreter(DbContext.ServiceProvider);
+            QueryInterpreter = new QueryInterpreter(dbContext.DbContextParts);
         }
 
         public IQueryable CreateQuery(Expression query)

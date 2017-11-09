@@ -1,4 +1,5 @@
-﻿using Zarf.Mapping;
+﻿using Zarf.Core;
+using Zarf.Mapping;
 using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
@@ -9,10 +10,9 @@ namespace Zarf.Query
 
         private QueryContextFacotry()
         {
-
         }
 
-        public IQueryContext CreateContext()
+        public IQueryContext CreateContext(IDbContextParts dbContextParts)
         {
             return new QueryContext(
                     new EntityMemberSourceMappingProvider(),
@@ -21,7 +21,8 @@ namespace Zarf.Query
                     new QuerySourceProvider(),
                     new ProjectionExpressionVisitor(),
                     new AliasGenerator(),
-                    new MemberValueCache()
+                    new MemberValueCache(),
+                    dbContextParts
                 );
         }
 
@@ -32,7 +33,8 @@ namespace Zarf.Query
             IQuerySourceProvider sourceProvider = null,
             IProjectionScanner scanner = null,
             IAliasGenerator aliasGenerator = null,
-            IMemberValueCache memValue = null
+            IMemberValueCache memValue = null,
+            IDbContextParts dbcontextParts = null
             )
         {
             return new QueryContext(
@@ -42,7 +44,8 @@ namespace Zarf.Query
                 sourceProvider ?? new QuerySourceProvider(),
                 scanner ?? new ProjectionExpressionVisitor(),
                 aliasGenerator ?? new AliasGenerator(),
-                memValue ?? new MemberValueCache()
+                memValue ?? new MemberValueCache(),
+                dbcontextParts
             );
         }
     }

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Zarf.Core;
 using Zarf.Mapping;
 namespace Zarf.Query
 {
     public interface IQueryContextFactory
     {
-        IQueryContext CreateContext();
+        IQueryContext CreateContext(IDbContextParts dbContextParts);
 
         IQueryContext CreateContext(
             IEntityMemberSourceMappingProvider sourceMappingProvider = null,
@@ -15,6 +13,7 @@ namespace Zarf.Query
             IQuerySourceProvider sourceProvider = null,
             IProjectionScanner scanner = null,
             IAliasGenerator generator = null,
-            IMemberValueCache memValue = null);
+            IMemberValueCache memValue = null,
+            IDbContextParts dbContextParts = null);
     }
 }

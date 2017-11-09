@@ -1,8 +1,8 @@
-﻿using System;
-using Zarf.Update.Commands;
+﻿using Zarf.Update.Commands;
 using Zarf.Core;
 using Zarf.Builders;
 using System.Linq;
+using Zarf.Update.Compilers;
 
 namespace Zarf.Update.Executors
 {
@@ -14,11 +14,14 @@ namespace Zarf.Update.Executors
 
         protected IDbCommandExecutor<DbDeleteCommand> DeleteExecutor { get; }
 
-        public CompisteDbCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+        protected IModifyOperationCompiler Compiler { get; }
+
+        public CompisteDbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder)
         {
-            InsertExecutor = new DbInsertCommandExecutor(dataBase, sqlBuilder, compiler);
-            UpdateExecutor = new DbUpdateCommandExecutor(dataBase, sqlBuilder, compiler);
-            DeleteExecutor = new DbDeleteCommandExecutor(dataBase, sqlBuilder, compiler);
+            Compiler = new CompositeModifyOperationCompiler();
+            InsertExecutor = new DbInsertCommandExecutor(commandFacotry, sqlBuilder, Compiler);
+            UpdateExecutor = new DbUpdateCommandExecutor(commandFacotry, sqlBuilder, Compiler);
+            DeleteExecutor = new DbDeleteCommandExecutor(commandFacotry, sqlBuilder, Compiler);
         }
 
         public int Execute(DbModifyOperation modifyOperation)

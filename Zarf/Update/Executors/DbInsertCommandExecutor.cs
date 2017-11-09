@@ -9,8 +9,8 @@ namespace Zarf.Update.Executors
 {
     public class DbInsertCommandExecutor : DbCommandExecutor<DbInsertCommand>
     {
-        public DbInsertCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
-            : base(dataBase, sqlBuilder, compiler)
+        public DbInsertCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+            : base(commandFacotry, sqlBuilder, compiler)
         {
 
         }
@@ -28,9 +28,7 @@ namespace Zarf.Update.Executors
 
         public override int ExecuteCore(string commandText, DbInsertCommand modifyCommand)
         {
-            var dbCommand = DataBase.GetCommand();
-            var autoIncrementValue = dbCommand.ExecuteScalar<int>(commandText, modifyCommand.DbParams.ToArray());
-
+            var autoIncrementValue = CommandFacotry.Create().ExecuteScalar<int>(commandText, modifyCommand.DbParams.ToArray());
             if (modifyCommand.Entity.Increment != null)
             {
                 modifyCommand.Entity.Increment.SetValue(modifyCommand.Entity.Entity, autoIncrementValue);

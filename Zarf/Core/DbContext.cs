@@ -1,41 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Builders;
+
 using Zarf.Core;
-using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Update;
+using Zarf.Update.Executors;
 
 namespace Zarf
 {
-    public interface IDbContextParts
-    {
-        ISqlTextBuilder SqlBuilder { get; }
-
-        IDbCommandFacotry CommandFacotry { get; }
-    }
-
     public abstract class DbContext : IDisposable
     {
-        public IDbContextParts DbContextParts { get; protected set; }
+        public IDbContextParts DbContextParts { get; }
 
-        public DbContext()
+        public IDbCommandExecutor DbModifyCommandExecutor { get; }
+
+        public DbContext(IDbContextParts dbContextParts)
         {
-
+            DbContextParts = dbContextParts;
+            DbModifyCommandExecutor = new CompisteDbCommandExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder);
         }
-
-        public static IServiceProvider ServiceProvider { get; set; }
-
-        protected IDbCommandExecutor Executor { get; set; }
-
-        protected IDataBaseFacade DataBase { get; set; }
-
-        public IDbCommandFacade Command { get; protected set; }
-
-        protected IDbService DbService { get; set; }
 
         public virtual IDbQuery<TEntity> Query<TEntity>()
         {
@@ -62,7 +47,7 @@ namespace Zarf
                 entries.Add(EntityEntry.Create(entity, EntityState.Insert));
             }
 
-            Executor.Execute(new DbModifyOperation(entries, null));
+            DbModifyCommandExecutor.Execute(new DbModifyOperation(entries, null));
         }
 
         public virtual void Add<TEntity>(TEntity entity) => AddRange(new[] { entity });
@@ -75,7 +60,7 @@ namespace Zarf
 
         public virtual int Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            return Executor.Execute(new DbModifyOperation(new[] { EntityEntry.Create(entity, EntityState.Update) }, GetIdentityMember(identity)));
+            return DbModifyCommandExecutor.Execute(new DbModifyOperation(new[] { EntityEntry.Create(entity, EntityState.Update) }, GetIdentityMember(identity)));
         }
 
         public virtual int Delete<TEntity>(TEntity entity) => Delete<TEntity, TEntity>(entity, null);
@@ -84,7 +69,7 @@ namespace Zarf
 
         public virtual int Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            return Executor.Execute(new DbModifyOperation(new[] { EntityEntry.Create(entity, EntityState.Delete) }, GetIdentityMember(identity)));
+            return DbModifyCommandExecutor.Execute(new DbModifyOperation(new[] { EntityEntry.Create(entity, EntityState.Delete) }, GetIdentityMember(identity)));
         }
 
         private static MemberDescriptor GetIdentityMember(Expression identity)

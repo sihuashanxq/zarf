@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using Zarf.Core;
 
 namespace Zarf.Query
 {
@@ -49,6 +50,8 @@ namespace Zarf.Query
 
         public IMemberValueCache MemberValueCache { get; }
 
+        public IDbContextParts DbContextParts { get; }
+
         public QueryContext(
             IEntityMemberSourceMappingProvider memberMappingProvider,
             IEntityProjectionMappingProvider projectionMappingProvider,
@@ -56,7 +59,8 @@ namespace Zarf.Query
             IQuerySourceProvider sourceProvider,
             IProjectionScanner projectionFinder,
             IAliasGenerator aliasGenerator,
-            IMemberValueCache memValueCache
+            IMemberValueCache memValueCache,
+            IDbContextParts dbContextParts
             )
         {
             EntityMemberMappingProvider = memberMappingProvider;
@@ -66,6 +70,7 @@ namespace Zarf.Query
             ProjectionScanner = projectionFinder;
             Alias = aliasGenerator;
             MemberValueCache = memValueCache;
+            DbContextParts = dbContextParts;
         }
 
         public QueryExpression UpdateRefrenceSource(QueryExpression query)

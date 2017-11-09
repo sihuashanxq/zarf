@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
+using Zarf.Core;
 using Zarf.Query;
 
 namespace Zarf
@@ -11,20 +12,18 @@ namespace Zarf
     {
         private IMemberValueCache _memValueCache;
 
-        public EntityPropertyEnumerable(Expression query, IMemberValueCache memValueCache)
-            : base(query)
+        private IDbContextParts _dbContextParts;
+
+        public EntityPropertyEnumerable(Expression query, IMemberValueCache memValueCache, IDbContextParts dbContextParts)
+            : base(query, dbContextParts)
         {
             _memValueCache = memValueCache;
+            _dbContextParts = dbContextParts;
         }
 
         public override IEnumerator<TEntity> GetEnumerator()
         {
-            if (Enumerator == null)
-            {
-                Enumerator = QueryInterpreter.Execute<TEntity>(Expression, QueryContextFacotry.Factory.CreateContext(memValue: _memValueCache));
-            }
-
-            return Enumerator;
+            return Enumerator ?? (Enumerator = Interpreter.Execute<TEntity>(Expression, QueryContextFacotry.Factory.CreateContext(memValue: _memValueCache, dbContextParts: _dbContextParts)));
         }
     }
 
@@ -34,22 +33,17 @@ namespace Zarf
 
         protected Expression Expression { get; }
 
-        protected IQueryInterpreter QueryInterpreter { get; }
+        protected IQueryInterpreter Interpreter { get; }
 
-        public EntityEnumerable(Expression query)
+        public EntityEnumerable(Expression query, IDbContextParts dbContextParts)
         {
             Expression = query;
-            QueryInterpreter = new QueryInterpreter(DbContext.ServiceProvider);
+            Interpreter = new QueryInterpreter(dbContextParts);
         }
 
         public virtual IEnumerator<TEntity> GetEnumerator()
         {
-            if (Enumerator == null)
-            {
-                Enumerator = QueryInterpreter.Execute<TEntity>(Expression);
-            }
-
-            return Enumerator;
+            return Enumerator ?? (Enumerator = Interpreter.Execute<TEntity>(Expression));
         }
 
         IEnumerator IEnumerable.GetEnumerator()

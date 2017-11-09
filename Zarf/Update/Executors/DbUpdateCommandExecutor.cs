@@ -8,17 +8,25 @@ namespace Zarf.Update.Executors
 {
     public class DbUpdateCommandExecutor : DbCommandExecutor<DbUpdateCommand>
     {
-        public DbUpdateCommandExecutor(IDataBaseFacade dataBase, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
-            : base(dataBase, sqlBuilder, compiler)
+        public DbUpdateCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+            : base(commandFacotry, sqlBuilder, compiler)
         {
 
         }
 
         public override int ExecuteCore(string commandText, DbUpdateCommand modifyCommand)
         {
-            var dbCommand = DataBase.GetCommand();
-            var dbParams = modifyCommand.DbParams.ToList().Concat(new[] { modifyCommand.IdentityColumnValue });
-            return dbCommand.ExecuteScalar<int>(commandText, dbParams.ToArray());
+            return 
+                CommandFacotry
+                .Create()
+                .ExecuteScalar<int>(
+                    commandText,
+                    modifyCommand
+                        .DbParams
+                        .ToList()
+                        .Concat(new[] { modifyCommand.IdentityColumnValue })
+                        .ToArray()
+                );
         }
 
         public override string GetCommandText(DbUpdateCommand modifyCommand)
