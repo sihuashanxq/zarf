@@ -5,80 +5,6 @@ using Zarf.Entities;
 
 namespace Zarf
 {
-    public class User
-    {
-        public int Id { get; set; }
-
-        public int Age { get; set; }
-
-        public string Name { get; set; }
-
-        public int AddressId { get; set; }
-
-        public DateTime BDay { get; set; }
-
-        public IEnumerable<Address> Address { get; set; }
-
-        public IEnumerable<Order> Orders { get; set; }
-
-        public override string ToString()
-        {
-            return "Id:" + Id + "\tAge=" + Age + "\tName=" + Name + "\t AddressId=" + AddressId + "\t BDay=" + BDay.ToString("yyyy-MM-dd HH:mm:ss");
-        }
-    }
-
-    public class Address
-    {
-        public int Id { get; set; }
-
-        public string Street { get; set; }
-
-        public int UserId { get; set; }
-
-        public IEnumerable<Order> Orders { get; set; }
-    }
-
-    public class Order
-    {
-        public int? AddressID { get; set; }
-
-        public string OrderName { get; set; }
-    }
-
-    public class Abc
-    {
-        public int Id { get; set; }
-
-        public int Count;
-    }
-
-
-    public class C
-    {
-        public User User { get; set; }
-
-        public int Id { get; set; }
-    }
-
-    public class PP
-    {
-        [PrimaryKey]
-        [AutoIncrement]
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-    }
-
-    public class DbUserContext : SqlServerDbContext
-    {
-        public DbUserContext() : base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
-        {
-            Users = this.Query<User>();
-        }
-
-        public IDbQuery<User> Users { get; }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -234,5 +160,62 @@ namespace Zarf
                 .Select(item => item)
                 .ToList();
         }
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+
+        public int Age { get; set; }
+
+        public string Name { get; set; }
+
+        public int AddressId { get; set; }
+
+        public DateTime BDay { get; set; }
+
+        public IEnumerable<Address> Address { get; set; }
+
+        public override string ToString()
+        {
+            return "Id:" + Id + "\tAge=" + Age + "\tName=" + Name + "\t AddressId=" + AddressId + "\t BDay=" + BDay.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+    }
+
+    public class Address
+    {
+        public int Id { get; set; }
+
+        public string Street { get; set; }
+
+        public int UserId { get; set; }
+
+        public IEnumerable<Order> Orders { get; set; }
+    }
+
+    public class Order
+    {
+        public int? AddressID { get; set; }
+
+        public string OrderName { get; set; }
+    }
+
+    public class PP
+    {
+        [PrimaryKey]
+        [AutoIncrement]
+        public int Id { get; set; }
+
+        public string Name { get; set; }
+    }
+
+    public class DbUserContext : SqlServerDbContext
+    {
+        public DbUserContext() : base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
+        {
+            Users = this.Query<User>();
+        }
+
+        public IDbQuery<User> Users { get; }
     }
 }
