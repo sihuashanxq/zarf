@@ -13,7 +13,7 @@ namespace Zarf.Update.Compilers
 
         protected object _syncRoot;
 
-        public CompositeModifyOperationCompiler()
+        public CompositeModifyOperationCompiler(IEntityTracker tracker)
         {
             _syncRoot = new object();
             _trackEntityMemValues = new Dictionary<object, Dictionary<MemberInfo, object>>();
@@ -21,30 +21,9 @@ namespace Zarf.Update.Compilers
             InternalCompilers = new Dictionary<EntityState, IModifyOperationCompiler>
             {
                 [EntityState.Insert] = new InsertOperationCompiler(),
-                [EntityState.Update] = new UpdateOperationCompiler(_trackEntityMemValues),
+                [EntityState.Update] = new UpdateOperationCompiler(tracker),
                 [EntityState.Delete] = new DeleteOperationCompiler()
             };
-        }
-
-        public override void TrackEntity<TEntity>(TEntity entity)
-        {
-            lock (_syncRoot)
-            {
-                var eType = typeof(TEntity);
-                var values = new Dictionary<MemberInfo, object>();
-
-                foreach (var item in eType.GetProperties().Where(item => ReflectionUtil.SimpleTypes.Contains(item.PropertyType)))
-                {
-                    values[item] = item.GetValue(entity);
-                }
-
-                foreach (var item in eType.GetFields().Where(item => ReflectionUtil.SimpleTypes.Contains(item.FieldType)))
-                {
-                    values[item] = item.GetValue(entity);
-                }
-
-                _trackEntityMemValues[entity] = values;
-            }
         }
 
         public override DbModifyCommand Compile(EntityEntry entity, MemberDescriptor identity)

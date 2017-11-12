@@ -14,8 +14,9 @@ namespace Zarf.Update.Executors
 
         protected IDbCommandExecutor<DbDeleteCommand> DeleteExecutor { get; }
 
-        public CompositeDbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
+        public CompositeDbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IEntityTracker tracker)
         {
+            var compiler = new CompositeModifyOperationCompiler(tracker);
             InsertExecutor = new DbInsertCommandExecutor(commandFacotry, sqlBuilder, compiler);
             UpdateExecutor = new DbUpdateCommandExecutor(commandFacotry, sqlBuilder, compiler);
             DeleteExecutor = new DbDeleteCommandExecutor(commandFacotry, sqlBuilder, compiler);

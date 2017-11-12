@@ -17,13 +17,13 @@ namespace Zarf
 
         public IDbCommandExecutor DbModifyCommandExecutor { get; }
 
-        public IModifyOperationCompiler DbModifyCompiler { get; }
+        public IEntityTracker Tracker { get; }
 
         public DbContext(IDbContextParts dbContextParts)
         {
             DbContextParts = dbContextParts;
-            DbModifyCompiler = new CompositeModifyOperationCompiler();
-            DbModifyCommandExecutor = new CompositeDbCommandExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder, DbModifyCompiler);
+            Tracker = new EntityTracker();
+            DbModifyCommandExecutor = new CompositeDbCommandExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder, Tracker);
         }
 
         public IDbQuery<TEntity> Query<TEntity>()
@@ -39,7 +39,7 @@ namespace Zarf
         public void TrackEntity<TEntity>(TEntity entity)
             where TEntity : class
         {
-            DbModifyCompiler.TrackEntity(entity);
+            Tracker.TrackEntity(entity);
         }
 
         public virtual void AddRange(IEnumerable<object> entities) => AddRange<object>(entities);

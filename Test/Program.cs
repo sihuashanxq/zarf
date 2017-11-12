@@ -11,11 +11,11 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                BasicTest(db);
+                //BasicTest(db);
 
                 var first = db.Users.FirstOrDefault();
                 db.TrackEntity(first);
-                first.Name = "Wheaa";
+                first.Name = "Wheaa2";
                 db.Update(first);
         
                 //var user = new User()

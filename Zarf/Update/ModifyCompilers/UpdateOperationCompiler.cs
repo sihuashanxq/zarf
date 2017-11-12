@@ -7,18 +7,19 @@ namespace Zarf.Update.Compilers
 {
     public class UpdateOperationCompiler : ModifyOperationCompiler
     {
-        private Dictionary<object, Dictionary<MemberInfo, object>> _trackEntityValues;
+        private IEntityTracker _tracker;
 
-        public UpdateOperationCompiler(Dictionary<object, Dictionary<MemberInfo, object>> trackEntityValues)
+        public UpdateOperationCompiler(IEntityTracker tracker)
         {
-            _trackEntityValues = trackEntityValues;
+            _tracker = tracker;
         }
 
         public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity)
         {
-            var columns = new List<string>();
-            var dbParams = new List<DbParameter>();
-            var entityMemValues = _trackEntityValues.GetValueOrDefault(entry.Entity);
+            var updatedColumns = new List<string>();
+            var paramemters = new List<DbParameter>();
+
+            var isTracked = _tracker.IsTracked(entry.Entity);
 
             foreach (var item in entry.Members)
             {
@@ -27,35 +28,17 @@ namespace Zarf.Update.Compilers
                     continue;
                 }
 
-                var dbParameter = GetDbParameter(entry.Entity, item);
-                if (entityMemValues != null)
+                var parameter = GetDbParameter(entry.Entity, item);
+                if (isTracked && !_tracker.IsValueChanged(entry.Entity, item.Member, parameter.Value))
                 {
-                    //track
-                    var memValue = entityMemValues[item.Member];
-                    if (memValue == null && dbParameter.Value == null)
-                    {
-                        continue;
-                    }
-
-                    if (memValue != null && memValue.Equals(dbParameter.Value))
-                    {
-                        continue;
-                    }
-
-                    if (dbParameter.Value != null && dbParameter.Equals(dbParameter.Value))
-                    {
-                        continue;
-                    }
-
-                    //update track
-                    entityMemValues[item.Member] = dbParameter.Value;
+                    continue;
                 }
 
-                columns.Add(GetColumnName(item));
-                dbParams.Add(dbParameter);
+                updatedColumns.Add(GetColumnName(item));
+                paramemters.Add(parameter);
             }
 
-            return new DbUpdateCommand(entry, columns, dbParams, GetColumnName(identity), GetDbParameter(entry.Entity, identity));
+            return new DbUpdateCommand(entry, updatedColumns, paramemters, GetColumnName(identity), GetDbParameter(entry.Entity, identity));
         }
     }
 }
