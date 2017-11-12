@@ -12,39 +12,45 @@ namespace Zarf
             using (var db = new DbUserContext())
             {
                 BasicTest(db);
-                var user = new User()
-                {
-                    Name = "张三",
-                    Age = 33,
-                    BDay = DateTime.Now,
-                    Id = 999
-                };
 
-                var user2 = new User
-                {
-                    Name = "王五",
-                    Age = 44,
-                    BDay = DateTime.Now,
-                    Id = 1001
-                };
+                var first = db.Users.FirstOrDefault();
+                db.TrackEntity(first);
+                first.Name = "Wheaa";
+                db.Update(first);
+        
+                //var user = new User()
+                //{
+                //    Name = "张三",
+                //    Age = 33,
+                //    BDay = DateTime.Now,
+                //    Id = 999
+                //};
 
-                db.AddRange(new[] { user, user2 });
-                db.Add(user);
-                db.Users.Add(user);
-                db.Users.AddRange(new[] { user, user2 });
+                //var user2 = new User
+                //{
+                //    Name = "王五",
+                //    Age = 44,
+                //    BDay = DateTime.Now,
+                //    Id = 1001
+                //};
 
-                user.Name = "李四";
+                //db.AddRange(new[] { user, user2 });
+                //db.Add(user);
+                //db.Users.Add(user);
+                //db.Users.AddRange(new[] { user, user2 });
 
-                db.Users.Update(user);
-                db.Update(user, item => item.Id);
+                //user.Name = "李四";
 
-                user.Age = 22;
-                db.Update(user);
+                //db.Users.Update(user);
+                //db.Update(user, item => item.Id);
 
-                db.Delete(user);
-                db.Users.Delete(user);
+                //user.Age = 22;
+                //db.Update(user);
 
-                db.Delete(user, item => user.Age);
+                //db.Delete(user);
+                //db.Users.Delete(user);
+
+                //db.Delete(user, item => user.Age);
 
                 Console.ReadKey();
             }
@@ -211,7 +217,8 @@ namespace Zarf
 
     public class DbUserContext : SqlServerDbContext
     {
-        public DbUserContext() : base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
+        public DbUserContext() :
+            base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
         {
             Users = this.Query<User>();
         }

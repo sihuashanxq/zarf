@@ -16,7 +16,12 @@ namespace Zarf.Update.Executors
 
         public override int ExecuteCore(string commandText, DbUpdateCommand modifyCommand)
         {
-            return 
+            if (modifyCommand.Columns == null || modifyCommand.Columns.Count() == 0)
+            {
+                return 0;
+            }
+
+            return
                 CommandFacotry
                 .Create()
                 .ExecuteScalar<int>(

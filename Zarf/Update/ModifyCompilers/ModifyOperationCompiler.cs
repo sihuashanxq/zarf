@@ -22,6 +22,11 @@ namespace Zarf.Update.Compilers
 
         public abstract DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity);
 
+        public virtual void TrackEntity<TEntity>(TEntity entity)
+        {
+
+        }
+
         protected string GetColumnName(MemberDescriptor memberDescriptor)
         {
             return memberDescriptor.Member.GetCustomAttribute<ColumnAttribute>()?.Name ?? memberDescriptor.Member.Name;

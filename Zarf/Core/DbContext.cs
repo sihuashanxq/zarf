@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Update;
+using Zarf.Update.Compilers;
 using Zarf.Update.Executors;
 
 namespace Zarf
@@ -16,20 +17,29 @@ namespace Zarf
 
         public IDbCommandExecutor DbModifyCommandExecutor { get; }
 
+        public IModifyOperationCompiler DbModifyCompiler { get; }
+
         public DbContext(IDbContextParts dbContextParts)
         {
             DbContextParts = dbContextParts;
-            DbModifyCommandExecutor = new CompisteDbCommandExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder);
+            DbModifyCompiler = new CompositeModifyOperationCompiler();
+            DbModifyCommandExecutor = new CompositeDbCommandExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder, DbModifyCompiler);
         }
 
-        public virtual IDbQuery<TEntity> Query<TEntity>()
+        public IDbQuery<TEntity> Query<TEntity>()
         {
             return new DbQuery<TEntity>(new DbQueryProvider(this));
         }
 
-        public virtual IDbQuery<TEntity> Query<TEntity>(string queryText)
+        public IDbQuery<TEntity> Query<TEntity>(string queryText)
         {
             return null;
+        }
+
+        public void TrackEntity<TEntity>(TEntity entity)
+            where TEntity : class
+        {
+            DbModifyCompiler.TrackEntity(entity);
         }
 
         public virtual void AddRange(IEnumerable<object> entities) => AddRange<object>(entities);

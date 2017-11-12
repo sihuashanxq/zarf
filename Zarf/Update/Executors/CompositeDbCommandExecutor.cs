@@ -6,7 +6,7 @@ using Zarf.Update.Compilers;
 
 namespace Zarf.Update.Executors
 {
-    public class CompisteDbCommandExecutor : IDbCommandExecutor
+    public class CompositeDbCommandExecutor : IDbCommandExecutor
     {
         protected IDbCommandExecutor<DbInsertCommand> InsertExecutor { get; }
 
@@ -14,14 +14,11 @@ namespace Zarf.Update.Executors
 
         protected IDbCommandExecutor<DbDeleteCommand> DeleteExecutor { get; }
 
-        protected IModifyOperationCompiler Compiler { get; }
-
-        public CompisteDbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder)
+        public CompositeDbCommandExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IModifyOperationCompiler compiler)
         {
-            Compiler = new CompositeModifyOperationCompiler();
-            InsertExecutor = new DbInsertCommandExecutor(commandFacotry, sqlBuilder, Compiler);
-            UpdateExecutor = new DbUpdateCommandExecutor(commandFacotry, sqlBuilder, Compiler);
-            DeleteExecutor = new DbDeleteCommandExecutor(commandFacotry, sqlBuilder, Compiler);
+            InsertExecutor = new DbInsertCommandExecutor(commandFacotry, sqlBuilder, compiler);
+            UpdateExecutor = new DbUpdateCommandExecutor(commandFacotry, sqlBuilder, compiler);
+            DeleteExecutor = new DbDeleteCommandExecutor(commandFacotry, sqlBuilder, compiler);
         }
 
         public int Execute(DbModifyOperation modifyOperation)
