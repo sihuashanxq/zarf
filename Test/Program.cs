@@ -13,11 +13,18 @@ namespace Zarf
             {
                 //BasicTest(db);
 
-                var first = db.Users.FirstOrDefault();
-                db.TrackEntity(first);
-                first.Name = "Wheaa2";
+                var first = db.Query<PP>().FirstOrDefault();
+                var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
+
+                var newPP = new PP()
+                {
+                    Name = "3333333"
+                };
+
                 db.Update(first);
-        
+                db.Add(newPP);
+                db.Update(sencond);
+
                 //var user = new User()
                 //{
                 //    Name = "张三",

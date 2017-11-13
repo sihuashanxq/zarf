@@ -3,6 +3,7 @@ using Zarf.Core;
 using Zarf.Builders;
 using System.Linq;
 using Zarf.Update.Compilers;
+using System.Collections.Generic;
 
 namespace Zarf.Update.Executors
 {
@@ -22,17 +23,31 @@ namespace Zarf.Update.Executors
             DeleteExecutor = new DbDeleteCommandExecutor(commandFacotry, sqlBuilder, compiler);
         }
 
-        public int Execute(DbModifyOperation modifyOperation)
+        public int Execute(IEnumerable<EntityEntry> entries)
         {
-            switch (modifyOperation.Entries.FirstOrDefault().State)
+            var inserts = entries.Where(item => item.State == EntityState.Insert).GroupBy(item => item.Type);
+            var updates = entries.Where(item => item.State == EntityState.Update).GroupBy(item => item.Type);
+            var deletes = entries.Where(item => item.State == EntityState.Delete).GroupBy(item => item.Type);
+            //FlushMode==AutoSetIncrement
+
+            //合并
+            foreach (var item in entries.OrderBy(item => item.State).ThenByDescending(item => item.Entity.GetType().GetHashCode()))
             {
-                case EntityState.Insert:
-                    return InsertExecutor.Execute(modifyOperation);
-                case EntityState.Update:
-                    return UpdateExecutor.Execute(modifyOperation);
-                default:
-                    return DeleteExecutor.Execute(modifyOperation);
+                switch (item.State)
+                {
+                    case EntityState.Insert:
+                        InsertExecutor.Execute(new[] { item });
+                        break;
+                    case EntityState.Update:
+                        UpdateExecutor.Execute(new[] { item });
+                        break;
+                    default:
+                        DeleteExecutor.Execute(new[] { item });
+                        break;
+                }
             }
+
+            return 0;
         }
     }
 }

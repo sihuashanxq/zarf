@@ -5,12 +5,12 @@ namespace Zarf.Update.Compilers
 {
     public class DeleteOperationCompiler : ModifyOperationCompiler
     {
-        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity)
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor primary)
         {
             return new DbDeleteCommand(
                 entry,
-                GetColumnName(identity),
-                new DbParameter("@" + identity.Member.Name, identity.GetValue(entry.Entity))
+                GetColumnName(primary),
+                new DbParameter("@" + primary.Member.Name, primary.GetValue(entry.Entity))
             );
         }
     }

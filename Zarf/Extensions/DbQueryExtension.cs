@@ -16,29 +16,29 @@ namespace Zarf
             dbQuery.Context?.Add(entity);
         }
 
-        public static int Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
+        public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
         {
-            return dbQuery.Context?.Update(entity) ?? 0;
+            dbQuery.Context?.Update(entity);
         }
 
-        public static int Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
         {
-            return dbQuery.Context?.Update(entity, predicate) ?? 0;
+            dbQuery.Context?.Update(entity, predicate);
         }
 
-        public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, Expression<Func<TEntity, bool>> predicate)
+        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, Expression<Func<TEntity, bool>> predicate)
         {
-            return dbQuery.Context?.Delete(predicate) ?? 0;
+            dbQuery.Context?.Delete(predicate);
         }
 
-        public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
         {
-            return dbQuery.Context?.Delete(entity, predicate) ?? 0;
+            dbQuery.Context?.Delete(entity, predicate);
         }
 
-        public static int Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
+        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
         {
-            return dbQuery.Context?.Delete(entity) ?? 0;
+            dbQuery.Context?.Delete(entity);
         }
     }
 }

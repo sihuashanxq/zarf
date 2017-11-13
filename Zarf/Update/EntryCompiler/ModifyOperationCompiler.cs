@@ -3,16 +3,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Update.Commands;
+using System.Linq;
 
 namespace Zarf.Update.Compilers
 {
     public abstract class ModifyOperationCompiler : IModifyOperationCompiler
     {
-        public virtual IEnumerable<DbModifyCommand> Compile(DbModifyOperation modifyOperation)
+        public virtual IEnumerable<DbModifyCommand> Compile(IEnumerable<EntityEntry> entries)
         {
-            foreach (var entry in modifyOperation.Entries)
+            foreach (var entry in entries.OrderBy(item => item.State).ThenByDescending(item => item.Entity.GetType().GetHashCode()))
             {
-                var modifyCommand = Compile(entry, modifyOperation.Identity);
+                var modifyCommand = Compile(entry, entry.Primary);
                 if (modifyCommand != null)
                 {
                     yield return modifyCommand;
@@ -20,7 +21,7 @@ namespace Zarf.Update.Compilers
             }
         }
 
-        public abstract DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity);
+        public abstract DbModifyCommand Compile(EntityEntry entry, MemberDescriptor primary);
 
         protected string GetColumnName(MemberDescriptor memberDescriptor)
         {

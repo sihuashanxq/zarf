@@ -6,7 +6,7 @@ namespace Zarf.Update.Compilers
 {
     public class InsertOperationCompiler : ModifyOperationCompiler
     {
-        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity)
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor primary)
         {
             var columns = new List<string>();
             var dbParams = new List<DbParameter>();

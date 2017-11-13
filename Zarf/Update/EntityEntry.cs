@@ -8,9 +8,9 @@ namespace Zarf
 {
     public class EntityEntry
     {
-        public Type Type { get; }
+        public object Entity { get; set; }
 
-        public object Entity { get; }
+        public Type Type { get; }
 
         public EntityState State { get; }
 
@@ -18,7 +18,9 @@ namespace Zarf
 
         public MemberDescriptor Increment => Members?.FirstOrDefault(item => item.IsIncrement);
 
-        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary);
+        public MemberDescriptor ConventionId => Members?.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
+
+        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary) ?? Increment ?? ConventionId;
 
         public EntityEntry(object entity, EntityState state, IEnumerable<MemberDescriptor> members)
         {

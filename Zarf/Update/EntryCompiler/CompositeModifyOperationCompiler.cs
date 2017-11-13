@@ -26,21 +26,16 @@ namespace Zarf.Update.Compilers
             };
         }
 
-        public override DbModifyCommand Compile(EntityEntry entity, MemberDescriptor identity)
+        public override DbModifyCommand Compile(EntityEntry entity, MemberDescriptor primary)
         {
-            if (identity == null)
-            {
-                identity = entity.Primary ?? entity.Increment ?? entity.Members.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
-            }
-
-            if (identity == null)
+            if (primary == null)
             {
                 throw new KeyNotFoundException($"Type {entity.Entity.GetType().Name} should be set an member as primary!");
             }
 
             if (InternalCompilers.TryGetValue(entity.State, out IModifyOperationCompiler internalCompiler))
             {
-                return internalCompiler.Compile(entity, identity);
+                return internalCompiler.Compile(entity, primary);
             }
 
             return null;

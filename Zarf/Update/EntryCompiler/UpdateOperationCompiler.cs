@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using Zarf.Entities;
 using Zarf.Update.Commands;
 
@@ -14,7 +13,7 @@ namespace Zarf.Update.Compilers
             _tracker = tracker;
         }
 
-        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor identity)
+        public override DbModifyCommand Compile(EntityEntry entry, MemberDescriptor primary)
         {
             var updatedColumns = new List<string>();
             var paramemters = new List<DbParameter>();
@@ -23,7 +22,7 @@ namespace Zarf.Update.Compilers
 
             foreach (var item in entry.Members)
             {
-                if (item.IsIncrement || item.IsPrimary || item.Member == identity.Member)
+                if (item.IsIncrement || item.IsPrimary || item.Member == primary.Member)
                 {
                     continue;
                 }
@@ -38,7 +37,7 @@ namespace Zarf.Update.Compilers
                 paramemters.Add(parameter);
             }
 
-            return new DbUpdateCommand(entry, updatedColumns, paramemters, GetColumnName(identity), GetDbParameter(entry.Entity, identity));
+            return new DbUpdateCommand(entry, updatedColumns, paramemters, GetColumnName(primary), GetDbParameter(entry.Entity, primary));
         }
     }
 }

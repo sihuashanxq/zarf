@@ -1,9 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using Zarf.Builders;
 using Zarf.Core;
-using Zarf.Extensions;
 using Zarf.Update.Commands;
 
 namespace Zarf.Update.Executors
@@ -24,21 +22,25 @@ namespace Zarf.Update.Executors
             Compiler = compiler;
         }
 
-        public virtual int Execute(DbModifyOperation modifyOperation)
+        public virtual int Execute(IEnumerable<EntityEntry> entries)
         {
-            var modifyCommand = GetModifyCommand(modifyOperation);
-            var commandText = GetCommandText(modifyCommand);
+            var commands = GetModifyCommand(entries);
+            foreach (var command in commands)
+            {
+                var commandText = GetCommandText(command);
+                ExecuteCore(commandText, command);
+            }
 
-            return ExecuteCore(commandText, modifyCommand);
+            return 0;
         }
 
         public abstract int ExecuteCore(string commandText, TModifyCommand modifyCommand);
 
         public abstract string GetCommandText(TModifyCommand modifyCommand);
 
-        protected virtual TModifyCommand GetModifyCommand(DbModifyOperation modifyOperation)
+        protected virtual IEnumerable<TModifyCommand> GetModifyCommand(IEnumerable<EntityEntry> entries)
         {
-            return Compiler.Compile(modifyOperation).FirstOrDefault().As<TModifyCommand>();
+            return Compiler.Compile(entries).OfType<TModifyCommand>();
         }
     }
 }
