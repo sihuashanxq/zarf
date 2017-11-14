@@ -1,4 +1,5 @@
-﻿using Zarf.Entities;
+﻿using System.Collections.Generic;
+using Zarf.Entities;
 using Zarf.Update.Commands;
 
 namespace Zarf.Update.Compilers
@@ -10,7 +11,7 @@ namespace Zarf.Update.Compilers
             return new DbDeleteCommand(
                 entry,
                 GetColumnName(primary),
-                new DbParameter("@" + primary.Member.Name, primary.GetValue(entry.Entity))
+                new List<DbParameter>() { new DbParameter("@" + primary.Member.Name, primary.GetValue(entry.Entity)) }
             );
         }
     }

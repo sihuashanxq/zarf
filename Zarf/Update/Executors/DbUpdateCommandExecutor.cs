@@ -29,7 +29,7 @@ namespace Zarf.Update.Executors
                     modifyCommand
                         .DbParams
                         .ToList()
-                        .Concat(new[] { modifyCommand.IdentityColumnValue })
+                        .Concat(modifyCommand.PrimaryKeyValues)
                         .ToArray()
                 );
         }
@@ -40,8 +40,8 @@ namespace Zarf.Update.Executors
                 modifyCommand.Table,
                 modifyCommand.DbParams,
                 modifyCommand.Columns,
-                modifyCommand.IdentityColumn,
-                modifyCommand.IdentityColumnValue);
+                modifyCommand.PrimaryKey,
+                modifyCommand.PrimaryKeyValues.FirstOrDefault());
 
             return SqlBuilder.Build(updateExpression);
         }

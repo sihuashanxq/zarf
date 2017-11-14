@@ -1,18 +1,15 @@
-﻿using Zarf.Entities;
+﻿using System.Collections.Generic;
+using Zarf.Entities;
 
 namespace Zarf.Update.Commands
 {
     public class DbDeleteCommand : DbModifyCommand
     {
-        public string IdentityColumn { get; }
-
-        public DbParameter IdentityColumnValue { get; }
-
-        public DbDeleteCommand(EntityEntry entity, string identityColumn, DbParameter identityColumnValue)
+        public DbDeleteCommand(EntityEntry entity, string primaryKey, List<DbParameter> primaryKeyValues)
             : base(entity)
         {
-            IdentityColumn = identityColumn;
-            IdentityColumnValue = identityColumnValue;
+            PrimaryKey = primaryKey;
+            PrimaryKeyValues = primaryKeyValues;
         }
     }
 }

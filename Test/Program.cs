@@ -21,9 +21,16 @@ namespace Zarf
                     Name = "3333333"
                 };
 
+                var newPPP = new PP { };
+                db.Add(newPPP);
+
                 db.Update(first);
                 db.Add(newPP);
                 db.Update(sencond);
+
+                var x = new EntityEntryStore(db.Tracker);
+
+                x.Store(db.CacheEntryStore.GetCahcedEntries());
 
                 //var user = new User()
                 //{

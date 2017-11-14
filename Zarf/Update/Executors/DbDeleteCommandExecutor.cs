@@ -15,15 +15,15 @@ namespace Zarf.Update.Executors
 
         public override int ExecuteCore(string commandText, DbDeleteCommand modifyCommand)
         {
-            return CommandFacotry.Create().ExecuteScalar<int>(commandText, modifyCommand.IdentityColumnValue);
+            return CommandFacotry.Create().ExecuteScalar<int>(commandText, modifyCommand.PrimaryKeyValues.ToArray());
         }
 
         public override string GetCommandText(DbDeleteCommand modifyCommand)
         {
             var deleteExpression = new DeleteExpression(
                 modifyCommand.Table,
-                modifyCommand.IdentityColumn,
-                modifyCommand.IdentityColumnValue);
+                modifyCommand.PrimaryKey,
+                modifyCommand.PrimaryKeyValues);
 
             return SqlBuilder.Build(deleteExpression);
         }

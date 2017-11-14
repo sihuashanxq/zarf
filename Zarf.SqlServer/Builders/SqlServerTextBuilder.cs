@@ -7,6 +7,7 @@ using Zarf.Builders;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Update.Expressions;
 
 namespace Zarf.SqlServer.Builders
 {
@@ -470,9 +471,31 @@ namespace Zarf.SqlServer.Builders
             Visit(expression);
         }
 
-        protected override Expression VisitInsert(InsertExpression insert)
+        protected override Expression VisitStore(DbStoreExpression store)
         {
-            Append(" INSERT INTO ").
+            foreach (var persist in store.Persists)
+            {
+                switch (persist)
+                {
+                    case InsertExpression insert:
+                        BuildInsert(insert, store.Persists.Count() == 1);
+                        break;
+                    case UpdateExpression update:
+                        BuildUpdate(update);
+                        break;
+                    default:
+                        BuildDelete(persist.As<DeleteExpression>());
+                        break;
+                }
+            }
+
+            return store;
+        }
+
+        protected void BuildInsert(InsertExpression insert, bool genIdentity = false)
+        {
+            Append(Environment.NewLine).
+            Append(";INSERT INTO ").
             Append(insert.Table.Schema.Escape()).
             Append('.').
             Append(insert.Table.Name.Escape()).
@@ -483,35 +506,45 @@ namespace Zarf.SqlServer.Builders
                 Append(col.Escape()).Append(',');
             }
             _builder.Length--;
-            Append(") VALUES (");
+            Append(") VALUES ");
 
-            foreach (var dbParam in insert.DbParams)
+            var dbParams = insert.DbParams.ToList();
+            var colCount = insert.Columns.Count();
+
+            for (var i = 0; i < dbParams.Count; i++)
             {
-                Append(dbParam.Name).Append(',');
+                var parameter = dbParams[i];
+                var mod = (i + 1 % colCount);
+
+                if (mod == 1)
+                {
+                    Append('(').Append(parameter.Name);
+                }
+                else if (mod == 0)
+                {
+                    Append(parameter.Name).Append(')');
+                }
+                else
+                {
+                    Append(parameter.Name).Append(',');
+                }
             }
 
-            _builder.Length--;
-            Append(");");
-
-            if (insert.IncrementMember != null)
+            if (insert.IncrementMember != null &&
+                colCount == dbParams.Count)
             {
                 Append("SELECT SCOPE_IDENTITY() AS ID;");
             }
-            else
-            {
-                Append("SELECT -1 AS ID");
-            }
-
-            return insert;
         }
 
-        protected override Expression VisitUpdate(UpdateExpression update)
+        protected void BuildUpdate(UpdateExpression update)
         {
-            Append(" UPDATE ").
-             Append(update.Table.Schema.Escape()).
-             Append('.').
-             Append(update.Table.Name.Escape()).
-             Append("SET ");
+            Append(Environment.NewLine).
+            Append(";UPDATE ").
+            Append(update.Table.Schema.Escape()).
+            Append('.').
+            Append(update.Table.Name.Escape()).
+            Append("SET ");
 
             var columns = update.Columns.ToList();
             var dbParams = update.DbParams.ToList();
@@ -524,28 +557,45 @@ namespace Zarf.SqlServer.Builders
                 Append(dbParam.Name).
                 Append(',');
             }
+
             _builder.Length--;
 
             Append(" WHERE ").
             Append(update.Identity).
             Append('=').
             Append(update.IdentityValue.Name).
-            Append(";SELECT @@ROWCOUNT AS Count;");
-            return update;
+            Append(";");
         }
 
-        protected override Expression VisitDelete(DeleteExpression delete)
+        protected void BuildDelete(DeleteExpression delete)
         {
-            Append(" DELETE FROM  ").
+            Append(Environment.NewLine).
+            Append(";DELETE FROM  ").
             Append(delete.Table.Schema.Escape()).
             Append('.').
             Append(delete.Table.Name.Escape()).
             Append(" WHERE ").
-            Append(delete.Identity).
-            Append('=').
-            Append(delete.IdentityValue.Name).
-            Append(";SELECT @@ROWCOUNT AS Count;");
-            return delete;
+            Append(delete.PrimaryKey);
+
+            var primaryKeyValues = delete.PrimaryKeyValues.ToList();
+            if (primaryKeyValues.Count == 1)
+            {
+                Append('=');
+                Append(delete.PrimaryKeyValues.FirstOrDefault().Name);
+            }
+            else
+            {
+                Append("IN (");
+                foreach (var primaryKeyValue in primaryKeyValues)
+                {
+                    Append(primaryKeyValue.Name + ',');
+                }
+
+                _builder.Length--;
+                Append(')');
+            }
+
+            Append(";");
         }
     }
 }

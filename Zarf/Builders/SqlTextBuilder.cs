@@ -2,6 +2,7 @@
 using Zarf.Query.Expressions;
 using System;
 using System.Collections.Generic;
+using Zarf.Update.Expressions;
 
 namespace Zarf.Builders
 {
@@ -52,12 +53,9 @@ namespace Zarf.Builders
                     return VisitAll(all);
                 case AnyExpression any:
                     return VisitAny(any);
-                case InsertExpression insert:
-                    return VisitInsert(insert);
-                case UpdateExpression update:
-                    return VisitUpdate(update);
-                case DeleteExpression delete:
-                    return VisitDelete(delete);
+                case DbStoreExpression store:
+                    return VisitStore(store);
+
             }
             return node;
         }
@@ -90,11 +88,7 @@ namespace Zarf.Builders
 
         protected abstract Expression VisitAny(AnyExpression any);
 
-        protected abstract Expression VisitInsert(InsertExpression insert);
-
-        protected abstract Expression VisitUpdate(UpdateExpression update);
-
-        protected abstract Expression VisitDelete(DeleteExpression delete);
+        protected abstract Expression VisitStore(DbStoreExpression store);
 
         public abstract string Build(Expression expression);
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Entities;
+using System.Collections.Generic;
 
 namespace Zarf.Query.Expressions
 {
@@ -10,17 +11,17 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public string Identity { get; }
+        public string PrimaryKey { get; }
 
-        public DbParameter IdentityValue { get; }
+        public IEnumerable<DbParameter> PrimaryKeyValues { get; }
 
         public Table Table { get; }
 
-        public DeleteExpression(Table table,  string identity, DbParameter identityValue)
+        public DeleteExpression(Table table, string primary, IEnumerable<DbParameter> primaryKeyValues)
         {
             Table = table;
-            Identity = identity;
-            IdentityValue = identityValue;
+            PrimaryKey = primary;
+            PrimaryKeyValues = primaryKeyValues;
         }
     }
 }
