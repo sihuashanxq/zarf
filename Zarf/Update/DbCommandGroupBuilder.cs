@@ -59,7 +59,7 @@ namespace Zarf.Update
                 dbParams.Add(new DbParameter(GetNewParameterName(), item.GetValue(entry.Entity)));
             }
 
-            AddCommandToGroup(groups, new DbInsertCommand(entry, columns, dbParams));
+            AddCommandToGroup(groups, new DbModifyCommand(entry, columns, dbParams));
         }
 
         protected void BuildUpdate(List<DbModifyCommandGroup> groups, EntityEntry entry)
@@ -87,7 +87,7 @@ namespace Zarf.Update
 
             AddCommandToGroup(
                 groups,
-                new DbUpdateCommand(
+                new DbModifyCommand(
                     entry,
                     columns,
                     paramemters,
@@ -100,7 +100,7 @@ namespace Zarf.Update
         {
             AddCommandToGroup(
                 groups,
-                new DbDeleteCommand(
+                new DbModifyCommand(
                    entry,
                    GetColumnName(entry.Primary),
                    new List<DbParameter>() { GetDbParameter(entry.Entity, entry.Primary) })
@@ -116,7 +116,7 @@ namespace Zarf.Update
                 groups.Add(group);
             }
 
-            if (modifyCommand.Is<DbUpdateCommand>())
+            if (modifyCommand.State == EntityState.Update)
             {
                 group.Commands.Add(modifyCommand);
                 return;
@@ -131,7 +131,7 @@ namespace Zarf.Update
                 return;
             }
 
-            if (modifyCommand.Is<DbInsertCommand>())
+            if (modifyCommand.State == EntityState.Insert)
             {
                 last.DbParams.AddRange(modifyCommand.DbParams);
             }
@@ -146,8 +146,8 @@ namespace Zarf.Update
             var group = groups.LastOrDefault();
             if (group != null && group.DbParameterCount + modifyCommand.DbParameterCount < MaxParameterCount)
             {
-                if ((modifyCommand.Entry.State != EntityState.Insert || modifyCommand.Entry.Increment == null) &&
-                    group.Commands.Any(item => item.Entry.State != EntityState.Insert || item.Entry.Increment == null))
+                if ((modifyCommand.State != EntityState.Insert || modifyCommand.Entry.Increment == null) &&
+                    group.Commands.Any(item => item.State != EntityState.Insert || item.Entry.Increment == null))
                 {
                     return group;
                 }

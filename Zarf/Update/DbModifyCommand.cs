@@ -11,13 +11,13 @@ namespace Zarf.Update.Commands
 
         public EntityEntry Entry { get; }
 
-        public List<string> Columns { get; protected set; }
+        public List<string> Columns { get; }
 
-        public List<DbParameter> DbParams { get; protected set; }
+        public List<DbParameter> DbParams { get; }
 
-        public string PrimaryKey { get; protected set; }
+        public string PrimaryKey { get; }
 
-        public List<DbParameter> PrimaryKeyValues { get; protected set; }
+        public List<DbParameter> PrimaryKeyValues { get; }
 
         public int DbParameterCount => (DbParams?.Count ?? 0) + (PrimaryKeyValues?.Count ?? 0);
 
@@ -29,14 +29,25 @@ namespace Zarf.Update.Commands
             Table = Entry.Type.ToTable();
         }
 
-        public DbModifyCommand(
-            EntityEntry entity,
-            IEnumerable<string> columns,
-            IEnumerable<DbParameter> dbParams)
+        public DbModifyCommand(EntityEntry entity, IEnumerable<string> columns, IEnumerable<DbParameter> columnParams)
             : this(entity)
         {
             Columns = columns.ToList();
-            DbParams = dbParams.ToList();
+            DbParams = columnParams.ToList();
+        }
+
+        public DbModifyCommand(EntityEntry entry, IEnumerable<string> columns, IEnumerable<DbParameter> columnParams, string primaryKey, DbParameter primaryKeyValue)
+            : this(entry, columns, columnParams)
+        {
+            PrimaryKey = primaryKey;
+            PrimaryKeyValues = new List<DbParameter>() { primaryKeyValue };
+        }
+
+        public DbModifyCommand(EntityEntry entity, string primaryKey, List<DbParameter> primaryKeyValues)
+            : this(entity)
+        {
+            PrimaryKey = primaryKey;
+            PrimaryKeyValues = primaryKeyValues;
         }
     }
 
