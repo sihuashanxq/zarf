@@ -56,11 +56,8 @@ namespace Zarf.Core
 
         protected virtual IDbCommand PrepareDbCommand(string commandText, params DbParameter[] dbParams)
         {
-            if (DbCommand.Connection.State == ConnectionState.Closed)
-            {
-                DbCommand.Connection.Open();
-            }
-
+            DbCommand.Parameters.Clear();
+          
             if (dbParams != null)
             {
                 foreach (var item in dbParams)
@@ -70,6 +67,11 @@ namespace Zarf.Core
             }
 
             DbCommand.CommandText = commandText;
+            if (DbCommand.Connection.State == ConnectionState.Closed)
+            {
+                DbCommand.Connection.Open();
+            }
+
             return DbCommand;
         }
     }

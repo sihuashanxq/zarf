@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Zarf.Entities;
+using Zarf.Update;
 
 namespace Zarf
 {
@@ -13,24 +14,21 @@ namespace Zarf
             {
                 //BasicTest(db);
 
-                var first = db.Query<PP>().FirstOrDefault();
-                var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
+                //var first = db.Query<PP>().FirstOrDefault();
+                //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
 
                 var newPP = new PP()
                 {
                     Name = "3333333"
                 };
 
-                var newPPP = new PP { };
+                var newPPP = new PP { Name = "3" };
                 db.Add(newPPP);
 
-                db.Update(first);
                 db.Add(newPP);
-                db.Update(sencond);
 
-                var x = new EntityEntryStore(db.Tracker);
-
-                x.Store(db.CacheEntryStore.GetCahcedEntries());
+                //db.Update(first);
+                //db.Update(sencond);
 
                 //var user = new User()
                 //{

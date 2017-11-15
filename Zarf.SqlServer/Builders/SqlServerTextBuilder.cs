@@ -514,19 +514,21 @@ namespace Zarf.SqlServer.Builders
             for (var i = 0; i < dbParams.Count; i++)
             {
                 var parameter = dbParams[i];
-                var mod = (i + 1 % colCount);
-
-                if (mod == 1)
+                var mod = (i % colCount);
+                if (mod == 0)
                 {
-                    Append('(').Append(parameter.Name);
-                }
-                else if (mod == 0)
-                {
-                    Append(parameter.Name).Append(')');
+                    Append(i != 0 ? ',' : ' ').
+                    Append('(').
+                    Append(parameter.Name);
                 }
                 else
                 {
-                    Append(parameter.Name).Append(',');
+                    Append(',').Append(parameter.Name);
+                }
+
+                if ((i + 1) % colCount == 0)
+                {
+                    Append(')');
                 }
             }
 

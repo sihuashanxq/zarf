@@ -9,7 +9,7 @@ namespace Zarf.Update.Commands
     {
         public Table Table { get; }
 
-        public EntityEntry Entity { get; }
+        public EntityEntry Entry { get; }
 
         public List<string> Columns { get; protected set; }
 
@@ -21,10 +21,22 @@ namespace Zarf.Update.Commands
 
         public int DbParameterCount => (DbParams?.Count ?? 0) + (PrimaryKeyValues?.Count ?? 0);
 
+        public EntityState State => Entry.State;
+
         public DbModifyCommand(EntityEntry entity)
         {
-            Entity = entity;
-            Table = Entity.Type.ToTable();
+            Entry = entity;
+            Table = Entry.Type.ToTable();
+        }
+
+        public DbModifyCommand(
+            EntityEntry entity,
+            IEnumerable<string> columns,
+            IEnumerable<DbParameter> dbParams)
+            : this(entity)
+        {
+            Columns = columns.ToList();
+            DbParams = dbParams.ToList();
         }
     }
 
@@ -43,6 +55,28 @@ namespace Zarf.Update.Commands
         public DbModifyCommandGroup()
         {
             Commands = new List<DbModifyCommand>();
+        }
+
+        public IEnumerable<DbParameter> Parameters
+        {
+            get
+            {
+                var parameters = new List<DbParameter>();
+                foreach (var item in Commands)
+                {
+                    if (item.DbParams != null)
+                    {
+                        parameters.AddRange(item.DbParams);
+                    }
+
+                    if (item.PrimaryKeyValues != null)
+                    {
+                        parameters.AddRange(item.PrimaryKeyValues);
+                    }
+                }
+
+                return parameters;
+            }
         }
     }
 }
