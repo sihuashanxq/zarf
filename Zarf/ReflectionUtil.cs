@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-using System.Linq;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Zarf
 {
@@ -127,22 +126,16 @@ namespace Zarf
             AllEnumerableMethods = typeof(Enumerable).GetMethods();
 
             EnumerableWhereMethod = typeof(ReflectionUtil).GetMethod(nameof(Where));
-            EnumerableDistinct = AllEnumerableMethods.FirstOrDefault(item => item.Name == "Distinct");
-
-            //.FirstOrDefault(item => item.Name == "Where" && item.GetParameters().Last().ParameterType.GenericTypeArguments.Length == 2);
             EnumerableToListMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "ToList");
         }
 
-        public static IEnumerable<TEntity> Where<TOtherEntity, TEntity>(
-            this IEnumerable<TEntity> collection,
-            TOtherEntity oEntity,
-            Func<TOtherEntity, TEntity, bool> predicate)
+        public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> filter)
         {
-            foreach (var element in collection)
+            foreach (var entity in entities)
             {
-                if (predicate(oEntity, element))
+                if (filter(oEntity, entity))
                 {
-                    yield return element;
+                    yield return entity;
                 }
             }
         }

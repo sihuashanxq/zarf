@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
-using Zarf.Update.Commands;
 
 namespace Zarf.Update.Expressions
 {
@@ -15,7 +14,7 @@ namespace Zarf.Update.Expressions
         {
         }
 
-        public DbStoreExpression Create(DbModifyCommandGroup group)
+        public DbStoreExpression Create(DbModificationCommandGroup group)
         {
             var persists = new List<Expression>();
             foreach (var command in group.Commands)
@@ -27,7 +26,7 @@ namespace Zarf.Update.Expressions
                             command.Entry.Type.ToTable(),
                             command.DbParams,
                             command.Columns,
-                            command.Entry.Increment?.Member
+                            command.Entry.AutoIncrementProperty?.Member
                         ));
                         break;
                     case EntityState.Update:

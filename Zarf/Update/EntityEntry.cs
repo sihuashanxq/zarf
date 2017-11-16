@@ -16,11 +16,11 @@ namespace Zarf
 
         public IEnumerable<MemberDescriptor> Members { get; }
 
-        public MemberDescriptor Increment => Members?.FirstOrDefault(item => item.IsIncrement);
+        public MemberDescriptor AutoIncrementProperty => Members?.FirstOrDefault(item => item.IsAutoIncrement);
 
         public MemberDescriptor ConventionId => Members?.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
 
-        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary) ?? Increment ?? ConventionId;
+        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary) ?? AutoIncrementProperty ?? ConventionId;
 
         public EntityEntry(object entity, EntityState state, IEnumerable<MemberDescriptor> members)
         {

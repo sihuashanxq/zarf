@@ -3,12 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using Zarf.Entities;
-using Zarf.Extensions;
-using Zarf.Update.Commands;
 
 namespace Zarf.Update
 {
-    public class DbCommandGroupBuilder
+    public class DbModificationCommandGroupBuilder
     {
         const int MaxParameterCount = 999;
 
@@ -16,14 +14,14 @@ namespace Zarf.Update
 
         private IEntityTracker _tracker;
 
-        public DbCommandGroupBuilder(IEntityTracker tracker)
+        public DbModificationCommandGroupBuilder(IEntityTracker tracker)
         {
             _tracker = tracker;
         }
 
-        public List<DbModifyCommandGroup> Build(IEnumerable<EntityEntry> entries)
+        public List<DbModificationCommandGroup> Build(IEnumerable<EntityEntry> entries)
         {
-            var groups = new List<DbModifyCommandGroup>();
+            var groups = new List<DbModificationCommandGroup>();
             foreach (var item in entries.OrderBy(item => item.State).ThenBy(item => item.Type.GetHashCode()))
             {
                 switch (item.State)
@@ -43,14 +41,14 @@ namespace Zarf.Update
             return groups;
         }
 
-        protected void BuildInsert(List<DbModifyCommandGroup> groups, EntityEntry entry)
+        protected void BuildInsert(List<DbModificationCommandGroup> groups, EntityEntry entry)
         {
             var columns = new List<string>();
             var dbParams = new List<DbParameter>();
 
             foreach (var item in entry.Members)
             {
-                if (item.IsIncrement)
+                if (item.IsAutoIncrement)
                 {
                     continue;
                 }
@@ -59,10 +57,10 @@ namespace Zarf.Update
                 dbParams.Add(new DbParameter(GetNewParameterName(), item.GetValue(entry.Entity)));
             }
 
-            AddCommandToGroup(groups, new DbModifyCommand(entry, columns, dbParams));
+            AddCommandToGroup(groups, new DbModificationCommand(entry, columns, dbParams));
         }
 
-        protected void BuildUpdate(List<DbModifyCommandGroup> groups, EntityEntry entry)
+        protected void BuildUpdate(List<DbModificationCommandGroup> groups, EntityEntry entry)
         {
             var columns = new List<string>();
             var paramemters = new List<DbParameter>();
@@ -70,7 +68,7 @@ namespace Zarf.Update
 
             foreach (var item in entry.Members)
             {
-                if (item.IsIncrement || item.IsPrimary || entry.Primary == item)
+                if (item.IsAutoIncrement || item.IsPrimary || entry.Primary == item)
                 {
                     continue;
                 }
@@ -87,7 +85,7 @@ namespace Zarf.Update
 
             AddCommandToGroup(
                 groups,
-                new DbModifyCommand(
+                new DbModificationCommand(
                     entry,
                     columns,
                     paramemters,
@@ -96,23 +94,23 @@ namespace Zarf.Update
             );
         }
 
-        protected void BuildDelete(List<DbModifyCommandGroup> groups, EntityEntry entry)
+        protected void BuildDelete(List<DbModificationCommandGroup> groups, EntityEntry entry)
         {
             AddCommandToGroup(
                 groups,
-                new DbModifyCommand(
+                new DbModificationCommand(
                    entry,
                    GetColumnName(entry.Primary),
                    new List<DbParameter>() { GetDbParameter(entry.Entity, entry.Primary) })
               );
         }
 
-        protected void AddCommandToGroup(List<DbModifyCommandGroup> groups, DbModifyCommand modifyCommand)
+        protected void AddCommandToGroup(List<DbModificationCommandGroup> groups, DbModificationCommand modifyCommand)
         {
             var group = FindCommadGroup(groups, modifyCommand);
             if (group == null)
             {
-                group = new DbModifyCommandGroup();
+                group = new DbModificationCommandGroup();
                 groups.Add(group);
             }
 
@@ -141,13 +139,13 @@ namespace Zarf.Update
             }
         }
 
-        protected DbModifyCommandGroup FindCommadGroup(List<DbModifyCommandGroup> groups, DbModifyCommand modifyCommand)
+        protected DbModificationCommandGroup FindCommadGroup(List<DbModificationCommandGroup> groups, DbModificationCommand modifyCommand)
         {
             var group = groups.LastOrDefault();
             if (group != null && group.DbParameterCount + modifyCommand.DbParameterCount < MaxParameterCount)
             {
-                if ((modifyCommand.State != EntityState.Insert || modifyCommand.Entry.Increment == null) &&
-                    group.Commands.Any(item => item.State != EntityState.Insert || item.Entry.Increment == null))
+                if ((modifyCommand.State != EntityState.Insert || modifyCommand.Entry.AutoIncrementProperty == null) &&
+                    group.Commands.Any(item => item.State != EntityState.Insert || item.Entry.AutoIncrementProperty == null))
                 {
                     return group;
                 }

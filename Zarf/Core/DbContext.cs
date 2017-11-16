@@ -9,55 +9,6 @@ using Zarf.Update.Executors;
 
 namespace Zarf
 {
-    public interface IEntityEntryCache
-    {
-        void AddOrUpdate(EntityEntry entry);
-
-        IEnumerable<EntityEntry> GetCahcedEntries();
-
-        void Clear();
-    }
-
-    public class EntityEntryCache : IEntityEntryCache
-    {
-        private ConcurrentDictionary<object, EntityEntry> _entries;
-
-        public EntityEntryCache()
-        {
-            _entries = new ConcurrentDictionary<object, EntityEntry>();
-        }
-
-        public void AddOrUpdate(EntityEntry entry)
-        {
-            _entries.AddOrUpdate(entry.Entity, entry, (k, e) =>
-            {
-                if (entry.State == EntityState.Delete && e.State == EntityState.Insert)
-                {
-                    return null;
-                }
-
-                e.Entity = entry.Entity;
-                return e;
-            });
-        }
-
-        public void Clear()
-        {
-            _entries.Clear();
-        }
-
-        public IEnumerable<EntityEntry> GetCahcedEntries()
-        {
-            foreach (var key in _entries.Keys)
-            {
-                if (_entries.TryRemove(key, out var entry))
-                {
-                    yield return entry;
-                }
-            }
-        }
-    }
-
     public abstract class DbContext : IDisposable
     {
         public IDbContextParts DbContextParts { get; }
@@ -96,14 +47,29 @@ namespace Zarf
 
         public virtual void AddRange<TEntity>(IEnumerable<TEntity> entities)
         {
-            if (entities == null || entities.Count() == 0)
+            if (entities == null)
             {
                 return;
             }
 
+            //自增长列,立即执行
+            var immediates = new List<EntityEntry>();
             foreach (var entity in entities)
             {
-                CacheEntryStore.AddOrUpdate(EntityEntry.Create(entity, EntityState.Insert));
+                var entry = EntityEntry.Create(entity, EntityState.Insert);
+                if (entry.AutoIncrementProperty != null)
+                {
+                    immediates.Add(entry);
+                }
+                else
+                {
+                    CacheEntryStore.AddOrUpdate(entry);
+                }
+            }
+
+            if (immediates.Count != 0)
+            {
+                Flush(immediates);
             }
         }
 
@@ -129,7 +95,7 @@ namespace Zarf
             CacheEntryStore.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
         }
 
-        public void Flush(FlushMode model = FlushMode.Default)
+        public void Flush()
         {
             var entries = CacheEntryStore.GetCahcedEntries().ToList();
             if (entries.Count == 0)
@@ -137,19 +103,19 @@ namespace Zarf
                 return;
             }
 
+            Flush(entries);
+        }
+
+        private void Flush(IEnumerable<EntityEntry> entries)
+        {
             DbModifyExecutor.Execute(entries);
         }
 
         public void Dispose()
         {
-
+            Flush();
+            CacheEntryStore.Clear();
+            Tracker.Clear();
         }
-    }
-
-    public enum FlushMode
-    {
-        Default = 0,
-
-        AutoGetIncrement
     }
 }

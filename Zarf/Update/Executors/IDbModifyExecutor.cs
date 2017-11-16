@@ -1,5 +1,4 @@
-﻿using Zarf.Update.Commands;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Zarf.Update
 {

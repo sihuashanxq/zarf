@@ -15,7 +15,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         static ThenIncludeTranslator()
         {
-            SupprotedMethods = new[] { DataQueryable.ThenIncludeMethodInfo };
+            SupprotedMethods = new[] { DbQueryExtension.ThenIncludeMethod };
         }
 
         public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)

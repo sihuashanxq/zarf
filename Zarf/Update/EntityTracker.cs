@@ -61,7 +61,6 @@ namespace Zarf.Update
             var memValues = new Dictionary<MemberInfo, object>();
             var eType = typeof(TEntity);
 
-
             foreach (var item in eType.GetProperties().Where(item => ReflectionUtil.SimpleTypes.Contains(item.PropertyType)))
             {
                 memValues[item] = item.GetValue(entity);
@@ -98,6 +97,11 @@ namespace Zarf.Update
 
                 return trackedValues;
             });
+        }
+
+        public void Clear()
+        {
+            _trackEntityMemValues.Clear();
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Linq;
 using Zarf.Builders;
 using Zarf.Core;
-using Zarf.Update.Commands;
 using Zarf.Update.Expressions;
 
 namespace Zarf.Update.Executors
@@ -13,13 +12,13 @@ namespace Zarf.Update.Executors
 
         public ISqlTextBuilder SqlBuilder { get; }
 
-        public DbCommandGroupBuilder CommandGroupBuilder { get; }
+        public DbModificationCommandGroupBuilder CommandGroupBuilder { get; }
 
         public DbModifyExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IEntityTracker tracker)
         {
             CommandFacotry = commandFacotry;
             SqlBuilder = sqlBuilder;
-            CommandGroupBuilder = new DbCommandGroupBuilder(tracker);
+            CommandGroupBuilder = new DbModificationCommandGroupBuilder(tracker);
         }
 
         public virtual int Execute(IEnumerable<EntityEntry> entries)
@@ -32,10 +31,10 @@ namespace Zarf.Update.Executors
                 if (commandGroup.Commands.Count == 1)
                 {
                     var modifyCommand = commandGroup.Commands.FirstOrDefault();
-                    if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.Increment != null)
+                    if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.AutoIncrementProperty != null)
                     {
                         var id = dbCommand.ExecuteScalar<int>(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
-                        modifyCommand.Entry.Increment.SetValue(modifyCommand.Entry.Entity, id);
+                        modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, id);
                         continue;
                     }
                 }
@@ -46,7 +45,7 @@ namespace Zarf.Update.Executors
             return 0;
         }
 
-        public string BuildCommandText(DbModifyCommandGroup commandGroup)
+        public string BuildCommandText(DbModificationCommandGroup commandGroup)
         {
             return SqlBuilder.Build(DbStoreExpressionFacotry.Default.Create(commandGroup));
         }

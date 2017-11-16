@@ -12,5 +12,7 @@ namespace Zarf.Update
         bool IsTracked<TEntity>(TEntity entity) where TEntity : class;
 
         bool IsValueChanged<TEntity>(TEntity entity, MemberInfo member, object newMemValue) where TEntity : class;
+
+        void Clear();
     }
 }
