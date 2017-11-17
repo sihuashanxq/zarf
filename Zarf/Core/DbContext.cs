@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Transactions;
 using Zarf.Core;
 using Zarf.Update;
 using Zarf.Update.Executors;
@@ -95,6 +97,11 @@ namespace Zarf
             CacheEntryStore.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
         }
 
+        public IDbTransactionWrapper BeginTransaction()
+        {
+            return DbContextParts.DbConnection.BeginTransaction();
+        }
+
         public void Flush()
         {
             var entries = CacheEntryStore.GetCahcedEntries().ToList();
@@ -116,6 +123,38 @@ namespace Zarf
             Flush();
             CacheEntryStore.Clear();
             Tracker.Clear();
+        }
+    }
+
+    public interface IDbTransactionWrapper
+    {
+        Guid Id { get; }
+
+        void Rollback();
+
+        void Commit();
+    }
+
+    public class DbTransactionWrapper : IDbTransactionWrapper
+    {
+        public Guid Id { get; }
+
+        public IDbConnectionWrapper Connection { get; }
+
+        public DbTransactionWrapper(Guid id, IDbConnectionWrapper connection)
+        {
+            Id = id;
+            Connection = connection;
+        }
+
+        public void Commit()
+        {
+            Connection.CommitTransaction();
+        }
+
+        public void Rollback()
+        {
+            Connection.RollbackTransaction();
         }
     }
 }

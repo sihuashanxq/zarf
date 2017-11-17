@@ -5,16 +5,16 @@ namespace Zarf.SqlServer.Core
 {
     public class SqlServerDbConnectionFacotry : IDbConnectionFacotry
     {
-        private string _connectionString;
+        private IDbConnectionWrapper _dbConnection;
 
         public SqlServerDbConnectionFacotry(string connectionString)
         {
-            _connectionString = connectionString;
+            _dbConnection = new DbConnectionWrapper(new SqlConnection(connectionString));
         }
 
         public IDbConnectionWrapper Create()
         {
-            return new DbConnectionWrapper(new SqlConnection(_connectionString));
+            return _dbConnection;
         }
     }
 }

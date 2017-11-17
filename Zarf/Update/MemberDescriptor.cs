@@ -58,7 +58,7 @@ namespace Zarf.Update
             if (member.GetCustomAttribute<AutoIncrementAttribute>() != null)
             {
                 var type = member.GetMemberTypeInfo();
-                if (NumericTypes.Contains(type))
+                if (!NumericTypes.Contains(type))
                 {
                     throw new Exception($"Type{type.Name} Cannot Be An AutoIncrement Member!");
                 }

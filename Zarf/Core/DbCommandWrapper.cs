@@ -10,9 +10,10 @@ namespace Zarf.Core
 
         public IDbCommand DbCommand { get; }
 
-        public DbCommandWrapper(IDbCommand dbCommand)
+        public DbCommandWrapper(IDbCommand dbCommand, IDbConnectionWrapper dbConnection)
         {
             DbCommand = dbCommand;
+            DbConnection = dbConnection;
         }
 
         public IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams)
@@ -57,7 +58,7 @@ namespace Zarf.Core
         protected virtual IDbCommand PrepareDbCommand(string commandText, params DbParameter[] dbParams)
         {
             DbCommand.Parameters.Clear();
-          
+
             if (dbParams != null)
             {
                 foreach (var item in dbParams)
@@ -67,9 +68,12 @@ namespace Zarf.Core
             }
 
             DbCommand.CommandText = commandText;
-            if (DbCommand.Connection.State == ConnectionState.Closed)
+            DbCommand.Connection = DbConnection.DbConnection;
+            DbCommand.Transaction = DbConnection.CurrentTransaction;
+
+            if (DbConnection.DbConnection.State == ConnectionState.Closed)
             {
-                DbCommand.Connection.Open();
+                DbConnection.DbConnection.Open();
             }
 
             return DbCommand;

@@ -26,10 +26,7 @@ namespace Zarf.SqlServer.Core
 
         public IDbCommandWrapper Create(IDbConnection dbConnection)
         {
-            return new DbCommandWrapper(new SqlCommand()
-            {
-                Connection = (SqlConnection)dbConnection
-            });
+            return new DbCommandWrapper(new SqlCommand(), _connectionFacotry.Create());
         }
     }
 }

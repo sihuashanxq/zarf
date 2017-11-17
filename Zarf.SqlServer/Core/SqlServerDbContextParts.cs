@@ -12,11 +12,14 @@ namespace Zarf.SqlServer.Core
 
         public IDbConnectionFacotry ConnectionFacotry { get; }
 
+        public IDbConnectionWrapper DbConnection { get; }
+
         public SqlServerDbContextParts(string connectionString)
         {
             SqlBuilder = new SqlServerTextBuilder();
             ConnectionFacotry = new SqlServerDbConnectionFacotry(connectionString);
             CommandFacotry = new SqlServerDbCommandFactory(ConnectionFacotry);
+            DbConnection = ConnectionFacotry.Create();
         }
     }
 }

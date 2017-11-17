@@ -6,6 +6,8 @@ namespace Zarf.Core
     {
         ISqlTextBuilder SqlBuilder { get; }
 
+        IDbConnectionWrapper DbConnection { get; }
+
         IDbCommandFacotry CommandFacotry { get; }
     }
 }

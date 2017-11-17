@@ -1,9 +1,10 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Collections.Generic;
-using Zarf.Mapping;
+using System.Reflection;
+
 using Zarf.Extensions;
+using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
@@ -17,31 +18,21 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "All");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public override Expression Translate(IQueryContext queryContext, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
+            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var selector = queryCompiler.Compile(methodCall.Arguments[1].UnWrap()).UnWrap();
 
-            if (rootQuery.Where != null && (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0))
+            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(queryContext.Alias.GetNewTable(), queryContext.UpdateRefrenceSource);
             }
 
-            rootQuery.Projections.Clear();
-            rootQuery.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
+            query.Projections.Clear();
+            query.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
+            query.AddWhere(Expression.Not(selector.As<LambdaExpression>()?.Body ?? selector));
 
-            context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
-            var condition = queryCompiler.Compile(lambda).UnWrap();
-            if (condition.Is<LambdaExpression>())
-            {
-                rootQuery.AddWhere(Expression.Not(condition.As<LambdaExpression>().Body));
-            }
-            else
-            {
-                rootQuery.AddWhere(Expression.Not(condition));
-            }
-
-            return new AllExpression(rootQuery);
+            return new AllExpression(query);
         }
     }
 }

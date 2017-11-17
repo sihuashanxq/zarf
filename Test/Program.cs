@@ -17,6 +17,8 @@ namespace Zarf
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
 
+                var transactioin = db.BeginTransaction();
+
                 var newPP = new PP()
                 {
                     Name = "3333333"
@@ -27,6 +29,7 @@ namespace Zarf
 
                 db.Add(newPP);
 
+                transactioin.Commit();
                 //db.Update(first);
                 //db.Update(sencond);
 
@@ -222,7 +225,7 @@ namespace Zarf
     {
         [PrimaryKey]
         [AutoIncrement]
-        public string Id { get; set; }
+        public int Id { get; set; }
 
         public string Name { get; set; }
     }
