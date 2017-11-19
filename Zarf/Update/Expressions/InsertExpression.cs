@@ -19,14 +19,14 @@ namespace Zarf.Query.Expressions
 
         public Table Table { get; }
 
-        public MemberInfo IncrementMember { get; }
+        public bool GenerateIdentity { get; }
 
-        public InsertExpression(Table table, IEnumerable<DbParameter> dbParams, IEnumerable<string> columns, MemberInfo incrementMember = null)
+        public InsertExpression(Table table, IEnumerable<DbParameter> dbParams, IEnumerable<string> columns, bool generateIdentity = false)
         {
             Table = table;
             DbParams = dbParams;
             Columns = columns;
-            IncrementMember = incrementMember;
+            GenerateIdentity = generateIdentity;
         }
     }
 }

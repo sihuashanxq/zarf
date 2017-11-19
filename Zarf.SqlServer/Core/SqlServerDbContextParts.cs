@@ -6,20 +6,20 @@ namespace Zarf.SqlServer.Core
 {
     public class SqlServerDbContextParts : IDbContextParts
     {
-        public ISqlTextBuilder SqlBuilder { get; }
+        public ISqlTextBuilder CommandTextBuilder { get; }
 
-        public IDbCommandFacotry CommandFacotry { get; }
+        public IDbEntityCommandFacotry EntityCommandFacotry { get; }
 
-        public IDbConnectionFacotry ConnectionFacotry { get; }
-
-        public IDbConnectionWrapper DbConnection { get; }
+        public IDbEntityConnectionFacotry EntityConnectionFacotry { get; }
+        
+        public IDbEntityConnection EntityConnection { get; }
 
         public SqlServerDbContextParts(string connectionString)
         {
-            SqlBuilder = new SqlServerTextBuilder();
-            ConnectionFacotry = new SqlServerDbConnectionFacotry(connectionString);
-            CommandFacotry = new SqlServerDbCommandFactory(ConnectionFacotry);
-            DbConnection = ConnectionFacotry.Create();
+            CommandTextBuilder = new SqlServerTextBuilder();
+            EntityConnectionFacotry = new SqlServerDbEntityConnectionFacotry(connectionString);
+            EntityCommandFacotry = new SqlServerDbEntityCommandFactory(EntityConnectionFacotry);
+            EntityConnection = EntityConnectionFacotry.Create();
         }
     }
 }

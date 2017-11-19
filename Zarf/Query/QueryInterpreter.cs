@@ -41,8 +41,8 @@ namespace Zarf.Query
             var entityBinder = new DefaultEntityBinder(queryContext);
             var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
 
-            var commandText = _dbContextParts.SqlBuilder.Build(compiledQuery);
-            var dataReader = _dbContextParts.CommandFacotry.Create().ExecuteDataReader(commandText);
+            var commandText = _dbContextParts.CommandTextBuilder.Build(compiledQuery);
+            var dataReader = _dbContextParts.EntityCommandFacotry.Create().ExecuteDataReader(commandText);
 
             if (typeof(TResult) != typeof(TEntity))
             {

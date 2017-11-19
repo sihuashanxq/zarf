@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Zarf.Builders;
 using Zarf.Core;
@@ -8,13 +9,13 @@ namespace Zarf.Update.Executors
 {
     public class DbModifyExecutor : IDbModifyExecutor
     {
-        public IDbCommandFacotry CommandFacotry { get; }
+        public IDbEntityCommandFacotry CommandFacotry { get; }
 
         public ISqlTextBuilder SqlBuilder { get; }
 
         public DbModificationCommandGroupBuilder CommandGroupBuilder { get; }
 
-        public DbModifyExecutor(IDbCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IEntityTracker tracker)
+        public DbModifyExecutor(IDbEntityCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IEntityTracker tracker)
         {
             CommandFacotry = commandFacotry;
             SqlBuilder = sqlBuilder;
@@ -25,6 +26,7 @@ namespace Zarf.Update.Executors
         {
             var commandGroups = CommandGroupBuilder.Build(entries);
             var dbCommand = CommandFacotry.Create();
+            var modifyRowcount = 0;
 
             foreach (var commandGroup in commandGroups)
             {
@@ -33,16 +35,23 @@ namespace Zarf.Update.Executors
                     var modifyCommand = commandGroup.Commands.FirstOrDefault();
                     if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.AutoIncrementProperty != null)
                     {
-                        var id = dbCommand.ExecuteScalar<int>(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
-                        modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, id);
-                        continue;
+                        using (var reader = dbCommand.ExecuteDataReader(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
+                        {
+                            if (!reader.Read())
+                            {
+                                throw new Exception("insert data error!");
+                            }
+                            modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[0]);
+                            modifyRowcount += reader.GetInt32(1);
+                            continue;
+                        }
                     }
                 }
 
-                dbCommand.ExecuteNonQuery(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
+                modifyRowcount += dbCommand.ExecuteScalar<int>(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
             }
 
-            return 0;
+            return modifyRowcount;
         }
 
         public string BuildCommandText(DbModificationCommandGroup commandGroup)

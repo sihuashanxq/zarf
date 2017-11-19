@@ -45,11 +45,13 @@ namespace Zarf.Update
         {
             if (Member.MemberType == MemberTypes.Field)
             {
-                (Member as FieldInfo)?.SetValue(entity, value);
+                var field = Member.As<FieldInfo>();
+                field.SetValue(entity, Convert.ChangeType(value, field.FieldType));
             }
             else
             {
-                (Member as PropertyInfo)?.SetValue(entity, value);
+                var property = Member.As<PropertyInfo>();
+                property.SetValue(entity, Convert.ChangeType(value, property.PropertyType));
             }
         }
 

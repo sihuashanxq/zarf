@@ -3,17 +3,11 @@ using Zarf.Entities;
 
 namespace Zarf.Core
 {
-    public interface IDbCommandWrapper
+    public interface IDbEntityCommand
     {
-        IDbConnectionWrapper DbConnection { get; }
+        IDbEntityConnection EntityConnection { get; }
 
         IDbCommand DbCommand { get; }
-
-        void BeginTransaction();
-
-        void RollbackTransaction();
-
-        void CommitTransaction();
 
         IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams);
 

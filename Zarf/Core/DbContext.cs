@@ -19,24 +19,21 @@ namespace Zarf
 
         public IEntityTracker Tracker { get; }
 
-        public IEntityEntryCache CacheEntryStore { get; }
+        public IEntityEntryCache EntryCache { get; }
+
+        private int _immInsertRowsCount;
 
         public DbContext(IDbContextParts dbContextParts)
         {
             DbContextParts = dbContextParts;
             Tracker = new EntityTracker();
-            CacheEntryStore = new EntityEntryCache();
-            DbModifyExecutor = new DbModifyExecutor(DbContextParts.CommandFacotry, dbContextParts.SqlBuilder, Tracker);
+            EntryCache = new EntityEntryCache();
+            DbModifyExecutor = new DbModifyExecutor(DbContextParts.EntityCommandFacotry, dbContextParts.CommandTextBuilder, Tracker);
         }
 
         public IDbQuery<TEntity> Query<TEntity>()
         {
             return new DbQuery<TEntity>(new DbQueryProvider(this));
-        }
-
-        public IDbQuery<TEntity> Query<TEntity>(string queryText)
-        {
-            return null;
         }
 
         public void TrackEntity<TEntity>(TEntity entity)
@@ -65,13 +62,13 @@ namespace Zarf
                 }
                 else
                 {
-                    CacheEntryStore.AddOrUpdate(entry);
+                    EntryCache.AddOrUpdate(entry);
                 }
             }
 
             if (immediates.Count != 0)
             {
-                Flush(immediates);
+                _immInsertRowsCount += Flush(immediates);
             }
         }
 
@@ -85,7 +82,7 @@ namespace Zarf
 
         public virtual void Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            CacheEntryStore.AddOrUpdate(EntityEntry.Create(entity, EntityState.Update));
+            EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Update));
         }
 
         public virtual void Delete<TEntity>(TEntity entity) => Delete<TEntity, TEntity>(entity, null);
@@ -94,67 +91,57 @@ namespace Zarf
 
         public virtual void Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            CacheEntryStore.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
+            EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
         }
 
-        public IDbTransactionWrapper BeginTransaction()
+        public IDbEntityTransaction BeginTransaction()
         {
-            return DbContextParts.DbConnection.BeginTransaction();
+            Flush();
+            return DbContextParts.EntityConnection.BeginTransaction();
         }
 
-        public void Flush()
+        public int Flush()
         {
-            var entries = CacheEntryStore.GetCahcedEntries().ToList();
+            var rowsCount = _immInsertRowsCount;
+            var entries = EntryCache.GetCahcedEntries().ToList();
+            _immInsertRowsCount = 0;
+
             if (entries.Count == 0)
             {
-                return;
+                return rowsCount;
             }
 
-            Flush(entries);
+            return rowsCount + Flush(entries);
         }
 
-        private void Flush(IEnumerable<EntityEntry> entries)
+        private int Flush(IEnumerable<EntityEntry> entries)
         {
-            DbModifyExecutor.Execute(entries);
+            if (DbContextParts.EntityConnection.DbTransaction == null)
+            {
+                var transaction = DbContextParts.EntityConnection.BeginTransaction();
+                try
+                {
+                    var rowsCount = DbModifyExecutor.Execute(entries);
+                    transaction.Commit();
+                    return rowsCount;
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    throw e;
+                }
+            }
+            else
+            {
+                return DbModifyExecutor.Execute(entries);
+            }
         }
 
         public void Dispose()
         {
             Flush();
-            CacheEntryStore.Clear();
+            EntryCache.Clear();
             Tracker.Clear();
-        }
-    }
-
-    public interface IDbTransactionWrapper
-    {
-        Guid Id { get; }
-
-        void Rollback();
-
-        void Commit();
-    }
-
-    public class DbTransactionWrapper : IDbTransactionWrapper
-    {
-        public Guid Id { get; }
-
-        public IDbConnectionWrapper Connection { get; }
-
-        public DbTransactionWrapper(Guid id, IDbConnectionWrapper connection)
-        {
-            Id = id;
-            Connection = connection;
-        }
-
-        public void Commit()
-        {
-            Connection.CommitTransaction();
-        }
-
-        public void Rollback()
-        {
-            Connection.RollbackTransaction();
         }
     }
 }

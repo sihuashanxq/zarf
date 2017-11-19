@@ -9,13 +9,13 @@ namespace Zarf.Update.Expressions
         /// <summary>
         /// InsertExpression UpdateExpression DeleteExpression
         /// </summary>
-        public IEnumerable<Expression> Persists { get; }
+        public List<Expression> Persists { get; }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public override Type Type => typeof(void);
 
-        public DbStoreExpression(IEnumerable<Expression> persists)
+        public DbStoreExpression(List<Expression> persists)
         {
             Persists = persists;
         }

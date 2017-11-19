@@ -4,16 +4,18 @@ using Zarf.Entities;
 
 namespace Zarf.Core
 {
-    public class DbCommandWrapper : IDbCommandWrapper
+    public class DbEntityCommand : IDbEntityCommand
     {
-        public IDbConnectionWrapper DbConnection { get; }
+        public IDbEntityConnection EntityConnection { get; }
 
         public IDbCommand DbCommand { get; }
 
-        public DbCommandWrapper(IDbCommand dbCommand, IDbConnectionWrapper dbConnection)
+        public DbEntityCommand(IDbCommand dbCommand, IDbEntityConnection dbConnection)
         {
             DbCommand = dbCommand;
-            DbConnection = dbConnection;
+            EntityConnection = dbConnection;
+            DbCommand.Connection = EntityConnection.DbConnection;
+            DbCommand.Transaction = EntityConnection.DbTransaction;
         }
 
         public IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams)
@@ -32,21 +34,6 @@ namespace Zarf.Core
             PrepareDbCommand(commandText, dbParams).ExecuteNonQuery();
         }
 
-        public void BeginTransaction()
-        {
-            DbCommand.Transaction = DbCommand.Connection.BeginTransaction();
-        }
-
-        public void RollbackTransaction()
-        {
-            DbCommand.Transaction?.Rollback();
-        }
-
-        public void CommitTransaction()
-        {
-            DbCommand.Transaction?.Commit();
-        }
-
         public void AddParameterWithValue(string parameterName, object value)
         {
             var parameter = DbCommand.CreateParameter();
@@ -58,6 +45,11 @@ namespace Zarf.Core
         protected virtual IDbCommand PrepareDbCommand(string commandText, params DbParameter[] dbParams)
         {
             DbCommand.Parameters.Clear();
+            DbCommand.CommandText = commandText;
+            if (DbCommand.Connection.State == ConnectionState.Closed)
+            {
+                DbCommand.Connection.Open();
+            }
 
             if (dbParams != null)
             {
@@ -65,15 +57,6 @@ namespace Zarf.Core
                 {
                     AddParameterWithValue(item.Name, item.Value);
                 }
-            }
-
-            DbCommand.CommandText = commandText;
-            DbCommand.Connection = DbConnection.DbConnection;
-            DbCommand.Transaction = DbConnection.CurrentTransaction;
-
-            if (DbConnection.DbConnection.State == ConnectionState.Closed)
-            {
-                DbConnection.DbConnection.Open();
             }
 
             return DbCommand;

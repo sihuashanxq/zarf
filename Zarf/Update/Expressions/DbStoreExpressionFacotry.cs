@@ -26,7 +26,7 @@ namespace Zarf.Update.Expressions
                             command.Entry.Type.ToTable(),
                             command.DbParams,
                             command.Columns,
-                            command.Entry.AutoIncrementProperty?.Member
+                            command.Entry.AutoIncrementProperty != null
                         ));
                         break;
                     case EntityState.Update:

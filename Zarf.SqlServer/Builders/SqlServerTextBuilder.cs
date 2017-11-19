@@ -473,12 +473,13 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitStore(DbStoreExpression store)
         {
+            Append("DECLARE @__ROWCOUNT__ INT=0;");
             foreach (var persist in store.Persists)
             {
                 switch (persist)
                 {
                     case InsertExpression insert:
-                        BuildInsert(insert, store.Persists.Count() == 1);
+                        BuildInsert(insert);
                         break;
                     case UpdateExpression update:
                         BuildUpdate(update);
@@ -487,12 +488,24 @@ namespace Zarf.SqlServer.Builders
                         BuildDelete(persist.As<DeleteExpression>());
                         break;
                 }
+
+                Append(";SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();");
+            }
+
+            if (store.Persists.Count == 1 &&(
+                store.Persists.First().As<InsertExpression>()?.GenerateIdentity ?? false))
+            {
+                Append("SELECT SCOPE_IDENTITY() AS ID,@__ROWCOUNT__ AS ROWSCOUNT;");
+            }
+            else
+            {
+                Append("SELECT @__ROWCOUNT__ AS ROWSCOUNT;");
             }
 
             return store;
         }
 
-        protected void BuildInsert(InsertExpression insert, bool genIdentity = false)
+        protected void BuildInsert(InsertExpression insert)
         {
             Append(Environment.NewLine).
             Append(";INSERT INTO ").
@@ -530,12 +543,6 @@ namespace Zarf.SqlServer.Builders
                 {
                     Append(')');
                 }
-            }
-
-            if (insert.IncrementMember != null &&
-                colCount == dbParams.Count)
-            {
-                Append("SELECT SCOPE_IDENTITY() AS ID;");
             }
         }
 

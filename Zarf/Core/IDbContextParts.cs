@@ -4,10 +4,10 @@ namespace Zarf.Core
 {
     public interface IDbContextParts
     {
-        ISqlTextBuilder SqlBuilder { get; }
+        ISqlTextBuilder CommandTextBuilder { get; }
 
-        IDbConnectionWrapper DbConnection { get; }
+        IDbEntityConnection EntityConnection { get; }
 
-        IDbCommandFacotry CommandFacotry { get; }
+        IDbEntityCommandFacotry EntityCommandFacotry { get; }
     }
 }
