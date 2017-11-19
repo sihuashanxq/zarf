@@ -15,6 +15,8 @@ namespace Zarf.Core
 
         public Guid Id { get; }
 
+        Guid IDbEntityTransaction.Id => throw new NotImplementedException();
+
         public DbEntityConnection(IDbConnection dbConnection)
         {
             DbConnection = dbConnection;
@@ -56,7 +58,7 @@ namespace Zarf.Core
 
         public void Open()
         {
-            if (DbConnection.State != ConnectionState.Closed)
+            if (DbConnection.State == ConnectionState.Closed)
             {
                 DbConnection.Open();
             }
@@ -69,10 +71,22 @@ namespace Zarf.Core
                 DbConnection.Close();
             }
 
+           ((IDbEntityTransaction)this).Dispose();
+        }
+
+        void IDbEntityTransaction.Dispose()
+        {
             if (_transaction != null)
             {
+                _transaction.Dispose();
                 _transaction = null;
             }
+        }
+
+        public void Dispose()
+        {
+            Commit();
+            DbConnection.Dispose();
         }
     }
 }

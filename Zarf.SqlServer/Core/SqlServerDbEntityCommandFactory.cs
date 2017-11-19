@@ -15,7 +15,7 @@ namespace Zarf.SqlServer.Core
 
         public IDbEntityCommand Create(IDbEntityConnection entityConnection)
         {
-            return new DbEntityCommand(new SqlCommand(), entityConnection);
+            return new SqlServerDbEntityCommand(new SqlCommand(), entityConnection);
         }
 
         public IDbEntityCommand Create()

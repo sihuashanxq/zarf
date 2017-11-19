@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 using Zarf.Entities;
 
 namespace Zarf.Core
 {
-    public class DbEntityCommand : IDbEntityCommand
+    public abstract class DbEntityCommand : IDbEntityCommand
     {
         public IDbEntityConnection EntityConnection { get; }
 
@@ -14,8 +15,6 @@ namespace Zarf.Core
         {
             DbCommand = dbCommand;
             EntityConnection = dbConnection;
-            DbCommand.Connection = EntityConnection.DbConnection;
-            DbCommand.Transaction = EntityConnection.DbTransaction;
         }
 
         public IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams)
@@ -23,10 +22,9 @@ namespace Zarf.Core
             return PrepareDbCommand(commandText, dbParams).ExecuteReader(CommandBehavior.Default);
         }
 
-        public TValueType ExecuteScalar<TValueType>(string commandText, params DbParameter[] dbParams)
+        public object ExecuteScalar(string commandText, params DbParameter[] dbParams)
         {
-            var rV = PrepareDbCommand(commandText, dbParams).ExecuteScalar();
-            return (TValueType)Convert.ChangeType(rV, typeof(TValueType));
+            return PrepareDbCommand(commandText, dbParams).ExecuteScalar();
         }
 
         public void ExecuteNonQuery(string commandText, params DbParameter[] dbParams)
@@ -61,5 +59,11 @@ namespace Zarf.Core
 
             return DbCommand;
         }
+
+        public abstract Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams);
+
+        public abstract Task ExecuteNonQueryAsync(string commandText, params DbParameter[] dbParams);
+
+        public abstract Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] dbParams);
     }
 }

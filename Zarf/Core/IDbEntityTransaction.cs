@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Zarf.Core
 {
-    public interface IDbEntityTransaction
+    public interface IDbEntityTransaction : IDisposable
     {
         Guid Id { get; }
 
         void Rollback();
 
         void Commit();
+
+        new void Dispose();
     }
 }

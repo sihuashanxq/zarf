@@ -1,8 +1,9 @@
 ﻿using System.Data;
+using System;
 
 namespace Zarf.Core
 {
-    public interface IDbEntityConnection
+    public interface IDbEntityConnection : IDisposable
     {
         IDbTransaction DbTransaction { get; }
 

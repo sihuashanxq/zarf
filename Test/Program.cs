@@ -8,6 +8,11 @@ namespace Zarf
 {
     class Program
     {
+        static async void A(DbContext db)
+        {
+            var d = await db.SaveAsync();
+        }
+
         static void Main(string[] args)
         {
             using (var db = new DbUserContext())
@@ -18,7 +23,6 @@ namespace Zarf
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
 
                 var transactioin = db.BeginTransaction();
-                var t2 = db.BeginTransaction();
                 var newPP = new PP()
                 {
                     Name = "3333333"
@@ -27,8 +31,12 @@ namespace Zarf
                 var newPPP = new PP { Name = "3" };
                 db.Add(newPPP);
                 db.Add(newPP);
-                var count = db.Flush();
-                t2.Rollback();
+                var count = db.Save();
+
+                newPP.Name = "34";
+                db.Update(newPP);
+                A(db);
+
                 transactioin.Commit();
                 //db.Update(first);
                 //db.Update(sencond);

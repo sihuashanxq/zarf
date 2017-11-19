@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Threading.Tasks;
 using Zarf.Entities;
 
 namespace Zarf.Core
@@ -13,7 +14,13 @@ namespace Zarf.Core
 
         void ExecuteNonQuery(string commandText, params DbParameter[] dbParams);
 
-        TValueType ExecuteScalar<TValueType>(string commandText, params DbParameter[] dbParams);
+        object ExecuteScalar(string commandText, params DbParameter[] dbParams);
+
+        Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams);
+
+        Task ExecuteNonQueryAsync(string commandText, params DbParameter[] dbParams);
+
+        Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] dbParams);
 
         void AddParameterWithValue(string parameterName, object value);
     }

@@ -1,5 +1,5 @@
 ﻿using Zarf.Builders;
-
+using System;
 namespace Zarf.Core
 {
     public interface IDbContextParts

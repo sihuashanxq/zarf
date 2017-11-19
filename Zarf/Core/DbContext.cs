@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Transactions;
+using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Update;
 using Zarf.Update.Executors;
@@ -68,7 +66,7 @@ namespace Zarf
 
             if (immediates.Count != 0)
             {
-                _immInsertRowsCount += Flush(immediates);
+                _immInsertRowsCount += Save(immediates);
             }
         }
 
@@ -96,11 +94,20 @@ namespace Zarf
 
         public IDbEntityTransaction BeginTransaction()
         {
-            Flush();
+            if (DbContextParts.EntityConnection.DbTransaction == null)
+            {
+                Save();
+            }
+
             return DbContextParts.EntityConnection.BeginTransaction();
         }
 
-        public int Flush()
+        public Task<IDbEntityTransaction> BeginTransactionAsync()
+        {
+            return Task.FromResult(BeginTransaction());
+        }
+
+        public int Save()
         {
             var rowsCount = _immInsertRowsCount;
             var entries = EntryCache.GetCahcedEntries().ToList();
@@ -111,24 +118,24 @@ namespace Zarf
                 return rowsCount;
             }
 
-            return rowsCount + Flush(entries);
+            return rowsCount + Save(entries);
         }
 
-        private int Flush(IEnumerable<EntityEntry> entries)
+        private int Save(IEnumerable<EntityEntry> entries)
         {
             if (DbContextParts.EntityConnection.DbTransaction == null)
             {
-                var transaction = DbContextParts.EntityConnection.BeginTransaction();
-                try
+                using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
                 {
-                    var rowsCount = DbModifyExecutor.Execute(entries);
-                    transaction.Commit();
-                    return rowsCount;
-                }
-                catch (Exception e)
-                {
-                    transaction.Rollback();
-                    throw e;
+                    try
+                    {
+                        return DbModifyExecutor.Execute(entries);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw e;
+                    }
                 }
             }
             else
@@ -137,11 +144,41 @@ namespace Zarf
             }
         }
 
+        public async Task<int> SaveAsync()
+        {
+            var entries = EntryCache.GetCahcedEntries().ToList();
+            if (entries == null)
+            {
+                return await Task.FromResult(0);
+            }
+
+            if (DbContextParts.EntityConnection.DbTransaction == null)
+            {
+                using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
+                {
+                    try
+                    {
+                        return await DbModifyExecutor.ExecuteAsync(entries);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw e;
+                    }
+                }
+            }
+            else
+            {
+                return await DbModifyExecutor.ExecuteAsync(entries);
+            }
+        }
+
         public void Dispose()
         {
-            Flush();
+            Save();
             EntryCache.Clear();
             Tracker.Clear();
+            DbContextParts.EntityConnection.Dispose();
         }
     }
 }

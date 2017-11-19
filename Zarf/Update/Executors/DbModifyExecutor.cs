@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zarf.Builders;
 using Zarf.Core;
 using Zarf.Update.Expressions;
@@ -48,7 +49,7 @@ namespace Zarf.Update.Executors
                     }
                 }
 
-                modifyRowcount += dbCommand.ExecuteScalar<int>(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
+                modifyRowcount += (int)dbCommand.ExecuteScalar(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
             }
 
             return modifyRowcount;
@@ -57,6 +58,38 @@ namespace Zarf.Update.Executors
         public string BuildCommandText(DbModificationCommandGroup commandGroup)
         {
             return SqlBuilder.Build(DbStoreExpressionFacotry.Default.Create(commandGroup));
+        }
+
+        public async Task<int> ExecuteAsync(IEnumerable<EntityEntry> entries)
+        {
+            var commandGroups = CommandGroupBuilder.Build(entries);
+            var dbCommand = CommandFacotry.Create();
+            var modifyRowcount = 0;
+
+            foreach (var commandGroup in commandGroups)
+            {
+                if (commandGroup.Commands.Count == 1)
+                {
+                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
+                    if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.AutoIncrementProperty != null)
+                    {
+                        using (var reader = await dbCommand.ExecuteDataReaderAsync(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
+                        {
+                            if (!reader.Read())
+                            {
+                                throw new Exception("insert data error!");
+                            }
+                            modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[0]);
+                            modifyRowcount += reader.GetInt32(1);
+                            continue;
+                        }
+                    }
+                }
+
+                modifyRowcount += (int)(await dbCommand.ExecuteScalarAsync(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()));
+            }
+
+            return modifyRowcount;
         }
     }
 }
