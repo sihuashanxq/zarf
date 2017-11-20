@@ -21,7 +21,12 @@ namespace Zarf
 
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
-                
+                //await db.BeginTransactionAsync();
+                //await db.AddAsync();
+                //await db.UpdateAsync();
+                //await db.DeleteAsync();
+                //await db.SaveAsync();
+
                 //事务测试
                 var t1 = db.BeginTransaction();
                 var p1 = new PP()
@@ -40,7 +45,7 @@ namespace Zarf
                 t2.Commit();     //t2.Rollback() 数据库中存在3333333 与 3, t2.Commit()数据库中存在 34,3
 
                 t1.Commit();
-                //db.Update(first);
+
                 //db.Update(sencond);
                 //var user = new User()
                 //{

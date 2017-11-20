@@ -25,37 +25,7 @@ namespace Zarf.Update.Executors
 
         public virtual int Execute(IEnumerable<EntityEntry> entries)
         {
-            var commandGroups = CommandGroupBuilder.Build(entries);
-            var dbCommand = CommandFacotry.Create();
-            var modifyRowcount = 0;
-
-            foreach (var commandGroup in commandGroups)
-            {
-                using (var reader = dbCommand.ExecuteDataReader(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
-                {
-                    if (!reader.Read())
-                    {
-                        throw new Exception("write data error!");
-                    }
-
-                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
-                    if (commandGroup.Commands.Count == 1 &&
-                        modifyCommand.Entry.State == EntityState.Insert &&
-                        modifyCommand.Entry.AutoIncrementProperty != null)
-                    {
-                        modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[1]);
-                    }
-
-                    modifyRowcount += reader.GetInt32(0);
-                }
-            }
-
-            return modifyRowcount;
-        }
-
-        public string BuildCommandText(DbModificationCommandGroup commandGroup)
-        {
-            return SqlBuilder.Build(DbStoreExpressionFacotry.Default.Create(commandGroup));
+            return ExecuteAsync(entries).GetAwaiter().GetResult();
         }
 
         public async Task<int> ExecuteAsync(IEnumerable<EntityEntry> entries)
@@ -86,6 +56,11 @@ namespace Zarf.Update.Executors
             }
 
             return modifyRowcount;
+        }
+
+        public string BuildCommandText(DbModificationCommandGroup commandGroup)
+        {
+            return SqlBuilder.Build(DbStoreExpressionFacotry.Default.Create(commandGroup));
         }
     }
 }

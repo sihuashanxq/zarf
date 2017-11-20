@@ -40,8 +40,6 @@ namespace Zarf
             Tracker.TrackEntity(entity);
         }
 
-        public virtual void AddRange(IEnumerable<object> entities) => AddRange<object>(entities);
-
         public virtual void AddRange<TEntity>(IEnumerable<TEntity> entities)
         {
             if (entities == null)
@@ -70,26 +68,40 @@ namespace Zarf
             }
         }
 
+        public virtual Task AddRangeAsync<TEntity>(IEnumerable<TEntity> entities)
+        {
+            return Task.Run(() => AddRange(entities));
+        }
+
         public virtual void Add<TEntity>(TEntity entity) => AddRange(new[] { entity });
 
-        public virtual void Add(object entity) => Add<object>(entity);
+        public virtual Task AddAsync<TEntity>(TEntity entity)
+        {
+            return Task.Run(() => Add(entity));
+        }
 
         public virtual void Update<TEntity>(TEntity entity) => Update<TEntity, TEntity>(entity, null);
-
-        public virtual void Update(object entity) => Update<object>(entity);
 
         public virtual void Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
             EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Update));
         }
 
-        public virtual void Delete<TEntity>(TEntity entity) => Delete<TEntity, TEntity>(entity, null);
+        public virtual Task UpdateAsync<TEntity>(TEntity entity)
+        {
+            return Task.Run(() => Update<TEntity, TEntity>(entity, null));
+        }
 
-        public virtual void Delete(object entity) => Delete<object>(entity);
+        public virtual void Delete<TEntity>(TEntity entity) => Delete<TEntity, TEntity>(entity, null);
 
         public virtual void Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
             EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
+        }
+
+        public virtual Task DeleteAsync<TEntity>(TEntity entity)
+        {
+            return Task.Run(() => Delete(entity));
         }
 
         public IDbEntityTransaction BeginTransaction()

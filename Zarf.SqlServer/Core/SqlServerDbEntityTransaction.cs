@@ -27,22 +27,25 @@ namespace Zarf.SqlServer.Core
 
         public void Commit()
         {
-            _completed = true;
-            _sqlEnittyConnection.CommitTransaction(_transOrder, _savePoint);
+            if (!_completed)
+            {
+                _completed = true;
+                _sqlEnittyConnection.CommitTransaction(_transOrder, _savePoint);
+            }
         }
 
         public void Rollback()
         {
-            _completed = true;
-            _sqlEnittyConnection.RollbackTransaction(_transOrder, _savePoint);
+            if (!_completed)
+            {
+                _completed = true;
+                _sqlEnittyConnection.RollbackTransaction(_transOrder, _savePoint);
+            }
         }
 
         public void Dispose()
         {
-            if (!_completed)
-            {
-                Commit();
-            }
+            Commit();
         }
     }
 }
