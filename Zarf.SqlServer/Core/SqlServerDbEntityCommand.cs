@@ -1,19 +1,21 @@
 ﻿using System.Data;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Entities;
-using System.Data.SqlClient;
 
 namespace Zarf.SqlServer.Core
 {
-    public class SqlServerDbEntityCommand : DbEntityCommand
+    internal class SqlServerDbEntityCommand : DbEntityCommand
     {
-        public SqlCommand SqlCommand => DbCommand as SqlCommand;
+        internal SqlCommand SqlCommand => DbCommand as SqlCommand;
 
-        public SqlServerDbEntityCommand(IDbCommand dbCommand, IDbEntityConnection dbConnection) : base(dbCommand, dbConnection)
+        internal SqlServerDbEntityConnection SqlEntityConnection => EntityConnection as SqlServerDbEntityConnection;
+
+        internal SqlServerDbEntityCommand(IDbCommand dbCommand, IDbEntityConnection dbConnection) : base(dbCommand, dbConnection)
         {
-            DbCommand.Connection = EntityConnection.DbConnection;
-            DbCommand.Transaction = EntityConnection.DbTransaction;
+            SqlCommand.Connection = SqlEntityConnection.SqlConnection;
+            SqlCommand.Transaction = SqlEntityConnection.SqlTransaction;
         }
 
         public override async Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams)

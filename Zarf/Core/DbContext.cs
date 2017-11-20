@@ -94,7 +94,7 @@ namespace Zarf
 
         public IDbEntityTransaction BeginTransaction()
         {
-            if (DbContextParts.EntityConnection.DbTransaction == null)
+            if (!DbContextParts.EntityConnection.HasTransaction())
             {
                 Save();
             }
@@ -123,7 +123,7 @@ namespace Zarf
 
         private int Save(IEnumerable<EntityEntry> entries)
         {
-            if (DbContextParts.EntityConnection.DbTransaction == null)
+            if (!DbContextParts.EntityConnection.HasTransaction())
             {
                 using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
                 {
@@ -152,7 +152,7 @@ namespace Zarf
                 return await Task.FromResult(0);
             }
 
-            if (DbContextParts.EntityConnection.DbTransaction == null)
+            if (!DbContextParts.EntityConnection.HasTransaction())
             {
                 using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
                 {

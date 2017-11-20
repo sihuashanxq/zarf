@@ -31,25 +31,23 @@ namespace Zarf.Update.Executors
 
             foreach (var commandGroup in commandGroups)
             {
-                if (commandGroup.Commands.Count == 1)
+                using (var reader = dbCommand.ExecuteDataReader(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
                 {
-                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
-                    if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.AutoIncrementProperty != null)
+                    if (!reader.Read())
                     {
-                        using (var reader = dbCommand.ExecuteDataReader(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
-                        {
-                            if (!reader.Read())
-                            {
-                                throw new Exception("insert data error!");
-                            }
-                            modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[0]);
-                            modifyRowcount += reader.GetInt32(1);
-                            continue;
-                        }
+                        throw new Exception("write data error!");
                     }
-                }
 
-                modifyRowcount += (int)dbCommand.ExecuteScalar(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray());
+                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
+                    if (commandGroup.Commands.Count == 1 &&
+                        modifyCommand.Entry.State == EntityState.Insert &&
+                        modifyCommand.Entry.AutoIncrementProperty != null)
+                    {
+                        modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[1]);
+                    }
+
+                    modifyRowcount += reader.GetInt32(0);
+                }
             }
 
             return modifyRowcount;
@@ -68,25 +66,23 @@ namespace Zarf.Update.Executors
 
             foreach (var commandGroup in commandGroups)
             {
-                if (commandGroup.Commands.Count == 1)
+                using (var reader = await dbCommand.ExecuteDataReaderAsync(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
                 {
-                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
-                    if (modifyCommand.Entry.State == EntityState.Insert && modifyCommand.Entry.AutoIncrementProperty != null)
+                    if (!reader.Read())
                     {
-                        using (var reader = await dbCommand.ExecuteDataReaderAsync(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()))
-                        {
-                            if (!reader.Read())
-                            {
-                                throw new Exception("insert data error!");
-                            }
-                            modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[0]);
-                            modifyRowcount += reader.GetInt32(1);
-                            continue;
-                        }
+                        throw new Exception("write data error!");
                     }
-                }
 
-                modifyRowcount += (int)(await dbCommand.ExecuteScalarAsync(BuildCommandText(commandGroup), commandGroup.Parameters.ToArray()));
+                    var modifyCommand = commandGroup.Commands.FirstOrDefault();
+                    if (commandGroup.Commands.Count == 1 &&
+                        modifyCommand.Entry.State == EntityState.Insert &&
+                        modifyCommand.Entry.AutoIncrementProperty != null)
+                    {
+                        modifyCommand.Entry.AutoIncrementProperty.SetValue(modifyCommand.Entry.Entity, reader[1]);
+                    }
+
+                    modifyRowcount += reader.GetInt32(0);
+                }
             }
 
             return modifyRowcount;

@@ -5,7 +5,7 @@ using Zarf.Builders;
 
 namespace Zarf.SqlServer.Builders
 {
-    public partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerTextBuilder : SqlTextBuilder
     {
         protected static readonly Type StringType = typeof(string);
 

@@ -11,7 +11,7 @@ using Zarf.Update.Expressions;
 
 namespace Zarf.SqlServer.Builders
 {
-    public partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerTextBuilder : SqlTextBuilder
     {
         protected StringBuilder _builder { get; set; } = new StringBuilder();
 
@@ -492,10 +492,10 @@ namespace Zarf.SqlServer.Builders
                 Append(";SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();");
             }
 
-            if (store.Persists.Count == 1 &&(
+            if (store.Persists.Count == 1 && (
                 store.Persists.First().As<InsertExpression>()?.GenerateIdentity ?? false))
             {
-                Append("SELECT SCOPE_IDENTITY() AS ID,@__ROWCOUNT__ AS ROWSCOUNT;");
+                Append("SELECT @__ROWCOUNT__ AS ROWSCOUNT,SCOPE_IDENTITY() AS ID;");
             }
             else
             {

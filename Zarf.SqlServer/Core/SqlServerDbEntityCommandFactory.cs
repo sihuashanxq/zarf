@@ -1,14 +1,13 @@
-﻿using System.Data;
-using System.Data.SqlClient;
+﻿using System.Data.SqlClient;
 using Zarf.Core;
 
 namespace Zarf.SqlServer.Core
 {
-    public class SqlServerDbEntityCommandFactory : IDbEntityCommandFacotry
+    internal class SqlServerDbEntityCommandFactory : IDbEntityCommandFacotry
     {
         private IDbEntityConnectionFacotry _entityConnectionFacotry;
 
-        public SqlServerDbEntityCommandFactory(IDbEntityConnectionFacotry entityConnectionFacotry)
+        internal SqlServerDbEntityCommandFactory(IDbEntityConnectionFacotry entityConnectionFacotry)
         {
             _entityConnectionFacotry = entityConnectionFacotry;
         }

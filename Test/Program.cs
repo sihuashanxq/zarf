@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Zarf.Entities;
-using Zarf.Update;
 
 namespace Zarf
 {
     class Program
     {
-        static async void A(DbContext db)
+        static async Task<int> A(DbContext db)
         {
-            var d = await db.SaveAsync();
+            return await db.SaveAsync();
         }
 
         static void Main(string[] args)
@@ -21,26 +21,27 @@ namespace Zarf
 
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
-
-                var transactioin = db.BeginTransaction();
-                var newPP = new PP()
+                
+                //事务测试
+                var t1 = db.BeginTransaction();
+                var p1 = new PP()
                 {
                     Name = "3333333"
                 };
 
-                var newPPP = new PP { Name = "3" };
-                db.Add(newPPP);
-                db.Add(newPP);
+                db.Add(new PP { Name = "3" });
+                db.Add(p1);
                 var count = db.Save();
 
-                newPP.Name = "34";
-                db.Update(newPP);
-                A(db);
+                var t2 = db.BeginTransaction();
+                p1.Name = "34";
+                db.Update(p1);
+                count = db.Save();
+                t2.Commit();     //t2.Rollback() 数据库中存在3333333 与 3, t2.Commit()数据库中存在 34,3
 
-                transactioin.Commit();
+                t1.Commit();
                 //db.Update(first);
                 //db.Update(sencond);
-
                 //var user = new User()
                 //{
                 //    Name = "张三",

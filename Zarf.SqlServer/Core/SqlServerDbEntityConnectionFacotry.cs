@@ -3,13 +3,13 @@ using Zarf.Core;
 
 namespace Zarf.SqlServer.Core
 {
-    public class SqlServerDbEntityConnectionFacotry : IDbEntityConnectionFacotry
+    internal class SqlServerDbEntityConnectionFacotry : IDbEntityConnectionFacotry
     {
-        private IDbEntityConnection _dbConnection;
+        private SqlServerDbEntityConnection _dbConnection;
 
-        public SqlServerDbEntityConnectionFacotry(string connectionString)
+        internal SqlServerDbEntityConnectionFacotry(string connectionString)
         {
-            _dbConnection = new DbEntityConnection(new SqlConnection(connectionString));
+            _dbConnection = new SqlServerDbEntityConnection(new SqlConnection(connectionString));
         }
 
         public IDbEntityConnection Create()

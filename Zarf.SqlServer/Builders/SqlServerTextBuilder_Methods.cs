@@ -9,7 +9,7 @@ using Zarf.Extensions;
 
 namespace Zarf.SqlServer.Builders
 {
-    public partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerTextBuilder : SqlTextBuilder
     {
         protected static HashSet<string> LikeMethods = new HashSet<string>
         {
