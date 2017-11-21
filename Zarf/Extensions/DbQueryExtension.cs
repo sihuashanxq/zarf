@@ -17,40 +17,40 @@ namespace Zarf
             ThenIncludeMethod = typeof(DbQueryExtension).GetMethod(nameof(ThenInclude));
         }
 
-        public static void AddRange<TEntity>(this IDbQuery<TEntity> dbQuery, IEnumerable<TEntity> entities)
-        {
-            dbQuery.Context?.AddRange(entities);
-        }
+        //public static void AddRange<TEntity>(this IDbQuery<TEntity> dbQuery, IEnumerable<TEntity> entities)
+        //{
+        //    dbQuery.Context?.AddRange(entities);
+        //}
 
-        public static void Add<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
-        {
-            dbQuery.Context?.Add(entity);
-        }
+        //public static void Add<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
+        //{
+        //    dbQuery.Context?.Add(entity);
+        //}
 
-        public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
-        {
-            dbQuery.Context?.Update(entity);
-        }
+        //public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
+        //{
+        //    dbQuery.Context?.Update(entity);
+        //}
 
-        public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            dbQuery.Context?.Update(entity, predicate);
-        }
+        //public static void Update<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        //{
+        //    dbQuery.Context?.Update(entity, predicate);
+        //}
 
-        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, Expression<Func<TEntity, bool>> predicate)
-        {
-            dbQuery.Context?.Delete(predicate);
-        }
+        //public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, Expression<Func<TEntity, bool>> predicate)
+        //{
+        //    dbQuery.Context?.Delete(predicate);
+        //}
 
-        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
-        {
-            dbQuery.Context?.Delete(entity, predicate);
-        }
+        //public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity, Expression<Func<TEntity, bool>> predicate)
+        //{
+        //    dbQuery.Context?.Delete(entity, predicate);
+        //}
 
-        public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
-        {
-            dbQuery.Context?.Delete(entity);
-        }
+        //public static void Delete<TEntity>(this IDbQuery<TEntity> dbQuery, TEntity entity)
+        //{
+        //    dbQuery.Context?.Delete(entity);
+        //}
 
         /// <summary>
         /// 查询包含属性
@@ -67,14 +67,15 @@ namespace Zarf
              Expression<Func<TEntity, TProperty, bool>> propertyRelation
            )
         {
-            return new IncludeDataQuery<TEntity, TProperty>(
-                new DbQueryProvider(dbQuery.Context),
-                Expression.Call(
-                    IncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
-                    dbQuery.Expression,
-                    Expression.Quote(propertyPath),
-                    Expression.Quote(propertyRelation)
-            ));
+            return null;
+            //return new IncludeDataQuery<TEntity, TProperty>(
+            //    new DbQueryProvider(dbQuery.Context),
+            //    Expression.Call(
+            //        IncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
+            //        dbQuery.InternalDbQuery.Expression,
+            //        Expression.Quote(propertyPath),
+            //        Expression.Quote(propertyRelation)
+            //));
         }
 
         /// <summary>
@@ -93,14 +94,15 @@ namespace Zarf
             Expression<Func<TPrevious, TProperty, bool>> propertyRelation
             )
         {
-            return new IncludeDataQuery<TEntity, TProperty>(
-                new DbQueryProvider(dbQuery.Context),
-                Expression.Call(
-                  ThenIncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
-                  dbQuery.Expression,
-                  Expression.Quote(propertyPath),
-                  Expression.Quote(propertyRelation)
-            ));
+            return null;
+            //return new IncludeDataQuery<TEntity, TProperty>(
+            //    new DbQueryProvider(dbQuery.Context),
+            //    Expression.Call(
+            //      ThenIncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
+            //      dbQuery.InternalDbQuery.Expression,
+            //      Expression.Quote(propertyPath),
+            //      Expression.Quote(propertyRelation)
+            //));
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                //BasicTest(db);
+                BasicTest(db);
 
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
@@ -27,24 +27,24 @@ namespace Zarf
                 //await db.DeleteAsync();
                 //await db.SaveAsync();
 
-                //事务测试
-                var t1 = db.BeginTransaction();
-                var p1 = new PP()
-                {
-                    Name = "3333333"
-                };
+                ////事务测试
+                //var t1 = db.BeginTransaction();
+                //var p1 = new PP()
+                //{
+                //    Name = "3333333"
+                //};
 
-                db.Add(new PP { Name = "3" });
-                db.Add(p1);
-                var count = db.Save();
+                //db.Add(new PP { Name = "3" });
+                //db.Add(p1);
+                //var count = db.Save();
 
-                var t2 = db.BeginTransaction();
-                p1.Name = "34";
-                db.Update(p1);
-                count = db.Save();
-                t2.Commit();     //t2.Rollback() 数据库中存在3333333 与 3, t2.Commit()数据库中存在 34,3
+                //var t2 = db.BeginTransaction();
+                //p1.Name = "34";
+                //db.Update(p1);
+                //count = db.Save();
+                //t2.Commit();     //t2.Rollback() 数据库中存在3333333 与 3, t2.Commit()数据库中存在 34,3
 
-                t1.Commit();
+                //t1.Commit();
 
                 //db.Update(sencond);
                 //var user = new User()
@@ -124,12 +124,12 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Inner Join..........................");
-            db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId).Join(
-                db.Query<Address>(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street, user.Address })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
+            //db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId).Join(
+            //    db.Query<Address>(),
+            //    item => item.AddressId,
+            //    item => item.Id,
+            //    (user, address) => new { user.Name, address.Street, user.Address })
+            //    .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
 
             Console.WriteLine();
             Console.WriteLine("LEFT Join..........................");
@@ -188,12 +188,12 @@ namespace Zarf
             Console.WriteLine("Any Id>0..........................");
             Console.WriteLine(db.Query<User>().Any(item => item.Id > 0));
 
-            Console.WriteLine("Include Test");
-            var users = db.Query<User>()
-                .Include(item => item.Address, (usr, address) => usr.Id == address.UserId && usr.Id != 1)
-                //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-                .Select(item => item)
-                .ToList();
+            //Console.WriteLine("Include Test");
+            //var users = db.Query<User>()
+            //    .Include(item => item.Address, (usr, address) => usr.Id == address.UserId && usr.Id != 1)
+            //    //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+            //    .Select(item => item)
+            //    .ToList();
         }
     }
 
@@ -247,7 +247,7 @@ namespace Zarf
     public class DbUserContext : SqlServerDbContext
     {
         public DbUserContext() :
-            base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
+            base(@"Data Source=localhost\SQLEXPRESS;MultipleActiveResultSets =true;Initial Catalog=ORM;Integrated Security=True")
         {
             Users = this.Query<User>();
         }

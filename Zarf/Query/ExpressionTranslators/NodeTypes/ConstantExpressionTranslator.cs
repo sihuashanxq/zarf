@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Query.Expressions;
-using System.Reflection;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -10,7 +9,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public override Expression Translate(IQueryContext context, ConstantExpression constant, IQueryCompiler queryCompiler)
         {
-            if (!typeof(IDbQuery).IsAssignableFrom(constant.Type))
+            if (!typeof(IInternalDbQuery).IsAssignableFrom(constant.Type))
             {
                 return constant;
             }
