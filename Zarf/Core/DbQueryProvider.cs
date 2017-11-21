@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Query;
+using Zarf.Core;
 
 namespace Zarf
 {
@@ -23,7 +24,7 @@ namespace Zarf
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression query)
         {
-            return new DbQuery<TElement>(this, query);
+            return new InternalDbQuery<TElement>(this, query);
         }
 
         public object Execute(Expression query)

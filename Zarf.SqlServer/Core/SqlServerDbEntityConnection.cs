@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using Zarf.Core;
 
@@ -43,6 +44,11 @@ namespace Zarf.SqlServer.Core
 
         internal void RollbackTransaction(int transCount, string savePoint)
         {
+            if (!HasTransaction())
+            {
+                throw new Exception("there not exists a activing transaction!");
+            }
+
             SqlTransaction.Rollback(savePoint);
             if (transCount == 1)
             {
@@ -53,6 +59,11 @@ namespace Zarf.SqlServer.Core
 
         internal void CommitTransaction(int transCount, string savePoint)
         {
+            if (!HasTransaction())
+            {
+                throw new Exception("there not exists a activing transaction!");
+            }
+
             if (transCount == 1)
             {
                 SqlTransaction.Commit();
