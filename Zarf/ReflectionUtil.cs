@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Zarf.Core;
 
 namespace Zarf
 {
@@ -19,6 +20,10 @@ namespace Zarf
         /// Enumerable.ToList
         /// </summary>
         public static MethodInfo EnumerableToListMethod { get; }
+
+        public static MethodInfo Include { get; }
+
+        public static MethodInfo ThenInclude { get; }
 
         public static MethodInfo EnumerableDistinct { get; }
 
@@ -127,6 +132,8 @@ namespace Zarf
 
             EnumerableWhereMethod = typeof(ReflectionUtil).GetMethod(nameof(Where));
             EnumerableToListMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "ToList");
+            Include = typeof(DbQueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
+            ThenInclude = typeof(DbQueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
         public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> filter)

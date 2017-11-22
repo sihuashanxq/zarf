@@ -67,6 +67,8 @@ namespace Zarf
 
         IDbQuery<TEntity> Union(IDbQuery<TEntity> source2);
 
+        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
+
         int Sum(Expression<Func<TEntity, int>> selector);
 
         long Sum(Expression<Func<TEntity, long>> selector);
@@ -135,8 +137,7 @@ namespace Zarf
 
     }
 
-    public interface IInternalDbQuery<TEnitty> : IInternalDbQuery, IQueryable<TEnitty>, IOrderedQueryable<TEnitty>
+    public interface IInternalDbQuery<TEntity> : IInternalDbQuery, IQueryable<TEntity>, IOrderedQueryable<TEntity>
     {
-
     }
 }

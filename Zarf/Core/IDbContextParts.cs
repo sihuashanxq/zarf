@@ -1,5 +1,4 @@
 ﻿using Zarf.Builders;
-using System;
 namespace Zarf.Core
 {
     public interface IDbContextParts
@@ -9,5 +8,7 @@ namespace Zarf.Core
         IDbEntityConnection EntityConnection { get; }
 
         IDbEntityCommandFacotry EntityCommandFacotry { get; }
+
+        string ConnectionString { get; }
     }
 }

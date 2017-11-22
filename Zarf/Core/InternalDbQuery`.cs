@@ -3,14 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Zarf.Query;
 
 namespace Zarf.Core
 {
-    public class InternalDbQuery<TEntity> : IInternalDbQuery<TEntity>
+    internal class InternalDbQuery<TEntity> : IInternalDbQuery<TEntity>
     {
-        private EntityEnumerable<TEntity> _entityEnumerable;
+        private EntityEnumerable<TEntity> _entities;
 
         public DbContext Context => (Provider as DbQueryProvider)?.Context;
 
@@ -24,12 +23,12 @@ namespace Zarf.Core
         {
             get
             {
-                if (_entityEnumerable == null)
+                if (_entities == null)
                 {
-                    _entityEnumerable = new EntityEnumerable<TEntity>(Expression, Context.DbContextParts);
+                    _entities = new EntityEnumerable<TEntity>(Expression, Context.DbContextParts);
                 }
 
-                return _entityEnumerable;
+                return _entities;
             }
         }
 

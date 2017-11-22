@@ -15,11 +15,16 @@ namespace Zarf
             InternalDbQuery = new InternalDbQuery<TEntity>(provider);
         }
 
-        private DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
+        protected DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
         {
             InternalDbQuery = internalDbQuery;
         }
 
+        /// <summary>
+        /// 通过实现GetEnumerator方法使DbQuery支持foreach访问
+        /// 不实现IEnumerable接口,Linq API太多了
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<TEntity> GetEnumerator()
         {
             return InternalDbQuery.GetEnumerator();
@@ -167,6 +172,21 @@ namespace Zarf
         public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
         {
             return new DbQuery<TResult>(InternalDbQuery.Join(inner.InternalDbQuery, outerKeySelector, innerKeySelector, resultSelector) as IInternalDbQuery<TResult>);
+        }
+
+        /// <summary>
+        /// 查询包含属性
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <typeparam name="TProperty">属性类型</typeparam>
+        /// <param name="dbQuery">原始查询</param>
+        /// <param name="propertyPath">属性路径</param>
+        /// <param name="propertyRelation">关联关系</param>
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(
+             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath,
+             Expression<Func<TEntity, TProperty, bool>> propertyRelation)
+        {
+            return new IncludeDbQuery<TEntity, TProperty>(InternalDbQuery.Include(propertyPath, propertyRelation));
         }
 
         public IDbQuery<TEntity> DefaultIfEmpty()

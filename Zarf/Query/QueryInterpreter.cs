@@ -1,13 +1,10 @@
-﻿using System.Linq.Expressions;
-using Zarf.Query.ExpressionVisitors;
-using Zarf.Query.ExpressionTranslators;
-using Zarf.Mapping.Bindings;
-using System.Collections.Generic;
-using Zarf.Extensions;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using Zarf.Builders;
+﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 using Zarf.Core;
+using Zarf.Extensions;
+using Zarf.Mapping.Bindings;
+using Zarf.Query.ExpressionTranslators;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
@@ -18,8 +15,6 @@ namespace Zarf.Query
         public QueryInterpreter(IDbContextParts dbContextParts)
         {
             _dbContextParts = dbContextParts;
-            //_serviceProvider = dbContextParts;
-            //_dbCommand = dbContextParts.GetService<IDbCommandFacade>();
         }
 
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext queryContext = null)
@@ -36,22 +31,24 @@ namespace Zarf.Query
         {
             queryContext = queryContext ?? QueryContextFacotry.Factory.CreateContext(dbContextParts: _dbContextParts);
 
-            var compiler = new QueryCompiler(queryContext, NodeTypeTranslatorProvider.Default);
-            var compiledQuery = compiler.Compile(query);
-            var entityBinder = new DefaultEntityBinder(queryContext);
-            var entityCreator = entityBinder.Bind<TEntity>(new BindingContext(compiledQuery));
-
-            var commandText = _dbContextParts.CommandTextBuilder.Build(compiledQuery);
-            var dataReader = _dbContextParts.EntityCommandFacotry.Create().ExecuteDataReader(commandText);
+            var compiledQuery = new QueryCompiler(queryContext, NodeTypeTranslatorProvider.Default).Compile(query);
+            var entityActivator = new DefaultEntityBinder(queryContext).Bind<TEntity>(new BindingContext(compiledQuery));
+            var dataReader = _dbContextParts
+                .EntityCommandFacotry
+                .Create(_dbContextParts.ConnectionString)
+                .ExecuteDataReader(_dbContextParts.CommandTextBuilder.Build(compiledQuery));
 
             if (typeof(TResult) != typeof(TEntity))
             {
-                return new EntityEnumerator<TEntity>(entityCreator, dataReader).Cast<TResult>();
+                return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();
             }
 
-            if (dataReader.Read())
+            using (dataReader)
             {
-                return entityCreator(dataReader).Cast<TResult>();
+                if (dataReader.Read())
+                {
+                    return entityActivator(dataReader).Cast<TResult>();
+                }
             }
 
             return default(TResult);

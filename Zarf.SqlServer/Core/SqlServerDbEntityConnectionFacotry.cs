@@ -16,5 +16,10 @@ namespace Zarf.SqlServer.Core
         {
             return _dbConnection;
         }
+
+        public IDbEntityConnection Create(string connectionString)
+        {
+            return new SqlServerDbEntityConnection(new SqlConnection(connectionString));
+        }
     }
 }
