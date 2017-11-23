@@ -2,21 +2,12 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Core;
 
 namespace Zarf
 {
     public static class DbQueryExtension
     {
-        public static readonly MethodInfo IncludeMethod;
-
-        public static readonly MethodInfo ThenIncludeMethod;
-
-        static DbQueryExtension()
-        {
-            IncludeMethod = typeof(DbQueryExtension).GetMethod(nameof(Include));
-            ThenIncludeMethod = typeof(DbQueryExtension).GetMethod(nameof(ThenInclude));
-        }
-
         //public static void AddRange<TEntity>(this IDbQuery<TEntity> dbQuery, IEnumerable<TEntity> entities)
         //{
         //    dbQuery.Context?.AddRange(entities);
@@ -61,21 +52,19 @@ namespace Zarf
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
         /// <returns></returns>
-        public static IIncludeDataQuery<TEntity, TProperty> Include<TEntity, TProperty>(
-             this IDbQuery<TEntity> dbQuery,
+        internal static IInternalDbQuery<TEntity> Include<TEntity, TProperty>(
+             this IInternalDbQuery<TEntity> dbQuery,
              Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath,
              Expression<Func<TEntity, TProperty, bool>> propertyRelation
            )
         {
-            return null;
-            //return new IncludeDataQuery<TEntity, TProperty>(
-            //    new DbQueryProvider(dbQuery.Context),
-            //    Expression.Call(
-            //        IncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
-            //        dbQuery.InternalDbQuery.Expression,
-            //        Expression.Quote(propertyPath),
-            //        Expression.Quote(propertyRelation)
-            //));
+            return new InternalDbQuery<TEntity>(dbQuery.Provider,
+                  Expression.Call(
+                      ReflectionUtil.Include.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
+                      dbQuery.Expression,
+                      Expression.Quote(propertyPath),
+                      Expression.Quote(propertyRelation)
+              ));
         }
 
         /// <summary>
@@ -87,22 +76,19 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        /// <returns></returns>
-        public static IIncludeDataQuery<TEntity, TProperty> ThenInclude<TEntity, TPrevious, TProperty>(
-           this IIncludeDataQuery<TEntity, TPrevious> dbQuery,
+        internal static IInternalDbQuery<TEntity> ThenInclude<TEntity, TPrevious, TProperty>(
+            this IInternalDbQuery<TEntity> dbQuery,
             Expression<Func<TPrevious, IEnumerable<TProperty>>> propertyPath,
             Expression<Func<TPrevious, TProperty, bool>> propertyRelation
             )
         {
-            return null;
-            //return new IncludeDataQuery<TEntity, TProperty>(
-            //    new DbQueryProvider(dbQuery.Context),
-            //    Expression.Call(
-            //      ThenIncludeMethod.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
-            //      dbQuery.InternalDbQuery.Expression,
-            //      Expression.Quote(propertyPath),
-            //      Expression.Quote(propertyRelation)
-            //));
+            return new InternalDbQuery<TEntity>(dbQuery.Provider,
+                     Expression.Call(
+                     ReflectionUtil.ThenInclude.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
+                     dbQuery.Expression,
+                     Expression.Quote(propertyPath),
+                     Expression.Quote(propertyRelation)
+                 ));
         }
     }
 }

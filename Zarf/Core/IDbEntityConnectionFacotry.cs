@@ -3,5 +3,7 @@
     public interface IDbEntityConnectionFacotry
     {
         IDbEntityConnection Create();
+
+        IDbEntityConnection Create(string connectionString);
     }
 }

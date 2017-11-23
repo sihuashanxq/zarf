@@ -5,5 +5,7 @@
         IDbEntityCommand Create(IDbEntityConnection entityConnection);
 
         IDbEntityCommand Create();
+
+        IDbEntityCommand Create(string connectionString);
     }
 }

@@ -21,5 +21,10 @@ namespace Zarf.SqlServer.Core
         {
             return Create(_entityConnectionFacotry.Create());
         }
+
+        public IDbEntityCommand Create(string connectionString)
+        {
+            return Create(_entityConnectionFacotry.Create(connectionString));
+        }
     }
 }

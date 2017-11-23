@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Threading.Tasks;
 using Zarf.Entities;
 
@@ -18,7 +18,6 @@ namespace Zarf
             using (var db = new DbUserContext())
             {
                 BasicTest(db);
-
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
                 //await db.BeginTransactionAsync();
@@ -188,12 +187,14 @@ namespace Zarf
             Console.WriteLine("Any Id>0..........................");
             Console.WriteLine(db.Query<User>().Any(item => item.Id > 0));
 
-            //Console.WriteLine("Include Test");
-            //var users = db.Query<User>()
-            //    .Include(item => item.Address, (usr, address) => usr.Id == address.UserId && usr.Id != 1)
-            //    //.ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-            //    .Select(item => item)
-            //    .ToList();
+            Console.WriteLine("Include Test");
+            var users = db.Query<User>()
+                .Include(item => item.Address)
+                .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
+                .Select(item => item)
+                .ToList();
+
+
         }
     }
 
@@ -247,7 +248,7 @@ namespace Zarf
     public class DbUserContext : SqlServerDbContext
     {
         public DbUserContext() :
-            base(@"Data Source=localhost\SQLEXPRESS;MultipleActiveResultSets =true;Initial Catalog=ORM;Integrated Security=True")
+            base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
         {
             Users = this.Query<User>();
         }

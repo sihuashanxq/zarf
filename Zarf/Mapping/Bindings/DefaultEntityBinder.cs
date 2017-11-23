@@ -296,7 +296,7 @@ namespace Zarf.Mapping.Bindings
 
             var filteredMemberValue = Expression.Call(
                 null,
-                ReflectionUtil.EnumerableWhereMethod.MakeGenericMethod(eObject.Type, memEleType),
+                ReflectionUtil.SubQueryWhere.MakeGenericMethod(eObject.Type, memEleType),
                 memValueVar,
                 eObject,
                 memNavigation.Relation.UnWrap().As<LambdaExpression>());

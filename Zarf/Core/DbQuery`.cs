@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Zarf.Core;
+using Zarf.Entities;
+using Zarf.Extensions;
 
 namespace Zarf
 {
@@ -15,11 +18,16 @@ namespace Zarf
             InternalDbQuery = new InternalDbQuery<TEntity>(provider);
         }
 
-        private DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
+        protected DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
         {
             InternalDbQuery = internalDbQuery;
         }
 
+        /// <summary>
+        /// 通过实现GetEnumerator方法使DbQuery支持foreach访问
+        /// 不实现IEnumerable接口,Linq API太多了
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<TEntity> GetEnumerator()
         {
             return InternalDbQuery.GetEnumerator();
@@ -167,6 +175,66 @@ namespace Zarf
         public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
         {
             return new DbQuery<TResult>(InternalDbQuery.Join(inner.InternalDbQuery, outerKeySelector, innerKeySelector, resultSelector) as IInternalDbQuery<TResult>);
+        }
+
+        /// <summary>
+        /// 查询包含属性
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <typeparam name="TProperty">属性类型</typeparam>
+        /// <param name="dbQuery">原始查询</param>
+        /// <param name="propertyPath">属性路径</param>
+        /// <param name="propertyRelation">关联关系</param>
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation = null)
+        {
+            return new IncludeDbQuery<TEntity, TProperty>(
+                InternalDbQuery.Include(
+                    propertyPath,
+                    propertyRelation ?? CreateDeafultKeyRealtion<TEntity, TProperty>()
+                    )
+                );
+        }
+
+        protected Expression<Func<TTEntity, TProperty, bool>> CreateDeafultKeyRealtion<TTEntity, TProperty>()
+        {
+            var typeOfEntity = typeof(TTEntity);
+            var typeOfProperty = typeof(TProperty);
+
+            var idOfEntity = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<PrimaryKeyAttribute>() != null || item.Name == "Id");
+            var foreignKeyOfProperty = FindEntityForeignKey(typeOfProperty, typeOfEntity.ToTable().Name + "Id");
+
+            if (idOfEntity == null)
+            {
+                throw new NotImplementedException($"Type Of {typeOfEntity.FullName} Need A PrimaryKey Or Id Member");
+            }
+
+            if (foreignKeyOfProperty == null)
+            {
+                throw new NotImplementedException($"Type Of {typeOfProperty.FullName} Have Not A Foreign Key With{typeOfEntity.FullName}");
+            }
+
+            var oEntity = Expression.Parameter(typeOfEntity);
+            var oProperty = Expression.Parameter(typeOfProperty);
+
+            return
+                Expression.Lambda<Func<TTEntity, TProperty, bool>>(
+                    Expression.Equal(
+                        Expression.MakeMemberAccess(oEntity, idOfEntity),
+                        Expression.MakeMemberAccess(oProperty, foreignKeyOfProperty)
+                    ),
+                    new[] { oEntity, oProperty }
+            );
+        }
+
+        protected MemberInfo FindEntityForeignKey(Type typeOfEntity, string defaultKey)
+        {
+            var foreignKey = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<ForeignKeyAttribute>()?.Name == defaultKey);
+            if (foreignKey == null)
+            {
+                return typeOfEntity.GetMembers().FirstOrDefault(item => item.ToColumn().Name == defaultKey);
+            }
+
+            return foreignKey;
         }
 
         public IDbQuery<TEntity> DefaultIfEmpty()

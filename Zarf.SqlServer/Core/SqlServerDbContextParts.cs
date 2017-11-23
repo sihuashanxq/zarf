@@ -11,8 +11,10 @@ namespace Zarf.SqlServer.Core
         public IDbEntityCommandFacotry EntityCommandFacotry { get; }
 
         public IDbEntityConnectionFacotry EntityConnectionFacotry { get; }
-        
+
         public IDbEntityConnection EntityConnection { get; }
+
+        public string ConnectionString { get; }
 
         public SqlServerDbContextParts(string connectionString)
         {
@@ -20,6 +22,7 @@ namespace Zarf.SqlServer.Core
             EntityConnectionFacotry = new SqlServerDbEntityConnectionFacotry(connectionString);
             EntityCommandFacotry = new SqlServerDbEntityCommandFactory(EntityConnectionFacotry);
             EntityConnection = EntityConnectionFacotry.Create();
+            ConnectionString = connectionString;
         }
     }
 }
