@@ -22,9 +22,14 @@ namespace Zarf
         /// <param name="propertyRelation">关联关系</param>
         public IIncludeDbQuery<TEntity, TKey> ThenInclude<TKey>(
             Expression<Func<TProperty, IEnumerable<TKey>>>
-            propertyPath, Expression<Func<TProperty, TKey, bool>> propertyRelation)
+            propertyPath, Expression<Func<TProperty, TKey, bool>> propertyRelation = null)
         {
-            return new IncludeDbQuery<TEntity, TKey>(InternalDbQuery.ThenInclude(propertyPath, propertyRelation));
+            return new IncludeDbQuery<TEntity, TKey>(
+                InternalDbQuery.ThenInclude(
+                    propertyPath,
+                    propertyRelation ?? CreateDeafultKeyRealtion<TProperty, TKey>()
+                )
+            );
         }
     }
 }

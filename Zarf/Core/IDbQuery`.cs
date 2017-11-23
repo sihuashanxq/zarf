@@ -67,7 +67,7 @@ namespace Zarf
 
         IDbQuery<TEntity> Union(IDbQuery<TEntity> source2);
 
-        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
+        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation = null);
 
         int Sum(Expression<Func<TEntity, int>> selector);
 

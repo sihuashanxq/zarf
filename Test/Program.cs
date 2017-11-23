@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Threading.Tasks;
 using Zarf.Entities;
 
@@ -189,10 +189,12 @@ namespace Zarf
 
             Console.WriteLine("Include Test");
             var users = db.Query<User>()
-                .Include(item => item.Address, (usr, address) => usr.Id == address.UserId && usr.Id != 1)
+                .Include(item => item.Address)
                 .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
                 .Select(item => item)
                 .ToList();
+
+
         }
     }
 

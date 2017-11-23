@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Zarf.Core;
 
 namespace Zarf
 {
@@ -11,25 +10,13 @@ namespace Zarf
     /// </summary>
     public static class ReflectionUtil
     {
-        /// <summary>
-        /// Enumerable.Where
-        /// </summary>
-        public static MethodInfo EnumerableWhereMethod { get; }
-
-        /// <summary>
-        /// Enumerable.ToList
-        /// </summary>
-        public static MethodInfo EnumerableToListMethod { get; }
+        public static MethodInfo SubQueryWhere { get; }
 
         public static MethodInfo Include { get; }
 
         public static MethodInfo ThenInclude { get; }
 
-        public static MethodInfo EnumerableDistinct { get; }
-
         public static MethodInfo[] AllQueryableMethods { get; }
-
-        public static MethodInfo[] AllEnumerableMethods { get; }
 
         public static readonly Type CharType = typeof(char);
 
@@ -128,19 +115,21 @@ namespace Zarf
         static ReflectionUtil()
         {
             AllQueryableMethods = typeof(Queryable).GetMethods();
-            AllEnumerableMethods = typeof(Enumerable).GetMethods();
-
-            EnumerableWhereMethod = typeof(ReflectionUtil).GetMethod(nameof(Where));
-            EnumerableToListMethod = AllEnumerableMethods.FirstOrDefault(item => item.Name == "ToList");
+            SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Include = typeof(DbQueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
             ThenInclude = typeof(DbQueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
-        public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> filter)
+        public static IEnumerable<TEntity> Where<TOEntity, TEntity>
+        (
+            this IEnumerable<TEntity> entities,
+            TOEntity oEntity,
+            Func<TOEntity, TEntity, bool> predicate
+        )
         {
             foreach (var entity in entities)
             {
-                if (filter(oEntity, entity))
+                if (predicate(oEntity, entity))
                 {
                     yield return entity;
                 }

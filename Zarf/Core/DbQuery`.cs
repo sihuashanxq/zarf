@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Zarf.Core;
+using Zarf.Entities;
+using Zarf.Extensions;
 
 namespace Zarf
 {
@@ -182,11 +185,56 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(
-             Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath,
-             Expression<Func<TEntity, TProperty, bool>> propertyRelation)
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation = null)
         {
-            return new IncludeDbQuery<TEntity, TProperty>(InternalDbQuery.Include(propertyPath, propertyRelation));
+            return new IncludeDbQuery<TEntity, TProperty>(
+                InternalDbQuery.Include(
+                    propertyPath,
+                    propertyRelation ?? CreateDeafultKeyRealtion<TEntity, TProperty>()
+                    )
+                );
+        }
+
+        protected Expression<Func<TTEntity, TProperty, bool>> CreateDeafultKeyRealtion<TTEntity, TProperty>()
+        {
+            var typeOfEntity = typeof(TTEntity);
+            var typeOfProperty = typeof(TProperty);
+
+            var idOfEntity = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<PrimaryKeyAttribute>() != null || item.Name == "Id");
+            var foreignKeyOfProperty = FindEntityForeignKey(typeOfProperty, typeOfEntity.ToTable().Name + "Id");
+
+            if (idOfEntity == null)
+            {
+                throw new NotImplementedException($"Type Of {typeOfEntity.FullName} Need A PrimaryKey Or Id Member");
+            }
+
+            if (foreignKeyOfProperty == null)
+            {
+                throw new NotImplementedException($"Type Of {typeOfProperty.FullName} Have Not A Foreign Key With{typeOfEntity.FullName}");
+            }
+
+            var oEntity = Expression.Parameter(typeOfEntity);
+            var oProperty = Expression.Parameter(typeOfProperty);
+
+            return
+                Expression.Lambda<Func<TTEntity, TProperty, bool>>(
+                    Expression.Equal(
+                        Expression.MakeMemberAccess(oEntity, idOfEntity),
+                        Expression.MakeMemberAccess(oProperty, foreignKeyOfProperty)
+                    ),
+                    new[] { oEntity, oProperty }
+            );
+        }
+
+        protected MemberInfo FindEntityForeignKey(Type typeOfEntity, string defaultKey)
+        {
+            var foreignKey = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<ForeignKeyAttribute>()?.Name == defaultKey);
+            if (foreignKey == null)
+            {
+                return typeOfEntity.GetMembers().FirstOrDefault(item => item.ToColumn().Name == defaultKey);
+            }
+
+            return foreignKey;
         }
 
         public IDbQuery<TEntity> DefaultIfEmpty()

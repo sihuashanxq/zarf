@@ -73,15 +73,20 @@ namespace Zarf.Extensions
             return ReflectionUtil.SimpleTypes.Contains(type);
         }
 
-        public static Table ToTable(this Type type)
+        public static Table ToTable(this Type typeOfEntity)
         {
-            var tableAttribute = type.GetTypeInfo().GetCustomAttribute<TableAttribute>();
+            var tableAttribute = typeOfEntity.GetTypeInfo().GetCustomAttribute<TableAttribute>();
             if (tableAttribute == null)
             {
-                return new Table(type.Name);
+                return new Table(typeOfEntity.Name);
             }
-       
+
             return new Table(tableAttribute.Name, tableAttribute.Schema.IsNullOrEmpty() ? "dbo" : tableAttribute.Schema);
+        }
+
+        public static Column ToColumn(this MemberInfo property)
+        {
+            return new Column(property.GetCustomAttribute<ColumnAttribute>()?.Name ?? property.Name);
         }
 
         public static TTarget As<TTarget>(this object o)

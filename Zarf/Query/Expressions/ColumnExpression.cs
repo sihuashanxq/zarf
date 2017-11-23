@@ -27,27 +27,20 @@ namespace Zarf.Query.Expressions
             FromTable = table;
             Member = member;
 
-            if (member != null)
+            if (Member != null)
             {
-                var attribute = Member.GetCustomAttribute<ColumnAttribute>();
-                var columnName = Member.Name;
-                if (attribute != null)
-                {
-                    columnName = attribute.Name;
-                }
-
-                Type = member.GetMemberTypeInfo();
-                Column = new Column(columnName);
+                Type = Member.GetMemberTypeInfo();
+                Column = Member.ToColumn();
                 Alias = alias;
             }
         }
 
-        public ColumnExpression(FromTableExpression table, Column column, Type refType, string alias = "")
+        public ColumnExpression(FromTableExpression table, Column column, Type valueType, string alias = "")
             : base(alias)
         {
             FromTable = table;
             Column = column;
-            Type = refType;
+            Type = valueType;
         }
 
         public override int GetHashCode()
