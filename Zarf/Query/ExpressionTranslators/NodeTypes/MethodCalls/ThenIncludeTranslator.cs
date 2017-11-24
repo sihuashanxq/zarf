@@ -30,7 +30,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             var previousQuery = previousNaviation.RefrenceQuery;
-            var propertyEleType = propertyPath.Member.GetMemberTypeInfo().GetCollectionElementType();
+            var propertyEleType = propertyPath.Member.GetPropertyType().GetCollectionElementType();
             var innerQuery = new QueryExpression(propertyEleType, context.Alias.GetNewTable());
 
             //关联关系

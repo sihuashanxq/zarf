@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
+using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
@@ -7,12 +8,16 @@ namespace Zarf.Query.ExpressionTranslators
 {
     public static class ITranslatorExtensions
     {
-        public static IEnumerable<Expression> GenerateTableColumns(this ITranslaor _, FromTableExpression table)
+        public static IEnumerable<ColumnExpression> GenerateTableColumns(this ITranslaor _, FromTableExpression table)
         {
-            var entityType = EntityTypeDescriptorFactory.Factory.Create(table.Type);
-            foreach (var member in entityType.GetExpandMembers())
+            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(table.Type);
+            foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
             {
-                yield return new ColumnExpression(table, member, member.Name);
+                yield return new ColumnExpression(
+                    table,
+                    memberDescriptor.Member.ToColumn(),
+                    memberDescriptor.MemberType,
+                    memberDescriptor.Name);
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Zarf.Entities;
 using Zarf.Mapping;
 using Zarf.Update;
 
@@ -14,15 +15,15 @@ namespace Zarf
 
         public EntityState State { get; }
 
-        public IEnumerable<MemberDescriptor> Members { get; }
+        public IEnumerable<IMemberDescriptor> Members { get; }
 
-        public MemberDescriptor AutoIncrementProperty => Members?.FirstOrDefault(item => item.IsAutoIncrement);
+        public IMemberDescriptor AutoIncrementProperty => Members?.FirstOrDefault(item => item.IsAutoIncrement);
 
-        public MemberDescriptor ConventionId => Members?.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
+        public IMemberDescriptor ConventionId => Members?.FirstOrDefault(item => item.Member.Name.ToLower() == "id");
 
-        public MemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimary) ?? AutoIncrementProperty ?? ConventionId;
+        public IMemberDescriptor Primary => Members?.FirstOrDefault(item => item.IsPrimaryKey) ?? AutoIncrementProperty ?? ConventionId;
 
-        public EntityEntry(object entity, EntityState state, IEnumerable<MemberDescriptor> members)
+        public EntityEntry(object entity, EntityState state, IEnumerable<IMemberDescriptor> members)
         {
             Entity = entity;
             State = state;
@@ -32,15 +33,7 @@ namespace Zarf
 
         public static EntityEntry Create(object entity, EntityState state)
         {
-            var memberDescriptors = new List<MemberDescriptor>();
-            EntityTypeDescriptorFactory
-                .Factory
-                .Create(entity.GetType())
-                .GetExpandMembers()
-                .ToList()
-                .ForEach(item => memberDescriptors.Add(new MemberDescriptor(item)));
-
-            return new EntityEntry(entity, state, memberDescriptors);
+            return new EntityEntry(entity, state, TypeDescriptorCacheFactory.Factory.Create(entity.GetType()).MemberDescriptors);
         }
     }
 }

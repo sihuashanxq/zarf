@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using Zarf.Entities;
+using Zarf.Mapping;
 
 namespace Zarf.Update
 {
@@ -68,7 +69,7 @@ namespace Zarf.Update
 
             foreach (var item in entry.Members)
             {
-                if (item.IsAutoIncrement || item.IsPrimary || entry.Primary == item)
+                if (item.IsAutoIncrement || item.IsPrimaryKey || entry.Primary == item)
                 {
                     continue;
                 }
@@ -159,12 +160,12 @@ namespace Zarf.Update
             return "@P" + (_colPostfix++).ToString();
         }
 
-        protected string GetColumnName(MemberDescriptor memberDescriptor)
+        protected string GetColumnName(IMemberDescriptor memberDescriptor)
         {
             return memberDescriptor.Member.GetCustomAttribute<ColumnAttribute>()?.Name ?? memberDescriptor.Member.Name;
         }
 
-        protected DbParameter GetDbParameter(object entity, MemberDescriptor memberDescriptor)
+        protected DbParameter GetDbParameter(object entity, IMemberDescriptor memberDescriptor)
         {
             return new DbParameter(GetNewParameterName(), memberDescriptor.GetValue(entity));
         }

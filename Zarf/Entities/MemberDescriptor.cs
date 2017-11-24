@@ -3,9 +3,12 @@ using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
 using System.Linq;
+using Zarf.Mapping;
+using System.Collections.Generic;
+
 namespace Zarf.Update
 {
-    public class MemberDescriptor
+    public class MemberDescriptor : IMemberDescriptor
     {
         static Type[] NumericTypes = new[]
         {
@@ -20,7 +23,7 @@ namespace Zarf.Update
             typeof(float),typeof(float?),
         };
 
-        public bool IsPrimary { get; }
+        public bool IsPrimaryKey { get; }
 
         public bool IsAutoIncrement { get; }
 
@@ -28,11 +31,26 @@ namespace Zarf.Update
 
         public MemberInfo Member { get; }
 
-        public bool IsWriteable
-            => Member.Is<FieldInfo>() || (Member.As<PropertyInfo>()?.CanWrite ?? false);
+        public bool IsConventionIdentity => Name == "Id";
 
-        public bool IsReadable
-            => Member.Is<FieldInfo>() || (Member.As<PropertyInfo>()?.CanRead ?? false);
+        public string Name => Member.Name;
+
+        public string RefrenceForeignKey { get; }
+
+        public Type MemberType { get; }
+
+        public IEnumerable<Attribute> Attributes { get; }
+
+        public MemberDescriptor(MemberInfo member)
+        {
+            Member = member;
+            Attributes = Member.GetCustomAttributes();
+            MemberType = member.GetPropertyType();
+            IsPrimaryKey = Attributes.FirstOrDefault(item => item is PrimaryKeyAttribute) != null;
+            RefrenceForeignKey = Attributes.OfType<ForeignKeyAttribute>()?.FirstOrDefault()?.Name ?? Name;
+            IsAutoIncrement = NumericTypes.Contains(MemberType) && Attributes.OfType<AutoIncrementAttribute>().FirstOrDefault() != null;
+        }
+
 
         public object GetValue(object obj)
         {
@@ -53,23 +71,6 @@ namespace Zarf.Update
                 var property = Member.As<PropertyInfo>();
                 property.SetValue(entity, Convert.ChangeType(value, property.PropertyType));
             }
-        }
-
-        public MemberDescriptor(MemberInfo member)
-        {
-            if (member.GetCustomAttribute<AutoIncrementAttribute>() != null)
-            {
-                var type = member.GetMemberTypeInfo();
-                if (!NumericTypes.Contains(type))
-                {
-                    throw new Exception($"Type{type.Name} Cannot Be An AutoIncrement Member!");
-                }
-
-                IsAutoIncrement = true;
-            }
-
-            Member = member;
-            IsPrimary = member.GetCustomAttribute<PrimaryKeyAttribute>() != null;
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 {
                     argument.Cast<ColumnExpression>().Alias = newExpression.Members[i].Name;
                 }
-                else if (argument is QueryExpression && newExpression.Members[i].GetMemberTypeInfo().IsCollection())
+                else if (argument is QueryExpression && newExpression.Members[i].GetPropertyType().IsCollection())
                 {
                     throw new NotImplementedException("not supported!");
                 }

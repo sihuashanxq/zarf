@@ -244,16 +244,16 @@ namespace Zarf.Mapping.Bindings
             }
 
             var eType = qExpression.Type.GetCollectionElementType();
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
+            var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
             var memberExpressions = new List<MemberExpressionPair>();
             var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
 
-            foreach (var item in typeDescriptor.GetExpandMembers())
+            foreach (var item in typeDescriptor.MemberDescriptors)
             {
-                var mappedExpression = FindMemberRelatedExpression(qExpression, item);
+                var mappedExpression = FindMemberRelatedExpression(qExpression, item.Member);
                 if (mappedExpression != null)
                 {
-                    memberExpressions.Add(new MemberExpressionPair(item, mappedExpression));
+                    memberExpressions.Add(new MemberExpressionPair(item.Member, mappedExpression));
                 }
             }
 
@@ -271,7 +271,7 @@ namespace Zarf.Mapping.Bindings
         public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression eObject)
         {
             var memNavigation = NavigationContext.GetNavigation(memberInfo);
-            var memEleType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
+            var memEleType = memberInfo.GetPropertyType().GetCollectionElementType();
             var memValueType = typeof(EntityPropertyEnumerable<>).MakeGenericType(memEleType);
 
             var makeNewMemberValue = Expression.Convert(

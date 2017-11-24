@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {

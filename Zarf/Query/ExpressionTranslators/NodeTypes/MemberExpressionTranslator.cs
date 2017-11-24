@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return exp;
             }
 
-            var typeInfo = memExpression.Member.GetMemberTypeInfo();
+            var typeInfo = memExpression.Member.GetPropertyType();
             if (typeof(IInternalDbQuery).IsAssignableFrom(typeInfo))
             {
                 return new QueryExpression(typeInfo, context.Alias.GetNewTable());

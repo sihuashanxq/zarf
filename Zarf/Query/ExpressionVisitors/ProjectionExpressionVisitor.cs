@@ -68,7 +68,7 @@ namespace Zarf.Query.ExpressionVisitors
 
             for (var i = 0; i < newExp.Arguments.Count; i++)
             {
-                if (ReflectionUtil.SimpleTypes.Contains(newExp.Members[i].GetMemberTypeInfo()))
+                if (ReflectionUtil.SimpleTypes.Contains(newExp.Members[i].GetPropertyType()))
                 {
                     AddProjection(newExp.Members[i], newExp.Arguments[i]);
                 }

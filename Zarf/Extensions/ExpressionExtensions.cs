@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators;
 
 namespace Zarf.Extensions
 {
@@ -40,11 +41,7 @@ namespace Zarf.Extensions
 
         public static IEnumerable<ColumnExpression> GenerateColumns(this FromTableExpression table)
         {
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(table.Type);
-            foreach (var member in typeDescriptor.GetExpandMembers())
-            {
-                yield return new ColumnExpression(table, member, member.Name);
-            }
+            return ITranslatorExtensions.GenerateTableColumns(null, table);
         }
     }
 }

@@ -185,7 +185,7 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation = null)
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation )
         {
             return new IncludeDbQuery<TEntity, TProperty>(
                 InternalDbQuery.Include(
@@ -195,13 +195,18 @@ namespace Zarf
                 );
         }
 
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath)
+        {
+            return Include(propertyPath, null);
+        }
+
         protected Expression<Func<TTEntity, TProperty, bool>> CreateDeafultKeyRealtion<TTEntity, TProperty>()
         {
             var typeOfEntity = typeof(TTEntity);
             var typeOfProperty = typeof(TProperty);
 
             var idOfEntity = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<PrimaryKeyAttribute>() != null || item.Name == "Id");
-            var foreignKeyOfProperty = FindEntityForeignKey(typeOfProperty, typeOfEntity.ToTable().Name + "Id");
+            var foreignKeyOfProperty = FindEntityForeignKey(typeOfProperty, typeOfEntity.Name + "Id");
 
             if (idOfEntity == null)
             {

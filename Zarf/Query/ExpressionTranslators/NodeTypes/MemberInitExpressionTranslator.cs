@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
                 var bindExpression = queryCompiler.Compile(binding.Expression);
-                var memberInfoType = binding.Member.GetMemberTypeInfo();
+                var memberInfoType = binding.Member.GetPropertyType();
 
                 if (typeof(IEnumerable).IsAssignableFrom(memberInfoType) && memberInfoType != typeof(string))
                 {
