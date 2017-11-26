@@ -7,10 +7,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {
-        public override Expression Translate(IQueryContext context, MemberExpression memExpression, IQueryCompiler queryCompiler)
+        public MemberExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+
+        }
+
+        public override Expression Translate(MemberExpression memExpression)
         {
             //new {item.User.Id,} item.User
-            var exp = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
+            var exp = Context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
             if (exp != null)
             {
                 return exp;
@@ -19,10 +24,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var typeInfo = memExpression.Member.GetPropertyType();
             if (typeof(IInternalDbQuery).IsAssignableFrom(typeInfo))
             {
-                return new QueryExpression(typeInfo, context.Alias.GetNewTable());
+                return new QueryExpression(typeInfo, Context.Alias.GetNewTable());
             }
 
-            var belongInstance = queryCompiler.Compile(memExpression.Expression);
+            var belongInstance = Compiler.Compile(memExpression.Expression);
             var value = TryEvalMemberValue(memExpression.Member, belongInstance);
             if (value != null)
             {

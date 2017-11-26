@@ -24,6 +24,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 );
         }
 
+        public OrderByTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+        }
+
         private OrderType GetOrderType(MethodCallExpression methodCall)
         {
             return methodCall.Method.Name == "OrderBy" || methodCall.Method.Name == "ThenBy"
@@ -31,22 +35,22 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 : OrderType.Desc;
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (rootQuery.Sets.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
+            MapQuerySource(lambda.Parameters.LastOrDefault(), rootQuery);
 
             rootQuery.Orders.Add(new OrderExpression(
-                context
+                Context
                 .ProjectionScanner
-                .Scan(queryCompiler.Compile(lambda))
+                .Scan(Compiler.Compile(lambda))
                 .Select(item => item.Expression)
                 .OfType<ColumnExpression>(),
                 GetOrderType(methodCall)

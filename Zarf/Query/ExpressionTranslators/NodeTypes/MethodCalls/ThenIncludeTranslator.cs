@@ -18,11 +18,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = new[] { ReflectionUtil.ThenInclude };
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public ThenIncludeTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var propertyPath = methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body.As<MemberExpression>();
-            var previousNaviation = context.PropertyNavigationContext.GetLastNavigation();
+            var previousNaviation = Context.PropertyNavigationContext.GetLastNavigation();
 
             if (propertyPath == null || previousNaviation == null)
             {
@@ -31,27 +35,25 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var previousQuery = previousNaviation.RefrenceQuery;
             var propertyEleType = propertyPath.Member.GetPropertyType().GetCollectionElementType();
-            var innerQuery = new QueryExpression(propertyEleType, context.Alias.GetNewTable());
+            var innerQuery = new QueryExpression(propertyEleType, Context.Alias.GetNewTable());
 
             //关联关系
             var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
+            MapQuerySource(lambda.Parameters.FirstOrDefault(), previousQuery);
 
-            context.QuerySourceProvider.AddSource(lambda.Parameters[0], previousQuery);
-
-            var relation = queryCompiler.Compile(lambda);
-
-            context.QuerySourceProvider.AddSource(lambda.Parameters[1], innerQuery);
-            var condtion = queryCompiler.Compile(lambda);
+            var relation = Compiler.Compile(lambda);
+            MapQuerySource(lambda.Parameters.LastOrDefault(), innerQuery);
+            var condtion = Compiler.Compile(lambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));
-            innerQuery.Projections.AddRange(context.ProjectionScanner.Scan(innerQuery));
+            innerQuery.Projections.AddRange(Context.ProjectionScanner.Scan(innerQuery));
 
-            context.PropertyNavigationContext.AddPropertyNavigation(
+            Context.PropertyNavigationContext.AddPropertyNavigation(
                 propertyPath.Member,
                 new PropertyNavigation(
                      propertyPath.Member,
                      innerQuery,
-                     context.ProjectionScanner.Scan(relation).Select(item => item.Expression).ToList(),
+                     Context.ProjectionScanner.Scan(relation).Select(item => item.Expression).ToList(),
                      relation
                 )
             );

@@ -7,7 +7,7 @@ namespace Zarf.Mapping
     {
         bool IsMapped(Expression node);
 
-        void Map(Projection projection);
+        void Map(ColumnDescriptor projection);
 
         int GetOrdinal(Expression node);
     }

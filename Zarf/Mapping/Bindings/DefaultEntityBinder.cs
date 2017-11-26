@@ -202,7 +202,7 @@ namespace Zarf.Mapping.Bindings
             {
                 foreach (var item in qExpression.GenerateColumns())
                 {
-                    var projection = new Projection()
+                    var projection = new ColumnDescriptor()
                     {
                         Member = item.Member,
                         Expression = item,
@@ -221,7 +221,7 @@ namespace Zarf.Mapping.Bindings
                 if (item.Expression.Is<AggregateExpression>())
                 {
                     var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
-                    col = new Projection()
+                    col = new ColumnDescriptor()
                     {
                         Expression = column ?? item.Expression,
                         Member = column?.Member,

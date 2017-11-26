@@ -1,11 +1,16 @@
 ﻿using System.Linq.Expressions;
-using System.Reflection;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class TypeBinaryExpressionTranslator : Translator<TypeBinaryExpression>
     {
-        public override Expression Translate(IQueryContext context, TypeBinaryExpression typeBinary, IQueryCompiler queryCompiler)
+        public TypeBinaryExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) 
+            : base(queryContext, queryCompiper)
+        {
+
+        }
+
+        public override Expression Translate(TypeBinaryExpression typeBinary)
         {
             var expType = typeBinary.Expression.Type;
             return typeBinary.TypeOperand.IsAssignableFrom(typeBinary.Expression.Type)

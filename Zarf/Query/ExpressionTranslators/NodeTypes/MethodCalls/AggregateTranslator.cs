@@ -19,9 +19,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => methods.Contains(item.Name));
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public AggregateTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+
+        }
+
+        public override Expression Translate( MethodCallExpression methodCall)
+        {
+            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             Expression aggregateKey = null;
 
             if (methodCall.Arguments.Count == 2)
@@ -29,13 +34,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
                 if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable());
+                    rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable());
                 }
 
-                context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
-                aggregateKey = context
+                MapQuerySource( keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
+                aggregateKey = Context
                     .ProjectionScanner
-                    .Scan(queryCompiler.Compile, keySelectorLambda)
+                    .Scan(Compiler.Compile, keySelectorLambda)
                     .FirstOrDefault()
                     .Expression;
             }
@@ -46,7 +51,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
 
-            rootQuery.Projections.Add(new Projection() { Expression = aggregate, Ordinal = rootQuery.Projections.Count });
+            rootQuery.Projections.Add(new ColumnDescriptor() { Expression = aggregate, Ordinal = rootQuery.Projections.Count });
             rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
 
             return rootQuery;

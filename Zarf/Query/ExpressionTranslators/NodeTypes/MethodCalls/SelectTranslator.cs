@@ -21,21 +21,24 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Select");
         }
 
-        public override Expression Translate(IQueryContext queryContext, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(queryContext.Alias.GetNewTable(), queryContext.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            queryContext.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), query);
+            MapQuerySource(selector.Parameters.FirstOrDefault(), query);
 
-            var entityNew = queryCompiler.Compile(selector).UnWrap();
-
-            query.Projections.AddRange(queryContext.ProjectionScanner.Scan(entityNew));
+            var entityNew = Compiler.Compile(selector).UnWrap();
+            query.Projections.AddRange(Context.ProjectionScanner.Scan(entityNew));
             query.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;
         }

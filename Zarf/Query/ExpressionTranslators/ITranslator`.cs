@@ -4,11 +4,11 @@ namespace Zarf.Query.ExpressionTranslators
 {
     public interface ITranslator<in T> : ITranslaor
     {
-        Expression Translate(IQueryContext queryContext, T query, IQueryCompiler queryCompiler);
+        Expression Translate( T query);
     }
 
     public interface ITranslaor
     {
-        Expression Translate(IQueryContext queryContext, Expression query, IQueryCompiler queryCompiler);
+        Expression Translate(Expression query);
     }
 }

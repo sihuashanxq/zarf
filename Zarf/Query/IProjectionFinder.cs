@@ -11,8 +11,8 @@ namespace Zarf.Query
     /// </summary>
     public interface IProjectionScanner
     {
-        List<Projection> Scan(Func<Expression, Expression> preHandle, Expression node);
+        List<ColumnDescriptor> Scan(Func<Expression, Expression> preHandle, Expression node);
 
-        List<Projection> Scan(Expression node);
+        List<ColumnDescriptor> Scan(Expression node);
     }
 }

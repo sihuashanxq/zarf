@@ -31,7 +31,7 @@ namespace Zarf.Query
         {
             queryContext = queryContext ?? QueryContextFacotry.Factory.CreateContext(dbContextParts: _dbContextParts);
 
-            var compiledQuery = new QueryCompiler(queryContext, NodeTypeTranslatorProvider.Default).Compile(query);
+            var compiledQuery = new QueryCompiler(queryContext).Compile(query);
             var entityActivator = new DefaultEntityBinder(queryContext).Bind<TEntity>(new BindingContext(compiledQuery));
             var dataReader = _dbContextParts
                 .EntityCommandFacotry

@@ -17,15 +17,19 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Except");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public ExceptTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+        }
+
+        public override Expression Translate( MethodCallExpression methodCall)
         {
             if (methodCall.Arguments.Count != 2)
             {
                 throw new NotImplementedException("not supproted!");
             }
 
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var setsQuery = queryCompiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
+            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var setsQuery = Compiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
 
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Except Query Expression");
@@ -34,7 +38,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (setsQuery.Projections.Count == 0)
             {
-                setsQuery.Projections.AddRange(context.ProjectionScanner.Scan(setsQuery));
+                setsQuery.Projections.AddRange(Context.ProjectionScanner.Scan(setsQuery));
             }
 
             return query;

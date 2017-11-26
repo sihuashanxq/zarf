@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Zarf.Mapping
 {
-    public class Projection
+    public class ColumnDescriptor
     {
         public Expression Expression { get; set; }
 
@@ -34,11 +34,11 @@ namespace Zarf.Mapping
                 return true;
             }
 
-            return (other is Projection) && GetHashCode() == other.GetHashCode();
+            return (other is ColumnDescriptor) && GetHashCode() == other.GetHashCode();
         }
 
 
-        public static bool operator ==(Projection left, Projection right)
+        public static bool operator ==(ColumnDescriptor left, ColumnDescriptor right)
         {
             if (ReferenceEquals(left, null))
             {
@@ -48,7 +48,7 @@ namespace Zarf.Mapping
             return left.Equals(right);
         }
 
-        public static bool operator !=(Projection left, Projection right)
+        public static bool operator !=(ColumnDescriptor left, ColumnDescriptor right)
         {
             return !(left == right);
         }

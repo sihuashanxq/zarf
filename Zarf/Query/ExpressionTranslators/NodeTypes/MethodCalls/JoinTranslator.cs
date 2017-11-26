@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
@@ -18,38 +17,42 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Join");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public JoinTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var joinQuery = queryCompiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
+        }
+
+        public override Expression Translate( MethodCallExpression methodCall)
+        {
+            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var joinQuery = Compiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
 
             if (rootQuery.Projections.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
             //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
             if (joinQuery.Projections.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
             {
-                joinQuery = joinQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                joinQuery = joinQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
             var outer = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
             var inner = methodCall.Arguments[3].UnWrap().As<LambdaExpression>();
             var selector = methodCall.Arguments[4].UnWrap().As<LambdaExpression>();
 
-            context.QuerySourceProvider.AddSource(outer.Parameters.First(), rootQuery);
-            context.QuerySourceProvider.AddSource(inner.Parameters.First(), joinQuery);
-            context.QuerySourceProvider.AddSource(selector.Parameters.First(), rootQuery);
-            context.QuerySourceProvider.AddSource(selector.Parameters.Last(), joinQuery);
+            MapQuerySource(outer.Parameters.FirstOrDefault(), rootQuery);
+            MapQuerySource( inner.Parameters.FirstOrDefault(), joinQuery);
+            MapQuerySource( selector.Parameters.FirstOrDefault(), rootQuery);
+            MapQuerySource(selector.Parameters.LastOrDefault(), joinQuery);
 
-            var left = queryCompiler.Compile(outer).UnWrap().As<LambdaExpression>().Body;
-            var right = queryCompiler.Compile(inner).UnWrap().As<LambdaExpression>().Body;
+            var left = Compiler.Compile(outer).UnWrap().As<LambdaExpression>().Body;
+            var right = Compiler.Compile(inner).UnWrap().As<LambdaExpression>().Body;
 
             //只保留Selector中的Columns
-            var entityNew = queryCompiler.Compile(selector).UnWrap();
+            var entityNew = Compiler.Compile(selector).UnWrap();
 
-            rootQuery.Projections.AddRange(context.ProjectionScanner.Scan(entityNew));
+            rootQuery.Projections.AddRange(Context.ProjectionScanner.Scan(entityNew));
             rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
             rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
 
@@ -58,18 +61,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         private JoinType GetJoinType(QueryExpression left, QueryExpression right)
         {
-            var joinType = JoinType.Inner;
-
             if (left.DefaultIfEmpty)
             {
-                joinType = right.DefaultIfEmpty ? JoinType.Full : JoinType.Right;
-            }
-            else
-            {
-                joinType = right.DefaultIfEmpty ? JoinType.Left : JoinType.Inner;
+                return right.DefaultIfEmpty ? JoinType.Full : JoinType.Right;
             }
 
-            return joinType;
+            return right.DefaultIfEmpty ? JoinType.Left : JoinType.Inner;
         }
     }
 }

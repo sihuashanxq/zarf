@@ -10,10 +10,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
-        public override Expression Translate(IQueryContext context, NewExpression newExpression, IQueryCompiler queryCompiler)
+        public NewExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
+            : base(queryContext, queryCompiper)
         {
-            if (newExpression.Arguments == null ||
-                newExpression.Arguments.Count == 0)
+
+        }
+
+        public override Expression Translate(NewExpression newExpression)
+        {
+            if (newExpression.Arguments == null || newExpression.Arguments.Count == 0)
             {
                 return newExpression;
             }
@@ -21,7 +26,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var arguments = new List<Expression>();
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var argument = queryCompiler.Compile(newExpression.Arguments[i]);
+                var argument = Compiler.Compile(newExpression.Arguments[i]);
                 if (newExpression.Members == null || newExpression.Members[i] == null)
                 {
                     continue;
@@ -36,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     throw new NotImplementedException("not supported!");
                 }
 
-                context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
+                Context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
                 arguments.Add(argument);
             }
 

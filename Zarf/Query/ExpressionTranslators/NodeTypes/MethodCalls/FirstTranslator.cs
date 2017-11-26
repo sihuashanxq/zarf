@@ -17,9 +17,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "First" || item.Name == "FirstOrDefault");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public FirstTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+        }
+
+        public override Expression Translate( MethodCallExpression methodCall)
+        {
+            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
 
             if (methodCall.Arguments.Count == 2)
             {
@@ -27,12 +31,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
                 if (rootQuery.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                    rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
                     rootQuery.Result = rootQuery.SubQuery.Result;
                 }
 
-                context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), rootQuery);
-                rootQuery.AddWhere(queryCompiler.Compile(condition).UnWrap());
+                MapQuerySource( condition.Parameters.FirstOrDefault(), rootQuery);
+                rootQuery.AddWhere(Compiler.Compile(condition).UnWrap());
             }
 
             if (methodCall.Method.Name == "FirstOrDefault")

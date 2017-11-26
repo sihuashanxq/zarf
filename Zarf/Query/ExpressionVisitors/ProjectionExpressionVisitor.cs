@@ -13,16 +13,16 @@ namespace Zarf.Query.ExpressionVisitors
     //一个Member中包含一个简单类型,一个简单类型后续方法调用包含一个复杂类型
     public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
     {
-        private List<Projection> _list;
+        private List<ColumnDescriptor> _list;
 
-        public List<Projection> Scan(Expression node)
+        public List<ColumnDescriptor> Scan(Expression node)
         {
-            _list = new List<Projection>();
+            _list = new List<ColumnDescriptor>();
             Visit(node);
             return _list.ToList();
         }
 
-        public List<Projection> Scan(Func<Expression, Expression> preHandle, Expression node)
+        public List<ColumnDescriptor> Scan(Func<Expression, Expression> preHandle, Expression node)
         {
             return Scan(preHandle(node));
         }
@@ -100,7 +100,7 @@ namespace Zarf.Query.ExpressionVisitors
 
             if (node.Is<ColumnExpression>())
             {
-                _list.Add(new Projection()
+                _list.Add(new ColumnDescriptor()
                 {
                     Member = member,
                     Expression = node,

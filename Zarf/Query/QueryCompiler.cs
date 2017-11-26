@@ -9,10 +9,10 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected ITransaltorProvider TranslatorProvider { get; }
 
-        public QueryCompiler(IQueryContext context, ITransaltorProvider transaltorProvider)
+        public QueryCompiler(IQueryContext context)
         {
             Context = context;
-            TranslatorProvider = transaltorProvider;
+            TranslatorProvider = new NodeTypeTranslatorProvider(context, this);
         }
 
         protected override Expression VisitLambda(LambdaExpression lambda)
@@ -36,7 +36,7 @@ namespace Zarf.Query.ExpressionVisitors
             var queryTranslator = TranslatorProvider.GetTranslator(node);
             if (queryTranslator != null)
             {
-                return queryTranslator.Translate(Context, node, this);
+                return queryTranslator.Translate(node);
             }
 
             return base.Visit(node);
