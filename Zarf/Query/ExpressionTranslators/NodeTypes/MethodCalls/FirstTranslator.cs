@@ -19,33 +19,28 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public FirstTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
 
             if (methodCall.Arguments.Count == 2)
             {
-                var condition = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-
-                if (rootQuery.Sets.Count != 0)
+                if (query.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
-                    rootQuery.Result = rootQuery.SubQuery.Result;
+                    query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                    query.Result = query.SubQuery.Result;
                 }
 
-                MapQuerySource( condition.Parameters.FirstOrDefault(), rootQuery);
-                rootQuery.AddWhere(Compiler.Compile(condition).UnWrap());
+                MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
+                query.AddWhere(GetCompiledExpression(methodCall.Arguments.LastOrDefault()).UnWrap());
             }
 
-            if (methodCall.Method.Name == "FirstOrDefault")
-            {
-                rootQuery.DefaultIfEmpty = true;
-            }
-
-            rootQuery.Limit = 1;
-            return rootQuery;
+            query.DefaultIfEmpty = methodCall.Method.Name == "FirstOrDefault";
+            query.Limit = 1;
+            return query;
         }
     }
 }

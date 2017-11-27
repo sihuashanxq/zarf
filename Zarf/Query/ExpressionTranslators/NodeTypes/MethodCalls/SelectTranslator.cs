@@ -23,23 +23,22 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
             if (query.Sets.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            MapQuerySource(selector.Parameters.FirstOrDefault(), query);
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.FirstOrDefault()), query);
 
-            var entityNew = Compiler.Compile(selector).UnWrap();
-            query.Projections.AddRange(Context.ProjectionScanner.Scan(entityNew));
-            query.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
+            var template = GetCompiledExpression(methodCall.Arguments.LastOrDefault()).UnWrap();
+            query.Projections.AddRange(GetColumns(template));
+            query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;
         }
     }

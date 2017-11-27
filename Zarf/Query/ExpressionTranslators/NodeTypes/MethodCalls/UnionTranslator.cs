@@ -17,21 +17,16 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Union" || item.Name == "Concat");
         }
 
-        public UnionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) 
+        public UnionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
             : base(queryContext, queryCompiper)
         {
 
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            if (methodCall.Arguments.Count != 2)
-            {
-                throw new NotImplementedException("not supproted!");
-            }
-
-            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var setsQuery = Compiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var setsQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments.LastOrDefault());
 
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Union Query Expression");
@@ -42,7 +37,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             {
                 if (query.Projections.Count == 0)
                 {
-                    query.Projections.AddRange(Context.ProjectionScanner.Scan(query));
+                    query.Projections.AddRange(GetColumns(query));
                 }
 
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
@@ -51,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (setsQuery.Projections.Count == 0)
             {
-                setsQuery.Projections.AddRange(Context.ProjectionScanner.Scan(setsQuery));
+                setsQuery.Projections.AddRange(GetColumns(setsQuery));
             }
 
             return query;

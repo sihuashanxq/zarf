@@ -21,26 +21,20 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            if (methodCall.Arguments.Count != 2)
-            {
-                throw new NotImplementedException("not supproted!");
-            }
-
-            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var setsQuery = Compiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var setsQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments.LastOrDefault());
 
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Except Query Expression");
 
-            query.Sets.Add(new ExceptExpression(setsQuery));
-
             if (setsQuery.Projections.Count == 0)
             {
-                setsQuery.Projections.AddRange(Context.ProjectionScanner.Scan(setsQuery));
+                setsQuery.Projections.AddRange(GetColumns(setsQuery));
             }
 
+            query.Sets.Add(new ExceptExpression(setsQuery));
             return query;
         }
     }

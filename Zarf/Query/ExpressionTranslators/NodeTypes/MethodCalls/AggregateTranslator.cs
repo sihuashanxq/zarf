@@ -24,37 +24,31 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            Expression aggregateKey = null;
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var column = new ColumnExpression(query, null, methodCall.Method.ReturnType, "1");
+
+            if (query.Projections.Count != 0 || query.Sets.Count != 0)
+            {
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+            }
 
             if (methodCall.Arguments.Count == 2)
             {
-                var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-                if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
-                {
-                    rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable());
-                }
-
-                MapQuerySource( keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
-                aggregateKey = Context
-                    .ProjectionScanner
-                    .Scan(Compiler.Compile, keySelectorLambda)
-                    .FirstOrDefault()
-                    .Expression;
+                MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
+                column = GetColumns(GetCompiledExpression(methodCall.Arguments.LastOrDefault())).FirstOrDefault().Expression.As<ColumnExpression>();
             }
-            else
+
+            var aggregate = new AggregateExpression(methodCall.Method, column);
+            query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
+            query.Projections.Add(new ColumnDescriptor()
             {
-                aggregateKey = new ColumnExpression(rootQuery, null, methodCall.Method.ReturnType, "1");
-            }
+                Expression = aggregate,
+                Ordinal = query.Projections.Count
+            });
 
-            var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
-
-            rootQuery.Projections.Add(new ColumnDescriptor() { Expression = aggregate, Ordinal = rootQuery.Projections.Count });
-            rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
-
-            return rootQuery;
+            return query;
         }
     }
 }

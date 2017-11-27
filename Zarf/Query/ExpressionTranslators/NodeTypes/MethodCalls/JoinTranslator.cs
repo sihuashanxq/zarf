@@ -19,16 +19,17 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public JoinTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var joinQuery = Compiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var joinQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments[1]);
 
-            if (rootQuery.Projections.Count != 0)
+            if (query.Projections.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
             //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
@@ -37,26 +38,22 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 joinQuery = joinQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            var outer = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
-            var inner = methodCall.Arguments[3].UnWrap().As<LambdaExpression>();
-            var selector = methodCall.Arguments[4].UnWrap().As<LambdaExpression>();
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[2]), query);
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[3]), joinQuery);
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[4]), query);
+            MapQuerySource(GetLastLambdaParameter(methodCall.Arguments[4]), joinQuery);
 
-            MapQuerySource(outer.Parameters.FirstOrDefault(), rootQuery);
-            MapQuerySource( inner.Parameters.FirstOrDefault(), joinQuery);
-            MapQuerySource( selector.Parameters.FirstOrDefault(), rootQuery);
-            MapQuerySource(selector.Parameters.LastOrDefault(), joinQuery);
-
-            var left = Compiler.Compile(outer).UnWrap().As<LambdaExpression>().Body;
-            var right = Compiler.Compile(inner).UnWrap().As<LambdaExpression>().Body;
+            var left = GetCompiledExpression(methodCall.Arguments[2]).UnWrap().As<LambdaExpression>().Body;
+            var right = GetCompiledExpression(methodCall.Arguments[3]).UnWrap().As<LambdaExpression>().Body;
 
             //只保留Selector中的Columns
-            var entityNew = Compiler.Compile(selector).UnWrap();
+            var newEntity = GetCompiledExpression(methodCall.Arguments[4]).UnWrap();
 
-            rootQuery.Projections.AddRange(Context.ProjectionScanner.Scan(entityNew));
-            rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
-            rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
+            query.Projections.AddRange(Context.ProjectionScanner.Scan(newEntity));
+            query.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(query, joinQuery)));
+            query.Result = new EntityResult(newEntity, methodCall.Method.ReturnType.GetCollectionElementType());
 
-            return rootQuery;
+            return query;
         }
 
         private JoinType GetJoinType(QueryExpression left, QueryExpression right)

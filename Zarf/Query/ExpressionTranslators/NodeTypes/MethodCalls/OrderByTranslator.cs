@@ -26,6 +26,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public OrderByTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         private OrderType GetOrderType(MethodCallExpression methodCall)
@@ -37,27 +38,25 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-
-            if (rootQuery.Sets.Count != 0)
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            if (query.Sets.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            MapQuerySource(lambda.Parameters.LastOrDefault(), rootQuery);
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
 
-            rootQuery.Orders.Add(new OrderExpression(
-                Context
-                .ProjectionScanner
-                .Scan(Compiler.Compile(lambda))
-                .Select(item => item.Expression)
-                .OfType<ColumnExpression>(),
-                GetOrderType(methodCall)
+            query.Orders.Add(new OrderExpression(
+                  GetColumns(
+                        GetCompiledExpression(
+                            methodCall.Arguments.LastOrDefault()
+                        )
+                    ).Select(item => item.Expression).OfType<ColumnExpression>(),
+                  GetOrderType(methodCall)
                 )
             );
 
-            return rootQuery;
+            return query;
         }
     }
 }

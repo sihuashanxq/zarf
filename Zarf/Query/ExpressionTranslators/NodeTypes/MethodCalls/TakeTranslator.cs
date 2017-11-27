@@ -19,14 +19,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public TakeTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var limit = methodCall.Arguments[1].As<ConstantExpression>().Value;
-
-            query.Limit = Convert.ToInt32(limit);
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            query.Limit = Convert.ToInt32(methodCall.Arguments.LastOrDefault().As<ConstantExpression>().Value);
             return query;
         }
     }

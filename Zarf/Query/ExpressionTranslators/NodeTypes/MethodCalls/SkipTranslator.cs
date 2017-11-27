@@ -21,28 +21,25 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public SkipTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
             var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
-
-            query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
-
             if (query.Projections.Count == 0)
             {
-                query.Projections.AddRange(Context.ProjectionScanner.Scan(query));
+                query.Projections.AddRange(GetColumns(query));
             }
 
+            query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
             query.Projections.Add(new ColumnDescriptor() { Expression = query.Offset });
-            query.Orders.Clear();
             query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
 
             var column = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
-            var predicate = Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset));
-            var lambda = Expression.Lambda(predicate);
-            query.AddWhere(lambda);
+            var predicate = Expression.Lambda(Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset)));
+            query.AddWhere(predicate);
 
             return query;
         }

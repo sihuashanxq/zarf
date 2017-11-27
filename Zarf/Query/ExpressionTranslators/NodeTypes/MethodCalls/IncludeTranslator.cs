@@ -21,7 +21,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         {
         }
 
-        public override Expression Translate( MethodCallExpression methodCall)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
             var rootQuery = Compiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
             var propertyPath = methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body.As<MemberExpression>();
@@ -36,11 +36,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             //关联关系
             var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
-            MapQuerySource( lambda.Parameters.FirstOrDefault(), rootQuery);
-            var relation = Compiler.Compile(lambda);
+            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[2]), rootQuery);
+            var relation = GetCompiledExpression(lambda);
 
-            MapQuerySource( lambda.Parameters.LastOrDefault(), innerQuery);
-            var condtion = Compiler.Compile(lambda);
+            MapQuerySource(GetLastLambdaParameter(methodCall.Arguments[2]), innerQuery);
+            var condtion = GetCompiledExpression(lambda);
 
             innerQuery.AddJoin(new JoinExpression(rootQuery, condtion));
             innerQuery.Projections.AddRange(Context.ProjectionScanner.Scan(innerQuery));

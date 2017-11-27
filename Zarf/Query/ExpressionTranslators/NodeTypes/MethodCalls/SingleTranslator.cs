@@ -17,17 +17,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public SingleTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate( MethodCallExpression methodCall)
         {
             var query = new WhereTranslator(Context, Compiler).Translate(methodCall) as QueryExpression;
-
-            if (methodCall.Method.Name == "SingleOrDefault")
-            {
-                query.DefaultIfEmpty = true;
-            }
-
+            query.DefaultIfEmpty = methodCall.Method.Name == "SingleOrDefault";
             query.Limit = 2;
             return query;
         }

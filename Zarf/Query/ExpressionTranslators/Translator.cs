@@ -40,14 +40,19 @@ namespace Zarf.Query.ExpressionTranslators
             return GetCompiledExpression<Expression>(exp);
         }
 
-        protected List<ParameterExpression> GetParameters(Expression lambda)
-        {
-            return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();
-        }
-
         protected List<ColumnDescriptor> GetColumns(Expression exp)
         {
             return Context.ProjectionScanner.Scan(exp);
+        }
+
+        protected ParameterExpression GetFirstLambdaParameter(Expression lambda)
+        {
+            return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();
+        }
+
+        protected ParameterExpression GetLastLambdaParameter(Expression lambda)
+        {
+            return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();
         }
     }
 }
