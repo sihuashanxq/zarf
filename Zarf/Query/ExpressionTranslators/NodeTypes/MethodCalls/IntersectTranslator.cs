@@ -24,8 +24,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
-            var setsQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments.LastOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var setsQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments[1]);
 
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Intersect Query Expression");

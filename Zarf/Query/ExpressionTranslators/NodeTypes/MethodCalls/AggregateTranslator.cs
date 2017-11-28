@@ -26,7 +26,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var column = new ColumnExpression(query, null, methodCall.Method.ReturnType, "1");
 
             if (query.Projections.Count != 0 || query.Sets.Count != 0)
@@ -36,8 +36,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (methodCall.Arguments.Count == 2)
             {
-                MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
-                column = GetColumns(GetCompiledExpression(methodCall.Arguments.LastOrDefault())).FirstOrDefault().Expression.As<ColumnExpression>();
+                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+                column = GetColumns(GetCompiledExpression(methodCall.Arguments[1])).FirstOrDefault().Expression.As<ColumnExpression>();
+                column.Alias = string.Empty;
             }
 
             var aggregate = new AggregateExpression(methodCall.Method, column);

@@ -5,6 +5,16 @@ namespace Zarf.Mapping
 {
     public class ColumnDescriptor
     {
+        public ColumnDescriptor()
+        {
+
+        }
+
+        public ColumnDescriptor(Expression exp)
+        {
+            Expression = exp;
+        }
+
         public Expression Expression { get; set; }
 
         public int Ordinal { get; set; } = -1;
@@ -15,7 +25,7 @@ namespace Zarf.Mapping
         {
             unchecked
             {
-                var hashCode =0;
+                var hashCode = 0;
                 hashCode = (hashCode * 397) ^ (Expression?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 return hashCode;

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using Zarf.Core;
 
 namespace Zarf
 {
@@ -39,7 +40,7 @@ namespace Zarf
 
         IDbQuery<TEntity> Take(int count);
 
-        IDbQuery<TEntity> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
+        IDbQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
 
         bool All(Expression<Func<TEntity, bool>> predicate);
 
@@ -57,6 +58,10 @@ namespace Zarf
 
         IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector);
 
+        IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, Expression<Func<TEntity, TInner, TResult>> resultSelector);
+
+        IDbJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate);
+
         IDbQuery<TEntity> DefaultIfEmpty();
 
         IDbQuery<TEntity> Distinct();
@@ -67,7 +72,7 @@ namespace Zarf
 
         IDbQuery<TEntity> Union(IDbQuery<TEntity> source2);
 
-        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation );
+        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
 
         IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath);
 
@@ -132,14 +137,5 @@ namespace Zarf
         TEntity[] ToArray();
 
         IEnumerator<TEntity> GetEnumerator();
-    }
-
-    public interface IInternalDbQuery
-    {
-
-    }
-
-    public interface IInternalDbQuery<TEntity> : IInternalDbQuery, IQueryable<TEntity>, IOrderedQueryable<TEntity>
-    {
     }
 }

@@ -26,37 +26,52 @@ namespace Zarf.Builders
             switch (node)
             {
                 case QueryExpression query:
-                    return VisitQuery(query);
+                    VisitQuery(query);
+                    break;
                 case WhereExperssion where:
-                    return VisitWhere(where);
+                    VisitWhere(where);
+                    break;
                 case ColumnExpression column:
-                    return VisitColumn(column);
+                    VisitColumn(column);
+                    break;
                 case JoinExpression join:
-                    return VisitJoin(join);
+                    VisitJoin(join);
+                    break;
                 case OrderExpression order:
-                    return VisitOrder(order);
+                    VisitOrder(order);
+                    break;
                 case GroupExpression group:
-                    return VisitGroup(group);
+                    VisitGroup(group);
+                    break;
                 case UnionExpression union:
-                    return VisitUnion(union);
+                    VisitUnion(union);
+                    break;
                 case ExceptExpression except:
-                    return VisitExcept(except);
+                    VisitExcept(except);
+                    break;
                 case IntersectExpression intersect:
-                    return VisitIntersect(intersect);
+                    VisitIntersect(intersect);
+                    break;
                 case SqlFunctionExpression function:
-                    return VisitSqlFunction(function);
+                    VisitSqlFunction(function);
+                    break;
                 case AggregateExpression aggregate:
-                    return VisitAggregate(aggregate);
+                    VisitAggregate(aggregate);
+                    break;
                 case SkipExpression skip:
-                    return VisitSkip(skip);
+                    VisitSkip(skip);
+                    break;
                 case AllExpression all:
-                    return VisitAll(all);
+                    VisitAll(all);
+                    break;
                 case AnyExpression any:
-                    return VisitAny(any);
+                    VisitAny(any);
+                    break;
                 case DbStoreExpression store:
-                    return VisitStore(store);
-
+                    VisitStore(store);
+                    break;
             }
+
             return node;
         }
 

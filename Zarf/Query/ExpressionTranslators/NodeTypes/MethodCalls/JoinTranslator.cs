@@ -24,7 +24,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var joinQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments[1]);
 
             if (query.Projections.Count != 0)
@@ -38,10 +38,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 joinQuery = joinQuery.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[2]), query);
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[3]), joinQuery);
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments[4]), query);
-            MapQuerySource(GetLastLambdaParameter(methodCall.Arguments[4]), joinQuery);
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[2]), query);
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[3]), joinQuery);
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[4]), query);
+            RegisterQuerySource(GetLastLambdaParameter(methodCall.Arguments[4]), joinQuery);
 
             var left = GetCompiledExpression(methodCall.Arguments[2]).UnWrap().As<LambdaExpression>().Body;
             var right = GetCompiledExpression(methodCall.Arguments[3]).UnWrap().As<LambdaExpression>().Body;

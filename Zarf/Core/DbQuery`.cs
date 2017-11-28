@@ -136,10 +136,9 @@ namespace Zarf
             return InternalDbQuery.Any(predicate);
         }
 
-        public IDbQuery<TEntity> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
+        public IDbQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
         {
-            InternalDbQuery = InternalDbQuery.Select(selector) as IInternalDbQuery<TEntity>;
-            return this;
+            return new DbQuery<TResult>(InternalDbQuery.Select(selector) as IInternalDbQuery<TResult>);
         }
 
         public IDbQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
@@ -172,11 +171,6 @@ namespace Zarf
             return this;
         }
 
-        public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
-        {
-            return new DbQuery<TResult>(InternalDbQuery.Join(inner.InternalDbQuery, outerKeySelector, innerKeySelector, resultSelector) as IInternalDbQuery<TResult>);
-        }
-
         /// <summary>
         /// 查询包含属性
         /// </summary>
@@ -185,7 +179,7 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation )
+        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation)
         {
             return new IncludeDbQuery<TEntity, TProperty>(
                 InternalDbQuery.Include(
@@ -406,6 +400,21 @@ namespace Zarf
         public TResult Min<TResult>(Expression<Func<TEntity, TResult>> selector)
         {
             return InternalDbQuery.Max(selector);
+        }
+
+        public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, Expression<Func<TEntity, TInner, TResult>> resultSelector)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDbJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
+        {
+            return new DbQuery<TResult>(InternalDbQuery.Join(inner.InternalDbQuery, outerKeySelector, innerKeySelector, resultSelector) as IInternalDbQuery<TResult>);
         }
     }
 }

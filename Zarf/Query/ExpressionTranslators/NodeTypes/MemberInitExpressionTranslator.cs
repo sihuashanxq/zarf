@@ -14,12 +14,12 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         {
         }
 
-        public override Expression Translate(MemberInitExpression memberInit)
+        public override Expression Translate(MemberInitExpression memInit)
         {
-            var newExpression = Compiler.Compile(memberInit.NewExpression).As<NewExpression>();
+            var newExp = GetCompiledExpression<NewExpression>(memInit.NewExpression);
             var bindings = new List<MemberBinding>();
 
-            foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
+            foreach (var binding in memInit.Bindings.OfType<MemberAssignment>())
             {
                 var bindExpression = Compiler.Compile(binding.Expression);
                 var memberInfoType = binding.Member.GetPropertyType();
@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 
-            return memberInit.Update(newExpression, bindings);
+            return memInit.Update(newExp, bindings);
         }
     }
 }

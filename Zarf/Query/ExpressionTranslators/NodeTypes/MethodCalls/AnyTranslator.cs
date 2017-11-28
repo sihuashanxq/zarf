@@ -24,16 +24,17 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
-
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            query.Projections.Add(new ColumnDescriptor() { Expression = Expression.Constant(1) });
-            query.AddWhere(GetCompiledExpression(methodCall.Arguments.LastOrDefault()));
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+
+            query.Projections.Clear();
+            query.Projections.Add(new ColumnDescriptor(Utils.ExpressionOne));
+            query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]));
             return new AllExpression(query);
         }
     }

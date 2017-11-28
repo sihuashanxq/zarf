@@ -5,9 +5,6 @@ using System.Reflection;
 
 namespace Zarf
 {
-    /// <summary>
-    /// 反射工具
-    /// </summary>
     public static class ReflectionUtil
     {
         public static MethodInfo SubQueryWhere { get; }

@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "All");
         }
 
-        public AllTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) 
+        public AllTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
             : base(queryContext, queryCompiper)
         {
 
@@ -26,18 +26,24 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
+         
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
 
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.LastOrDefault()), query);
+            var key = GetCompiledExpression(methodCall.Arguments[1].UnWrap()).UnWrap();
+            var col = new ColumnDescriptor(Utils.ExpressionOne);
 
-            var key = GetCompiledExpression(methodCall.Arguments.LastOrDefault().UnWrap()).UnWrap();
-            query.Projections.Add(new ColumnDescriptor() { Expression = Expression.Constant(1) });
-            query.AddWhere(Expression.Not(key.As<LambdaExpression>()?.Body ?? key));
+            if (key.NodeType == ExpressionType.Lambda)
+                query.AddWhere(Expression.Not(key.As<LambdaExpression>().Body));
+            else
+                query.AddWhere(Expression.Not(key));
 
+            query.Projections.Clear();
+            query.Projections.Add(col);
             return new AllExpression(query);
         }
     }

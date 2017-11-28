@@ -28,15 +28,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Sets.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            MapQuerySource(GetFirstLambdaParameter(methodCall.Arguments.FirstOrDefault()), query);
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
 
-            var template = GetCompiledExpression(methodCall.Arguments.LastOrDefault()).UnWrap();
+            var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
             query.Projections.AddRange(GetColumns(template));
             query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;

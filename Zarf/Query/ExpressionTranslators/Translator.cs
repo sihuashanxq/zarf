@@ -24,7 +24,7 @@ namespace Zarf.Query.ExpressionTranslators
         public Expression Translate(Expression query)
             => Translate(query.Cast<TExpression>());
 
-        protected void MapQuerySource(ParameterExpression parameter, QueryExpression query)
+        protected void RegisterQuerySource(ParameterExpression parameter, QueryExpression query)
         {
             Context.QuerySourceProvider.AddSource(parameter, query);
         }
@@ -52,7 +52,7 @@ namespace Zarf.Query.ExpressionTranslators
 
         protected ParameterExpression GetLastLambdaParameter(Expression lambda)
         {
-            return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();
+            return lambda.UnWrap().As<LambdaExpression>().Parameters.LastOrDefault();
         }
     }
 }

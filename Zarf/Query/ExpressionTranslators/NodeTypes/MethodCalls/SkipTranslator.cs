@@ -26,7 +26,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments.FirstOrDefault());
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
             if (query.Projections.Count == 0)
             {
