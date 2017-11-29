@@ -18,7 +18,7 @@ namespace Zarf
             InternalDbQuery = new InternalDbQuery<TEntity>(provider);
         }
 
-        protected DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
+        internal DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
         {
             InternalDbQuery = internalDbQuery;
         }
@@ -402,14 +402,14 @@ namespace Zarf
             return InternalDbQuery.Max(selector);
         }
 
-        public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, Expression<Func<TEntity, TInner, TResult>> resultSelector)
+        public IDbQuery<TResult> Join<TInner, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector)
         {
-            throw new NotImplementedException();
+            return Join(inner, predicate, joinType).Select(resultSelector);
         }
 
-        public IDbJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate)
+        public IJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            throw new NotImplementedException();
+            return new JoinQuery<TEntity, TInner>(JoinQuery.CreateJoinQuery(predicate, inner.InternalDbQuery, joinType), InternalDbQuery);
         }
 
         public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
