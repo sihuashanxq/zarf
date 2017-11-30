@@ -19,26 +19,27 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Skip");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public SkipTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
-
-            query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
-
             if (query.Projections.Count == 0)
             {
-                query.Projections.AddRange(context.ProjectionScanner.Scan(query));
+                query.Projections.AddRange(GetColumns(query));
             }
 
-            query.Projections.Add(new Projection() { Expression = query.Offset });
-            query.Orders.Clear();
-            query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+            query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
+            query.Projections.Add(new ColumnDescriptor() { Expression = query.Offset });
+            query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
 
             var column = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
-            var predicate = Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset));
-            var lambda = Expression.Lambda(predicate);
-            query.AddWhere(lambda);
+            var predicate = Expression.Lambda(Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset)));
+            query.AddWhere(predicate);
 
             return query;
         }

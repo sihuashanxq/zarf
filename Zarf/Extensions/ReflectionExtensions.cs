@@ -9,7 +9,7 @@ namespace Zarf.Extensions
 {
     public static class ReflectionExtensions
     {
-        public static Type GetMemberTypeInfo(this MemberInfo memberInfo)
+        public static Type GetPropertyType(this MemberInfo memberInfo)
         {
             if (memberInfo.Is<FieldInfo>())
             {
@@ -21,7 +21,7 @@ namespace Zarf.Extensions
                 return memberInfo.Cast<PropertyInfo>().PropertyType;
             }
 
-            throw new NotImplementedException($"{memberInfo.Name} is not a field or property");
+            return null;
         }
 
         public static bool IsStatic(this MemberInfo memberInfo)

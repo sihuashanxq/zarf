@@ -15,15 +15,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Single" || item.Name == "SingleOrDefault");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public SingleTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = new WhereTranslator().Translate(context, methodCall, queryCompiler) as QueryExpression;
 
-            if (methodCall.Method.Name == "SingleOrDefault")
-            {
-                query.DefaultIfEmpty = true;
-            }
+        }
 
+        public override Expression Translate( MethodCallExpression methodCall)
+        {
+            var query = new WhereTranslator(Context, Compiler).Translate(methodCall) as QueryExpression;
+            query.DefaultIfEmpty = methodCall.Method.Name == "SingleOrDefault";
             query.Limit = 2;
             return query;
         }

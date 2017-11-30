@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -7,73 +8,76 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {
-        public override Expression Translate(IQueryContext context, MemberExpression memExpression, IQueryCompiler queryCompiler)
+        public MemberExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+        }
+
+        public override Expression Translate(MemberExpression mem)
         {
             //new {item.User.Id,} item.User
-            var exp = context.EntityMemberMappingProvider.GetExpression(memExpression.Member);
-            if (exp != null)
+            var objExp = Context.EntityMemberMappingProvider.GetExpression(mem.Member);
+            if (objExp != null)
             {
-                return exp;
+                return objExp;
             }
 
-            var typeInfo = memExpression.Member.GetMemberTypeInfo();
-            if (typeof(IInternalDbQuery).IsAssignableFrom(typeInfo))
+            var typeOfMember = mem.Member.GetPropertyType();
+            if (typeof(IInternalDbQuery).IsAssignableFrom(typeOfMember))
             {
-                return new QueryExpression(typeInfo, context.Alias.GetNewTable());
+                return new QueryExpression(typeOfMember, Context.Alias.GetNewTable());
             }
 
-            var belongInstance = queryCompiler.Compile(memExpression.Expression);
-            var value = TryEvalMemberValue(memExpression.Member, belongInstance);
-            if (value != null)
+            objExp = GetCompiledExpression(mem.Expression);
+            if (EvalMemberValue(mem.Member, objExp, out var value))
             {
                 return value;
             }
 
-            if (belongInstance.Is<QueryExpression>())
+            if (objExp.Is<QueryExpression>())
             {
-                return new ColumnExpression(belongInstance.Cast<QueryExpression>(), memExpression.Member);
+                return new ColumnExpression(objExp.Cast<QueryExpression>(), mem.Member);
             }
 
-            return memExpression;
+            return mem;
         }
 
         /// <summary>
         /// 表达式求值  string.Empty 
         /// </summary>
         /// <param name="memberInfo">类成员 FieldInfo|Property</param>
-        /// <param name="belongInstance">所属实例</param>
+        /// <param name="objExp">所属实例</param>
         /// <returns></returns>
-        private Expression TryEvalMemberValue(MemberInfo memberInfo, Expression belongInstance)
+        private bool EvalMemberValue(MemberInfo memberInfo, Expression objExp, out Expression value)
         {
-            if (belongInstance != null && !belongInstance.Is<ConstantExpression>())
+            object obj = null;
+
+            if (!objExp.Is<ConstantExpression>())
             {
-                return null;
+                value = null;
+                return false;
             }
 
-            object instanceObj = null;
-
-            if (belongInstance.Is<ConstantExpression>())
+            if (objExp.Is<ConstantExpression>())
             {
-                instanceObj = belongInstance.Cast<ConstantExpression>().Value;
+                obj = objExp.Cast<ConstantExpression>().Value;
             }
 
-            if (memberInfo.MemberType == MemberTypes.Field)
+            var field = memberInfo.As<FieldInfo>();
+            if (field != null)
             {
-                return Expression.Constant(memberInfo.Cast<FieldInfo>().GetValue(instanceObj));
+                value = Expression.Constant(field.GetValue(obj));
+                return true;
             }
 
-            if (memberInfo.MemberType == MemberTypes.Property)
+            var property = memberInfo.As<PropertyInfo>();
+            if (property != null && property.CanRead)
             {
-                var property = memberInfo.Cast<PropertyInfo>();
-                if (property.GetMethod == null)
-                {
-                    return null;
-                }
-
-                return Expression.Constant(property.GetMethod.Invoke(instanceObj, null));
+                value = Expression.Constant(property.GetValue(obj));
+                return true;
             }
 
-            return null;
+            value = null;
+            return false;
         }
     }
 }

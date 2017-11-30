@@ -19,37 +19,37 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => methods.Contains(item.Name));
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public AggregateTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            Expression aggregateKey = null;
+
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var column = new ColumnExpression(query, null, methodCall.Method.ReturnType, "1");
+
+            if (query.Projections.Count != 0 || query.Sets.Count != 0)
+            {
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+            }
 
             if (methodCall.Arguments.Count == 2)
             {
-                var keySelectorLambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-                if (rootQuery.Projections.Count != 0 || rootQuery.Sets.Count != 0)
-                {
-                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable());
-                }
-
-                context.QuerySourceProvider.AddSource(keySelectorLambda.Parameters.FirstOrDefault(), rootQuery);
-                aggregateKey = context
-                    .ProjectionScanner
-                    .Scan(queryCompiler.Compile, keySelectorLambda)
-                    .FirstOrDefault()
-                    .Expression;
+                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+                column = GetColumns(GetCompiledExpression(methodCall.Arguments[1])).FirstOrDefault().Expression.As<ColumnExpression>();
+                column.Alias = string.Empty;
             }
-            else
+
+            var aggregate = new AggregateExpression(methodCall.Method, column);
+            query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
+            query.Projections.Add(new ColumnDescriptor()
             {
-                aggregateKey = new ColumnExpression(rootQuery, null, methodCall.Method.ReturnType, "1");
-            }
+                Expression = aggregate,
+                Ordinal = query.Projections.Count
+            });
 
-            var aggregate = new AggregateExpression(methodCall.Method, aggregateKey);
-
-            rootQuery.Projections.Add(new Projection() { Expression = aggregate, Ordinal = rootQuery.Projections.Count });
-            rootQuery.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
-
-            return rootQuery;
+            return query;
         }
     }
 }

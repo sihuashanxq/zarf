@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Zarf.Core;
 
 namespace Zarf
 {
-    /// <summary>
-    /// 反射工具
-    /// </summary>
     public static class ReflectionUtil
     {
         public static MethodInfo SubQueryWhere { get; }
@@ -15,6 +13,10 @@ namespace Zarf
         public static MethodInfo Include { get; }
 
         public static MethodInfo ThenInclude { get; }
+
+        public static MethodInfo Join { get; }
+
+        public static MethodInfo Select { get; }
 
         public static MethodInfo[] AllQueryableMethods { get; }
 
@@ -116,6 +118,8 @@ namespace Zarf
         {
             AllQueryableMethods = typeof(Queryable).GetMethods();
             SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
+            Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
+            Select = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
             Include = typeof(DbQueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
             ThenInclude = typeof(DbQueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }

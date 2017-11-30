@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Threading.Tasks;
+using Zarf.Core;
 using Zarf.Entities;
 
 namespace Zarf
@@ -17,6 +18,17 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
+                var x = db.Users
+                    .Join(db.Query<Address>(), (user, address) => user.Id == address.Id)
+                    .Join(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
+                    .Select((user, address, order) =>
+                   new
+                   {
+                       user,
+                       address
+                   }).ToList();
+
+                //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
                 BasicTest(db);
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
@@ -80,6 +92,11 @@ namespace Zarf
 
                 //db.Delete(user, item => user.Age);
 
+                IJoinQuery<User, Address> d = null;
+                //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
+                // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
+                // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
+
                 Console.ReadKey();
             }
         }
@@ -123,21 +140,6 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("Inner Join..........................");
-            //db.Query<User>().Include(item => item.Address, (x, y) => x.Id == y.UserId).Join(
-            //    db.Query<Address>(),
-            //    item => item.AddressId,
-            //    item => item.Id,
-            //    (user, address) => new { user.Name, address.Street, user.Address })
-            //    .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
-            Console.WriteLine();
-            Console.WriteLine("LEFT Join..........................");
-            db.Query<User>().Join(
-                db.Query<Address>().DefaultIfEmpty(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
 
             Console.WriteLine();
             Console.WriteLine("Order By DESC..........................");
@@ -146,23 +148,10 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("RIGHT Join..........................");
-            db.Query<User>().DefaultIfEmpty().Join(
-                db.Query<Address>(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
+         
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-            db.Query<User>().DefaultIfEmpty()
-                .Join(
-                db.Query<Address>().DefaultIfEmpty(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
+           
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
             db.Query<User>().Concat(db.Query<User>()).ToList().ForEach(item => Console.WriteLine(item));
@@ -193,8 +182,6 @@ namespace Zarf
                 .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
                 .Select(item => item)
                 .ToList();
-
-
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Zarf.Core;
 
 namespace Zarf
 {
@@ -22,7 +23,7 @@ namespace Zarf
         /// <param name="propertyRelation">关联关系</param>
         public IIncludeDbQuery<TEntity, TKey> ThenInclude<TKey>(
             Expression<Func<TProperty, IEnumerable<TKey>>>
-            propertyPath, Expression<Func<TProperty, TKey, bool>> propertyRelation = null)
+            propertyPath, Expression<Func<TProperty, TKey, bool>> propertyRelation)
         {
             return new IncludeDbQuery<TEntity, TKey>(
                 InternalDbQuery.ThenInclude(
@@ -30,6 +31,11 @@ namespace Zarf
                     propertyRelation ?? CreateDeafultKeyRealtion<TProperty, TKey>()
                 )
             );
+        }
+
+        public IIncludeDbQuery<TEntity, TKey> ThenInclude<TKey>(Expression<Func<TProperty, IEnumerable<TKey>>> propertyPath)
+        {
+            return ThenInclude(propertyPath, null);
         }
     }
 }

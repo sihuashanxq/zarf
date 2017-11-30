@@ -3,8 +3,18 @@ using System.Reflection;
 
 namespace Zarf.Mapping
 {
-    public class Projection
+    public class ColumnDescriptor
     {
+        public ColumnDescriptor()
+        {
+
+        }
+
+        public ColumnDescriptor(Expression exp)
+        {
+            Expression = exp;
+        }
+
         public Expression Expression { get; set; }
 
         public int Ordinal { get; set; } = -1;
@@ -15,7 +25,7 @@ namespace Zarf.Mapping
         {
             unchecked
             {
-                var hashCode =0;
+                var hashCode = 0;
                 hashCode = (hashCode * 397) ^ (Expression?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 return hashCode;
@@ -34,11 +44,11 @@ namespace Zarf.Mapping
                 return true;
             }
 
-            return (other is Projection) && GetHashCode() == other.GetHashCode();
+            return (other is ColumnDescriptor) && GetHashCode() == other.GetHashCode();
         }
 
 
-        public static bool operator ==(Projection left, Projection right)
+        public static bool operator ==(ColumnDescriptor left, ColumnDescriptor right)
         {
             if (ReferenceEquals(left, null))
             {
@@ -48,7 +58,7 @@ namespace Zarf.Mapping
             return left.Equals(right);
         }
 
-        public static bool operator !=(Projection left, Projection right)
+        public static bool operator !=(ColumnDescriptor left, ColumnDescriptor right)
         {
             return !(left == right);
         }

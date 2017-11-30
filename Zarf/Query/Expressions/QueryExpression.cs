@@ -11,7 +11,7 @@ namespace Zarf.Query.Expressions
         /// <summary>
         /// 查询投影
         /// </summary>
-        public List<Projection> Projections { get; }
+        public List<ColumnDescriptor> Projections { get; }
 
         /// <summary>
         /// 表连接
@@ -73,7 +73,7 @@ namespace Zarf.Query.Expressions
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Projections = new List<Projection>();
+            Projections = new List<ColumnDescriptor>();
         }
 
         public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
@@ -87,6 +87,7 @@ namespace Zarf.Query.Expressions
 
             DefaultIfEmpty = false;
             Parent = query;
+            query.Result = query.SubQuery.Result;
             return subQueryHandle != null ? subQueryHandle(query) : query;
         }
 
@@ -95,7 +96,7 @@ namespace Zarf.Query.Expressions
             Joins.Add(table);
         }
 
-        public void AddProjections(IEnumerable<Projection> projections)
+        public void AddProjections(IEnumerable<ColumnDescriptor> projections)
         {
             Projections.Clear();
             Projections.AddRange(projections);

@@ -13,21 +13,58 @@ namespace Zarf.SqlServer.Builders
 {
     internal partial class SqlServerTextBuilder : SqlTextBuilder
     {
-        protected StringBuilder _builder { get; set; } = new StringBuilder();
+        public class DisposeAction : IDisposable
+        {
+            private Action _action;
+
+            public DisposeAction(Action action)
+            {
+                _action = action;
+            }
+
+            public void Dispose()
+            {
+                _action?.Invoke();
+            }
+        }
+
+        protected static readonly Dictionary<string, string> Aggregates = new Dictionary<string, string>()
+        {
+            {"Min","Min" },
+            {"Max","Max" },
+            {"Sum","Sum" },
+            {"Average","Avg" },
+            {"Count","Count" },
+            {"LongCount","Count_Big" }
+        };
+
+        protected bool StopGenColumnAlias { get; set; }
+
+        protected StringBuilder Builder { get; set; } = new StringBuilder();
+
+        protected IDisposable BeginStopGenColumnAlias()
+        {
+            var stopGenColumnAlias = StopGenColumnAlias;
+            StopGenColumnAlias = true;
+            return new DisposeAction(() =>
+            {
+                StopGenColumnAlias = stopGenColumnAlias;
+            });
+        }
 
         public override string Build(Expression expression)
         {
             lock (this)
             {
-                _builder.Clear();
+                Builder.Clear();
                 BuildExpression(expression);
-                return _builder.ToString();
+                return Builder.ToString();
             }
         }
 
         protected override Expression VisitAggregate(AggregateExpression aggregate)
         {
-            if (Utils.AggregateFunctionMap.TryGetValue(aggregate.Method.Name, out string funcName))
+            if (Aggregates.TryGetValue(aggregate.Method.Name, out string funcName))
             {
                 Append(funcName, '(');
                 if (aggregate.KeySelector == null || aggregate.Method.Name.Contains("Count"))
@@ -51,8 +88,8 @@ namespace Zarf.SqlServer.Builders
         {
             if (column.FromTable != null && !column.FromTable.Alias.IsNullOrEmpty())
             {
-                _builder.Append(column.FromTable.Alias.Escape());
-                _builder.Append('.');
+                Builder.Append(column.FromTable.Alias.Escape());
+                Builder.Append('.');
             }
 
             if (column.Column == null)
@@ -61,13 +98,13 @@ namespace Zarf.SqlServer.Builders
             }
             else
             {
-                _builder.Append(column.Column.Name.Escape());
+                Builder.Append(column.Column.Name.Escape());
             }
 
-            if (!column.Alias.IsNullOrEmpty())
+            if (!StopGenColumnAlias && !column.Alias.IsNullOrEmpty())
             {
                 Append(" AS ");
-                _builder.Append(column.Alias.Escape());
+                Builder.Append(column.Alias.Escape());
             }
 
             return column;
@@ -82,8 +119,11 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitGroup(GroupExpression group)
         {
-            BuildColumns(group.Columns);
-            return group;
+            using (BeginStopGenColumnAlias())
+            {
+                BuildColumns(group.Columns);
+                return group;
+            }
         }
 
         protected override Expression VisitIntersect(IntersectExpression intersec)
@@ -136,19 +176,25 @@ namespace Zarf.SqlServer.Builders
                 Append(") AS " + query.Alias.Escape());
             }
 
-            Append(" ON ");
-            BuildExpression(join.Predicate);
-            return join;
+            using (BeginStopGenColumnAlias())
+            {
+                Append(" ON ");
+                BuildExpression(join.Predicate);
+                return join;
+            }
         }
 
         protected override Expression VisitOrder(OrderExpression order)
         {
-            var direction = order.OrderType == OrderType.Desc
-                ? " DESC "
-                : " ASC ";
+            using (BeginStopGenColumnAlias())
+            {
+                var direction = order.OrderType == OrderType.Desc
+                    ? " DESC "
+                    : " ASC ";
 
-            BuildColumns(order.Columns);
-            _builder.Append(direction);
+                BuildColumns(order.Columns);
+                Builder.Append(direction);
+            }
             return order;
         }
 
@@ -178,10 +224,12 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitWhere(WhereExperssion where)
         {
-            Append(" WHERE ");
-            BuildExpression(where.Predicate);
-
-            return where;
+            using (BeginStopGenColumnAlias())
+            {
+                Append(" WHERE ");
+                BuildExpression(where.Predicate);
+                return where;
+            }
         }
 
         protected override Expression VisitAll(AllExpression all)
@@ -215,7 +263,7 @@ namespace Zarf.SqlServer.Builders
                     Append(',');
                 }
 
-                _builder.Length--;
+                Builder.Length--;
                 Append(")  AS __ROWINDEX__");
             }
 
@@ -226,11 +274,11 @@ namespace Zarf.SqlServer.Builders
         {
             if (constant.Type == typeof(bool))
             {
-                _builder.Append(constant.Value.Cast<bool>() ? 1 : 0);
+                Builder.Append(constant.Value.Cast<bool>() ? 1 : 0);
             }
             else if (NumbericTypes.Contains(constant.Type))
             {
-                _builder.Append(constant.Value);
+                Builder.Append(constant.Value);
             }
             else if (constant.Value.Is<DateTime>())
             {
@@ -300,7 +348,7 @@ namespace Zarf.SqlServer.Builders
                 }
 
                 BuildExpression(left);
-                _builder.Append(op);
+                Builder.Append(op);
                 BuildExpression(right);
 
                 return binary;
@@ -317,7 +365,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            _builder.Length--;
+            Builder.Length--;
         }
 
         protected virtual void BuildLimit(QueryExpression query)
@@ -349,7 +397,7 @@ namespace Zarf.SqlServer.Builders
                     BuildExpression(item.Expression);
                     Append(',');
                 });
-                _builder.Length--;
+                Builder.Length--;
             }
         }
 
@@ -422,7 +470,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            _builder.Length--;
+            Builder.Length--;
         }
 
         protected virtual void BuildGroups(QueryExpression query)
@@ -445,7 +493,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            _builder.Length--;
+            Builder.Length--;
         }
 
         protected virtual void BuildWhere(QueryExpression query)
@@ -460,7 +508,7 @@ namespace Zarf.SqlServer.Builders
         {
             foreach (var arg in args)
             {
-                _builder.Append(arg);
+                Builder.Append(arg);
             }
 
             return this;
@@ -518,7 +566,7 @@ namespace Zarf.SqlServer.Builders
             {
                 Append(col.Escape()).Append(',');
             }
-            _builder.Length--;
+            Builder.Length--;
             Append(") VALUES ");
 
             var dbParams = insert.DbParams.ToList();
@@ -567,7 +615,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            _builder.Length--;
+            Builder.Length--;
 
             Append(" WHERE ").
             Append(update.Identity).
@@ -600,7 +648,7 @@ namespace Zarf.SqlServer.Builders
                     Append(primaryKeyValue.Name + ',');
                 }
 
-                _builder.Length--;
+                Builder.Length--;
                 Append(')');
             }
 

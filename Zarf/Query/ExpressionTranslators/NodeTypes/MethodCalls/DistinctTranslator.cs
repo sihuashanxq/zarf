@@ -14,17 +14,16 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static DistinctTranslator()
         {
-            SupprotedMethods= ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Distinct");
+            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Distinct");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public DistinctTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            if (methodCall.Arguments.Count != 1)
-            {
-                throw new NotImplementedException("Distinct method not supported arguments!");
-            }
+        }
 
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             query.IsDistinct = true;
             return query;
         }

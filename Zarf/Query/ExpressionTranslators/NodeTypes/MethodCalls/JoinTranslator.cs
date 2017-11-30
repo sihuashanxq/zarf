@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Core;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
@@ -15,61 +16,47 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static JoinTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Join");
+            SupprotedMethods = new[] { ReflectionUtil.Join };
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public JoinTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var joinQuery = queryCompiler.Compile(methodCall.Arguments[1]).As<QueryExpression>();
 
-            if (rootQuery.Projections.Count != 0)
-            {
-                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
-            }
-
-            //有子查询选择了具体列 ，如 JOIN (SELECT Name,Age FROM User) AS B
-            if (joinQuery.Projections.Count != 0 || joinQuery.Where != null || joinQuery.Sets.Count != 0)
-            {
-                joinQuery = joinQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
-            }
-
-            var outer = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
-            var inner = methodCall.Arguments[3].UnWrap().As<LambdaExpression>();
-            var selector = methodCall.Arguments[4].UnWrap().As<LambdaExpression>();
-
-            context.QuerySourceProvider.AddSource(outer.Parameters.First(), rootQuery);
-            context.QuerySourceProvider.AddSource(inner.Parameters.First(), joinQuery);
-            context.QuerySourceProvider.AddSource(selector.Parameters.First(), rootQuery);
-            context.QuerySourceProvider.AddSource(selector.Parameters.Last(), joinQuery);
-
-            var left = queryCompiler.Compile(outer).UnWrap().As<LambdaExpression>().Body;
-            var right = queryCompiler.Compile(inner).UnWrap().As<LambdaExpression>().Body;
-
-            //只保留Selector中的Columns
-            var entityNew = queryCompiler.Compile(selector).UnWrap();
-
-            rootQuery.Projections.AddRange(context.ProjectionScanner.Scan(entityNew));
-            rootQuery.AddJoin(new JoinExpression(joinQuery, Expression.Equal(left, right), GetJoinType(rootQuery, joinQuery)));
-            rootQuery.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
-
-            return rootQuery;
         }
 
-        private JoinType GetJoinType(QueryExpression left, QueryExpression right)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var joinType = JoinType.Inner;
-
-            if (left.DefaultIfEmpty)
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var queries = new List<QueryExpression>() { query };
+            var joins = methodCall.Arguments[1].As<ConstantExpression>()?.Value as List<JoinQuery>;
+            if (joins == null)
             {
-                joinType = right.DefaultIfEmpty ? JoinType.Full : JoinType.Right;
-            }
-            else
-            {
-                joinType = right.DefaultIfEmpty ? JoinType.Left : JoinType.Inner;
+                throw new Exception("error join query!");
             }
 
-            return joinType;
+            foreach (var item in joins)
+            {
+                queries.Add(GetJoinQuery(item.InternalDbQuery));
+                for (var i = 0; i < item.Predicate.Parameters.Count; i++)
+                {
+                    RegisterQuerySource(item.Predicate.Parameters[i], queries[i]);
+                }
+
+                query.AddJoin(new JoinExpression(queries.Last(), GetCompiledExpression(item.Predicate), item.JoinType));
+            }
+
+            return query;
+        }
+
+        private QueryExpression GetJoinQuery(IInternalDbQuery dbQuery)
+        {
+            var query = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
+            if (query == null)
+            {
+                throw new Exception("error join query!");
+            }
+
+            return GetCompiledExpression<QueryExpression>(query);
         }
     }
 }

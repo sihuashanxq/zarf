@@ -1,21 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {
     public class EntityProjectionMappingProvider : IEntityProjectionMappingProvider
     {
-        private Dictionary<Expression, Projection> _cahces = new Dictionary<Expression, Projection>();
+        private Dictionary<Expression, ColumnDescriptor> _cahces = new Dictionary<Expression, ColumnDescriptor>();
 
-        public void Map(Projection item)
+        public void Map(ColumnDescriptor item)
         {
             _cahces[item.Expression] = item;
         }
 
         public int GetOrdinal(Expression node)
         {
-            if (_cahces.TryGetValue(node, out Projection v))
+            if (_cahces.TryGetValue(node, out ColumnDescriptor v))
             {
                 return v.Ordinal;
             }

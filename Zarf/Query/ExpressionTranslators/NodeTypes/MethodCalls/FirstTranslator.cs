@@ -17,31 +17,30 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "First" || item.Name == "FirstOrDefault");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public FirstTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
 
             if (methodCall.Arguments.Count == 2)
             {
-                var condition = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-
-                if (rootQuery.Sets.Count != 0)
+                if (query.Sets.Count != 0)
                 {
-                    rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
-                    rootQuery.Result = rootQuery.SubQuery.Result;
+                    query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                    query.Result = query.SubQuery.Result;
                 }
 
-                context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), rootQuery);
-                rootQuery.AddWhere(queryCompiler.Compile(condition).UnWrap());
+                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+                query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]).UnWrap());
             }
 
-            if (methodCall.Method.Name == "FirstOrDefault")
-            {
-                rootQuery.DefaultIfEmpty = true;
-            }
-
-            rootQuery.Limit = 1;
-            return rootQuery;
+            query.DefaultIfEmpty = methodCall.Method.Name == "FirstOrDefault";
+            query.Limit = 1;
+            return query;
         }
     }
 }

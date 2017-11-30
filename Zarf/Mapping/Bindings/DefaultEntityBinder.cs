@@ -30,13 +30,19 @@ namespace Zarf.Mapping.Bindings
     /// </summary>
     public class DefaultEntityBinder : ExpressionVisitor, IBinder
     {
-        public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader));
+        public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader), "reader");
 
         public IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 
         public IPropertyNavigationContext NavigationContext { get; }
 
         public IQueryContext Context { get; }
+
+        protected QueryExpression RootQuery { get; set; }
+
+        protected static long VariablesCounter = 0;
+
+        const string VarPrefix = "_var_";
 
         public DefaultEntityBinder(IQueryContext context)
         {
@@ -56,27 +62,27 @@ namespace Zarf.Mapping.Bindings
             var query = context.Query;
             if (query.Is<AggregateExpression>())
             {
-                query = query
-                    .As<AggregateExpression>()
-                    ?.KeySelector
-                    ?.As<ColumnExpression>()
-                    ?.FromTable;
-                InitializeQueryColumns(query.As<QueryExpression>());
+                RootQuery = query.As<AggregateExpression>()
+                    ?.KeySelector?.As<ColumnExpression>()
+                    ?.FromTable.As<QueryExpression>();
             }
             else if (query.Is<AllExpression>())
             {
-                InitializeQueryColumns(query.As<AllExpression>().Expression.As<QueryExpression>());
+                RootQuery = query.As<AllExpression>().Expression.As<QueryExpression>();
             }
             else if (query.Is<AnyExpression>())
             {
-                InitializeQueryColumns(query.As<AnyExpression>().Expression.As<QueryExpression>());
+                RootQuery = query.As<AnyExpression>().Expression.As<QueryExpression>();
             }
             else
             {
-                InitializeQueryColumns(query.As<QueryExpression>());
+                RootQuery = query.As<QueryExpression>();
             }
 
-            return (Func<IDataReader, TEntity>)Expression.Lambda(Visit(bindQuery), DataReader).Compile();
+            InitializeQueryColumns(RootQuery);
+
+            var body = Visit(bindQuery);
+            return (Func<IDataReader, TEntity>)Expression.Lambda(body, DataReader).Compile();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
@@ -144,15 +150,13 @@ namespace Zarf.Mapping.Bindings
             var arguments = new List<Expression>();
             for (var i = 0; i < newExp.Arguments.Count; i++)
             {
-                var argument = newExp.Arguments[i];
-                var member = newExp.Members[i];
-
-                if (Context.PropertyNavigationContext.IsPropertyNavigation(member))
+                if (Context.PropertyNavigationContext.IsPropertyNavigation(newExp.Members[i]))
                 {
                     throw new Exception("Class Refrence A Navigation Property Must Have A Default Constructor!");
                 }
-
-                arguments.Add(Expression.Convert(Visit(newExp.Arguments[i]), argument.Type));
+                var argument = Visit(newExp.Arguments[i]);
+                var member = newExp.Members[i];
+                arguments.Add(argument);
             }
 
             return CreateEntityNewExpressionBlock(newExp.Constructor, newExp.Type, arguments);
@@ -202,7 +206,7 @@ namespace Zarf.Mapping.Bindings
             {
                 foreach (var item in qExpression.GenerateColumns())
                 {
-                    var projection = new Projection()
+                    var projection = new ColumnDescriptor()
                     {
                         Member = item.Member,
                         Expression = item,
@@ -221,7 +225,7 @@ namespace Zarf.Mapping.Bindings
                 if (item.Expression.Is<AggregateExpression>())
                 {
                     var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
-                    col = new Projection()
+                    col = new ColumnDescriptor()
                     {
                         Expression = column ?? item.Expression,
                         Member = column?.Member,
@@ -244,16 +248,16 @@ namespace Zarf.Mapping.Bindings
             }
 
             var eType = qExpression.Type.GetCollectionElementType();
-            var typeDescriptor = EntityTypeDescriptorFactory.Factory.Create(eType);
+            var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
             var memberExpressions = new List<MemberExpressionPair>();
             var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
 
-            foreach (var item in typeDescriptor.GetExpandMembers())
+            foreach (var item in typeDescriptor.MemberDescriptors)
             {
-                var mappedExpression = FindMemberRelatedExpression(qExpression, item);
+                var mappedExpression = FindMemberRelatedExpression(RootQuery, item.Member);
                 if (mappedExpression != null)
                 {
-                    memberExpressions.Add(new MemberExpressionPair(item, mappedExpression));
+                    memberExpressions.Add(new MemberExpressionPair(item.Member, mappedExpression));
                 }
             }
 
@@ -271,7 +275,7 @@ namespace Zarf.Mapping.Bindings
         public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression eObject)
         {
             var memNavigation = NavigationContext.GetNavigation(memberInfo);
-            var memEleType = memberInfo.GetMemberTypeInfo().GetCollectionElementType();
+            var memEleType = memberInfo.GetPropertyType().GetCollectionElementType();
             var memValueType = typeof(EntityPropertyEnumerable<>).MakeGenericType(memEleType);
 
             var makeNewMemberValue = Expression.Convert(
@@ -324,20 +328,47 @@ namespace Zarf.Mapping.Bindings
         /// <param name="constructor"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static BlockExpression CreateEntityNewExpressionBlock(ConstructorInfo constructor, Type type, IEnumerable<Expression> arguments = null)
+        public static BlockExpression CreateEntityNewExpressionBlock(
+            ConstructorInfo constructor,
+            Type type,
+            IEnumerable<Expression> arguemnts = null)
         {
             if (constructor == null)
             {
                 throw new NotImplementedException($"Type:{type.FullName} need a conscrutor which is none of parameters!");
             }
 
-            var begin = Expression.Label(type);
-            var var = Expression.Variable(type);
-            var varValue = Expression.Assign(var, Expression.New(constructor, arguments));
-            var retVar = Expression.Return(begin, var);
+            var ctorArgs = new List<Expression>();
+            var propertyValues = new List<Expression>();
+            var propertyDeclares = new List<ParameterExpression>();
 
-            var end = Expression.Label(begin, var);
-            return Expression.Block(new[] { var }, varValue, retVar, end);
+            foreach (var argument in arguemnts ?? new List<Expression>())
+            {
+                if (argument.NodeType != ExpressionType.Block)
+                {
+                    ctorArgs.Add(argument);
+                    continue;
+                }
+
+                var block = argument.As<BlockExpression>();
+                ctorArgs.Add(block.Variables[0]);
+                propertyDeclares.Add(block.Variables[0]);
+                propertyValues.AddRange(block.Expressions.Take(block.Expressions.Count - 2));
+            }
+
+            var beginOfBlock = Expression.Label(type, VarPrefix + VariablesCounter++);
+            var varOfEntity = Expression.Variable(type, VarPrefix + VariablesCounter++);
+            var valueOfEntity = Expression.New(constructor, arguemnts == null ? null : ctorArgs);
+            var setVarOfEntityValue = Expression.Assign(varOfEntity, valueOfEntity);
+            var returnVarOfEntity = Expression.Return(beginOfBlock, varOfEntity);
+            var endOfBlock = Expression.Label(beginOfBlock, varOfEntity);
+
+            propertyDeclares.Add(varOfEntity);
+            propertyValues.Add(setVarOfEntityValue);
+            propertyValues.Add(returnVarOfEntity);
+            propertyValues.Add(endOfBlock);
+
+            return Expression.Block(propertyDeclares, propertyValues.ToArray());
         }
 
         public static Expression FindMemberRelatedExpression(QueryExpression query, MemberInfo member)

@@ -6,6 +6,8 @@ namespace Zarf
 {
     public static class Utils
     {
+        const string AnonymouseTypePrefix = "<>f__AnonymousType";
+
         public static void CheckNull(object v, string name)
         {
             if (v == null)
@@ -14,9 +16,19 @@ namespace Zarf
             }
         }
 
+        /// <summary>
+        /// 是否匿名类型
+        /// </summary>
+        public static bool IsAnonymouseType(Type type)
+        {
+            return type.Name.Contains(" ");
+        }
+
         public static Expression ExpressionTrue = Expression.Equal(Expression.Constant(true), Expression.Constant(true));
 
         public static Expression ExpressionFalse = Expression.Equal(Expression.Constant(true), Expression.Constant(false));
+
+        public static Expression ExpressionOne = Expression.Constant(1);
 
         public static Dictionary<ExpressionType, string> OperatorMap = new Dictionary<ExpressionType, string>()
         {
@@ -35,16 +47,6 @@ namespace Zarf
             { ExpressionType.Modulo, " % " },
             { ExpressionType.And, " & " },
             { ExpressionType.Or, " | " }
-        };
-
-        public static Dictionary<string, string> AggregateFunctionMap = new Dictionary<string, string>()
-        {
-            {"Min","Min" },
-            {"Max","Max" },
-            {"Sum","Sum" },
-            {"Average","Avg" },
-            {"Count","Count" },
-            {"LongCount","Count_Big" }
         };
     }
 }

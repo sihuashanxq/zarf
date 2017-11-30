@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using Zarf.Core;
+using Zarf.Entities;
 
 namespace Zarf
 {
@@ -39,7 +41,7 @@ namespace Zarf
 
         IDbQuery<TEntity> Take(int count);
 
-        IDbQuery<TEntity> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
+        IDbQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
 
         bool All(Expression<Func<TEntity, bool>> predicate);
 
@@ -55,7 +57,9 @@ namespace Zarf
 
         IDbQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector);
+        IDbQuery<TResult> Join<TInner, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector);
+
+        IJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner);
 
         IDbQuery<TEntity> DefaultIfEmpty();
 
@@ -67,7 +71,9 @@ namespace Zarf
 
         IDbQuery<TEntity> Union(IDbQuery<TEntity> source2);
 
-        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation = null);
+        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
+
+        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath);
 
         int Sum(Expression<Func<TEntity, int>> selector);
 
@@ -130,14 +136,5 @@ namespace Zarf
         TEntity[] ToArray();
 
         IEnumerator<TEntity> GetEnumerator();
-    }
-
-    public interface IInternalDbQuery
-    {
-
-    }
-
-    public interface IInternalDbQuery<TEntity> : IInternalDbQuery, IQueryable<TEntity>, IOrderedQueryable<TEntity>
-    {
     }
 }

@@ -1,26 +1,31 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using Zarf.Core;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     class ConstantExpressionTranslator : Translator<ConstantExpression>
     {
-        public override Expression Translate(IQueryContext context, ConstantExpression constant, IQueryCompiler queryCompiler)
+        public ConstantExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+        }
+
+        public override Expression Translate(ConstantExpression constant)
         {
             if (!typeof(IInternalDbQuery).IsAssignableFrom(constant.Type))
             {
                 return constant;
             }
 
-            var entityType = constant.Type.GenericTypeArguments.FirstOrDefault();
-            if (entityType == null)
+            var typeOfEntity = constant.Type.GenericTypeArguments?[0];
+            if (typeOfEntity == null)
             {
                 throw new NotImplementedException("using IDataQuery<T>");
             }
 
-            return new QueryExpression(entityType, context.Alias.GetNewTable());
+            return new QueryExpression(typeOfEntity, Context.Alias.GetNewTable());
         }
     }
 }

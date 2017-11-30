@@ -18,23 +18,32 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "All");
         }
 
-        public override Expression Translate(IQueryContext queryContext, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public AllTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
+            : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            queryContext.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), query);
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(queryContext.Alias.GetNewTable(), queryContext.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
+         
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
 
-            var keySelector = queryCompiler.Compile(methodCall.Arguments[1].UnWrap()).UnWrap();
+            var key = GetCompiledExpression(methodCall.Arguments[1].UnWrap()).UnWrap();
+            var col = new ColumnDescriptor(Utils.ExpressionOne);
+
+            if (key.NodeType == ExpressionType.Lambda)
+                query.AddWhere(Expression.Not(key.As<LambdaExpression>().Body));
+            else
+                query.AddWhere(Expression.Not(key));
 
             query.Projections.Clear();
-            query.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
-            query.AddWhere(Expression.Not(keySelector.As<LambdaExpression>()?.Body ?? keySelector));
-
+            query.Projections.Add(col);
             return new AllExpression(query);
         }
     }

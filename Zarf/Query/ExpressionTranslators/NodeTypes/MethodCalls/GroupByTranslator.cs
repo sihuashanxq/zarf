@@ -16,26 +16,27 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "GroupBy");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public GroupByTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var keySelector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(keySelector.Parameters.First(), query);
-            var selector = queryCompiler.Compile(keySelector);
-
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
             query.Groups.Add(
                 new GroupExpression(
-                    context
-                    .ProjectionScanner
-                    .Scan(selector)
-                    .Select(item => item.Expression)
-                    .OfType<ColumnExpression>()
+                    GetColumns(
+                        GetCompiledExpression(
+                            methodCall.Arguments[1]
+                        )
+                    ).Select(item => item.Expression).OfType<ColumnExpression>()
                 )
             );
 

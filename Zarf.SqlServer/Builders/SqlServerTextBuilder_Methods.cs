@@ -227,7 +227,7 @@ namespace Zarf.SqlServer.Builders
                         BuildExpression(argument);
                         Append(',');
                     }
-                    _builder.Length--;
+                    Builder.Length--;
                     Append(')');
                     break;
                 default:
@@ -348,7 +348,7 @@ namespace Zarf.SqlServer.Builders
                     break;
                 case "Tanh":
                     BuildMathSinh(methodCall);
-                    _builder.Append('/');
+                    Builder.Append('/');
                     BuildMathCosh(methodCall);
                     break;
                 case "Truncate":

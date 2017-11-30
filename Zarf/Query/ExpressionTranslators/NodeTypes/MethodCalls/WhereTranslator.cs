@@ -16,19 +16,21 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Where");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public WhereTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var condition = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
-                query.Result = query.SubQuery.Result;
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(condition.Parameters.FirstOrDefault(), query);
-            query.AddWhere(queryCompiler.Compile(condition).UnWrap());
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+            query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]).UnWrap());
 
             if (methodCall.Method.Name == "SingleOrDefault")
             {

@@ -12,39 +12,39 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MethodCallExpressionTranslator : Translator<MethodCallExpression>
     {
-        private static readonly Dictionary<MethodInfo, ITranslaor> _methodCallTranslators = new Dictionary<MethodInfo, ITranslaor>();
+        private readonly Dictionary<MethodInfo, ITranslaor> _methodCallTranslators = new Dictionary<MethodInfo, ITranslaor>();
 
-        static MethodCallExpressionTranslator()
+        public MethodCallExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            Register(AggregateTranslator.SupprotedMethods, new AggregateTranslator());
-            Register(SelectTranslator.SupprotedMethods, new SelectTranslator());
-            Register(DefaultIfEmptyTranslator.SupprotedMethods, new DefaultIfEmptyTranslator());
-            Register(DistinctTranslator.SupprotedMethods, new DistinctTranslator());
-            Register(ExceptTranslator.SupprotedMethods, new ExceptTranslator());
-            Register(FirstTranslator.SupprotedMethods, new FirstTranslator());
-            Register(GroupByTranslator.SupprotedMethods, new GroupByTranslator());
-            Register(JoinTranslator.SupprotedMethods, new JoinTranslator());
-            Register(OrderByTranslator.SupprotedMethods, new OrderByTranslator());
-            Register(SingleTranslator.SupprotedMethods, new SingleTranslator());
-            Register(SkipTranslator.SupprotedMethods, new SkipTranslator());
-            Register(TakeTranslator.SupprotedMethods, new TakeTranslator());
-            Register(UnionTranslator.SupprotedMethods, new UnionTranslator());
-            Register(WhereTranslator.SupprotedMethods, new WhereTranslator());
-            Register(AllTranslator.SupprotedMethods, new AllTranslator());
-            Register(AnyTranslator.SupprotedMethods, new AnyTranslator());
-            Register(IncludeTranslator.SupprotedMethods, new IncludeTranslator());
-            Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator());
+            Register(AggregateTranslator.SupprotedMethods, new AggregateTranslator(queryContext,queryCompiper));
+            Register(SelectTranslator.SupprotedMethods, new SelectTranslator(queryContext, queryCompiper));
+            Register(DefaultIfEmptyTranslator.SupprotedMethods, new DefaultIfEmptyTranslator(queryContext, queryCompiper));
+            Register(DistinctTranslator.SupprotedMethods, new DistinctTranslator(queryContext, queryCompiper));
+            Register(ExceptTranslator.SupprotedMethods, new ExceptTranslator(queryContext, queryCompiper));
+            Register(FirstTranslator.SupprotedMethods, new FirstTranslator(queryContext, queryCompiper));
+            Register(GroupByTranslator.SupprotedMethods, new GroupByTranslator(queryContext, queryCompiper));
+            Register(JoinTranslator.SupprotedMethods, new JoinTranslator(queryContext, queryCompiper));
+            Register(OrderByTranslator.SupprotedMethods, new OrderByTranslator(queryContext, queryCompiper));
+            Register(SingleTranslator.SupprotedMethods, new SingleTranslator(queryContext, queryCompiper));
+            Register(SkipTranslator.SupprotedMethods, new SkipTranslator(queryContext, queryCompiper));
+            Register(TakeTranslator.SupprotedMethods, new TakeTranslator(queryContext, queryCompiper));
+            Register(UnionTranslator.SupprotedMethods, new UnionTranslator(queryContext, queryCompiper));
+            Register(WhereTranslator.SupprotedMethods, new WhereTranslator(queryContext, queryCompiper));
+            Register(AllTranslator.SupprotedMethods, new AllTranslator(queryContext, queryCompiper));
+            Register(AnyTranslator.SupprotedMethods, new AnyTranslator(queryContext, queryCompiper));
+            Register(IncludeTranslator.SupprotedMethods, new IncludeTranslator(queryContext, queryCompiper));
+            Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator(queryContext, queryCompiper));
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
             var translator = GetTranslator(methodCall);
             if (translator != null)
             {
-                return translator.Translate(context, methodCall, queryCompiler);
+                return translator.Translate( methodCall);
             }
 
-            return TranslateMethodCall(context, methodCall, queryCompiler);
+            return TranslateMethodCall(methodCall);
         }
 
         private ITranslaor GetTranslator(MethodCallExpression methodCall)
@@ -64,7 +64,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             return null;
         }
 
-        private static void Register(IEnumerable<MethodInfo> methodInfos, ITranslaor translator)
+        private void Register(IEnumerable<MethodInfo> methodInfos, ITranslaor translator)
         {
             foreach (var methodInfo in methodInfos)
             {
@@ -72,15 +72,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        private Expression TranslateMethodCall(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        private Expression TranslateMethodCall( MethodCallExpression methodCall)
         {
             var arguments = new List<Expression>();
-            var @object = queryCompiler.Compile(methodCall.Object);
+            var @object = Compiler.Compile(methodCall.Object);
             var methodInfo = methodCall.Method;
 
             foreach (var item in methodCall.Arguments)
             {
-                arguments.Add(queryCompiler.Compile(item));
+                arguments.Add(Compiler.Compile(item));
             }
 
             //自定义sql函数
@@ -108,7 +108,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
                 if (canEval)
                 {
-                    return queryCompiler.Compile(Expression.Constant(methodInfo.Invoke(instance, parameters)));
+                    return Compiler.Compile(Expression.Constant(methodInfo.Invoke(instance, parameters)));
                 }
             }
 

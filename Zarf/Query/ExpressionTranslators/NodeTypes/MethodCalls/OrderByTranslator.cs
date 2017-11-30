@@ -24,6 +24,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 );
         }
 
+        public OrderByTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
+        {
+
+        }
+
         private OrderType GetOrderType(MethodCallExpression methodCall)
         {
             return methodCall.Method.Name == "OrderBy" || methodCall.Method.Name == "ThenBy"
@@ -31,29 +36,27 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 : OrderType.Desc;
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public override Expression Translate(MethodCallExpression methodCall)
         {
-            var rootQuery = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var lambda = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
-
-            if (rootQuery.Sets.Count != 0)
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            if (query.Sets.Count != 0)
             {
-                rootQuery = rootQuery.PushDownSubQuery(context.Alias.GetNewTable(), context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            context.QuerySourceProvider.AddSource(lambda.Parameters.First(), rootQuery);
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
 
-            rootQuery.Orders.Add(new OrderExpression(
-                context
-                .ProjectionScanner
-                .Scan(queryCompiler.Compile(lambda))
-                .Select(item => item.Expression)
-                .OfType<ColumnExpression>(),
-                GetOrderType(methodCall)
+            query.Orders.Add(new OrderExpression(
+                  GetColumns(
+                        GetCompiledExpression(
+                            methodCall.Arguments[1]
+                        )
+                    ).Select(item => item.Expression).OfType<ColumnExpression>(),
+                  GetOrderType(methodCall)
                 )
             );
 
-            return rootQuery;
+            return query;
         }
     }
 }

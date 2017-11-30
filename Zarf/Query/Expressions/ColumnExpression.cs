@@ -29,7 +29,7 @@ namespace Zarf.Query.Expressions
 
             if (Member != null)
             {
-                Type = Member.GetMemberTypeInfo();
+                Type = Member.GetPropertyType();
                 Column = Member.ToColumn();
                 Alias = alias;
             }

@@ -10,26 +10,30 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberInitExpressionTranslator : Translator<MemberInitExpression>
     {
-        public override Expression Translate(IQueryContext context, MemberInitExpression memberInit, IQueryCompiler queryCompiler)
+        public MemberInitExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var newExpression = queryCompiler.Compile(memberInit.NewExpression).As<NewExpression>();
+        }
+
+        public override Expression Translate(MemberInitExpression memInit)
+        {
+            var newExp = GetCompiledExpression<NewExpression>(memInit.NewExpression);
             var bindings = new List<MemberBinding>();
 
-            foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
+            foreach (var binding in memInit.Bindings.OfType<MemberAssignment>())
             {
-                var bindExpression = queryCompiler.Compile(binding.Expression);
-                var memberInfoType = binding.Member.GetMemberTypeInfo();
+                var bindExpression = Compiler.Compile(binding.Expression);
+                var memberInfoType = binding.Member.GetPropertyType();
 
                 if (typeof(IEnumerable).IsAssignableFrom(memberInfoType) && memberInfoType != typeof(string))
                 {
                     throw new NotImplementedException("not supported!");
                 }
 
-                context.EntityMemberMappingProvider.Map(binding.Member, bindExpression);
+                Context.EntityMemberMappingProvider.Map(binding.Member, bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 
-            return memberInit.Update(newExpression, bindings);
+            return memInit.Update(newExp, bindings);
         }
     }
 }

@@ -10,37 +10,45 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
-        public override Expression Translate(IQueryContext context, NewExpression newExpression, IQueryCompiler queryCompiler)
+        public NewExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
+            : base(queryContext, queryCompiper)
         {
-            if (newExpression.Arguments == null ||
-                newExpression.Arguments.Count == 0)
+
+        }
+
+        public override Expression Translate(NewExpression newExp)
+        {
+            if (newExp.Arguments?.Count == 0)
             {
-                return newExpression;
+                return newExp;
             }
 
-            var arguments = new List<Expression>();
-            for (var i = 0; i < newExpression.Arguments.Count; i++)
+            var args = new List<Expression>();
+            for (var i = 0; i < newExp.Arguments.Count; i++)
             {
-                var argument = queryCompiler.Compile(newExpression.Arguments[i]);
-                if (newExpression.Members == null || newExpression.Members[i] == null)
+                var mem = newExp.Members?[i];
+                if (mem == null)
                 {
                     continue;
                 }
 
-                if (argument is ColumnExpression)
+                var arg = GetCompiledExpression(newExp.Arguments[i]);
+                var col = arg.As<ColumnExpression>();
+                if (col != null)
                 {
-                    argument.Cast<ColumnExpression>().Alias = newExpression.Members[i].Name;
+                    col.Alias = mem.Name;
                 }
-                else if (argument is QueryExpression && newExpression.Members[i].GetMemberTypeInfo().IsCollection())
+
+                if (arg is QueryExpression && mem.GetPropertyType().IsCollection())
                 {
                     throw new NotImplementedException("not supported!");
                 }
 
-                context.EntityMemberMappingProvider.Map(newExpression.Members[i], argument);
-                arguments.Add(argument);
+                Context.EntityMemberMappingProvider.Map(mem, arg);
+                args.Add(arg);
             }
 
-            return newExpression.Update(arguments);
+            return newExp.Update(args);
         }
     }
 }

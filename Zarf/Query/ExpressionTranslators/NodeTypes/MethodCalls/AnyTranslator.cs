@@ -17,23 +17,24 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Any");
         }
 
-        public override Expression Translate(IQueryContext queryContext, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public AnyTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
-            queryContext.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), query);
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(queryContext.Alias.GetNewTable(), queryContext.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            var keySelector = queryCompiler.Compile(methodCall.Arguments[1].UnWrap()).UnWrap();
+            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
 
             query.Projections.Clear();
-            query.Projections.Add(new Projection() { Expression = Expression.Constant(1) });
-            query.AddWhere(keySelector);
-
+            query.Projections.Add(new ColumnDescriptor(Utils.ExpressionOne));
+            query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]));
             return new AllExpression(query);
         }
     }

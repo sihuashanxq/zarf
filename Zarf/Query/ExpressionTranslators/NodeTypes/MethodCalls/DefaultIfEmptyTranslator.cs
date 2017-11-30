@@ -17,14 +17,14 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "DefaultIfEmpty");
         }
 
-        public override Expression Translate(IQueryContext context, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public DefaultIfEmptyTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            if (methodCall.Arguments.Count != 1)
-            {
-                throw new NotImplementedException("Distinct method not supported arguments!");
-            }
 
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             query.DefaultIfEmpty = true;
             return query;
         }

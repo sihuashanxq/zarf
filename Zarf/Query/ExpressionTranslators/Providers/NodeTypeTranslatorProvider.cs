@@ -6,20 +6,18 @@ namespace Zarf.Query.ExpressionTranslators
 {
     public class NodeTypeTranslatorProvider : ITransaltorProvider
     {
-        private static Dictionary<ExpressionType, ITranslaor> _nodeTypeTranslators;
+        private Dictionary<ExpressionType, ITranslaor> _nodeTypeTranslators;
 
-        public static ITransaltorProvider Default = new NodeTypeTranslatorProvider();
-
-        static NodeTypeTranslatorProvider()
+        public NodeTypeTranslatorProvider(IQueryContext queryContext,IQueryCompiler queryCompiler)
         {
             _nodeTypeTranslators = new Dictionary<ExpressionType, ITranslaor>();
-            _nodeTypeTranslators[ExpressionType.Call] = new MethodCallExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.MemberAccess] = new MemberExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.Constant] = new ConstantExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.TypeIs] = new TypeBinaryExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.Parameter] = new ParameterExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.New] = new NewExpressionTranslator();
-            _nodeTypeTranslators[ExpressionType.MemberInit] = new MemberInitExpressionTranslator();
+            _nodeTypeTranslators[ExpressionType.Call] = new MethodCallExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.MemberAccess] = new MemberExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.Constant] = new ConstantExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.TypeIs] = new TypeBinaryExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.Parameter] = new ParameterExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.New] = new NewExpressionTranslator(queryContext, queryCompiler);
+            _nodeTypeTranslators[ExpressionType.MemberInit] = new MemberInitExpressionTranslator(queryContext, queryCompiler);
         }
 
         public ITranslaor GetTranslator(Expression node)

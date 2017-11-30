@@ -18,26 +18,56 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SelectTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Select");
+            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Select")
+                .Concat(new[] { ReflectionUtil.Select });
         }
 
-        public override Expression Translate(IQueryContext queryContext, MethodCallExpression methodCall, IQueryCompiler queryCompiler)
+        public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            var query = queryCompiler.Compile(methodCall.Arguments[0]).As<QueryExpression>();
-            var selector = methodCall.Arguments[1].UnWrap().As<LambdaExpression>();
 
+        }
+
+        public override Expression Translate(MethodCallExpression methodCall)
+        {
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var methodBody = methodCall.Method.GetGenericMethodDefinition();
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(queryContext.Alias.GetNewTable(), queryContext.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
 
-            queryContext.QuerySourceProvider.AddSource(selector.Parameters.FirstOrDefault(), query);
+            if (methodBody == ReflectionUtil.Select)
+            {
+                RegisterJoinSelectQueries(query, methodCall.Arguments[1]);
+            }
+            else
+            {
+                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+            }
 
-            var entityNew = queryCompiler.Compile(selector).UnWrap();
-
-            query.Projections.AddRange(queryContext.ProjectionScanner.Scan(entityNew));
-            query.Result = new EntityResult(entityNew, methodCall.Method.ReturnType.GetCollectionElementType());
+            var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
+            query.Projections.AddRange(GetColumns(template));
+            query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;
+        }
+
+        protected virtual void RegisterJoinSelectQueries(QueryExpression query, Expression selector)
+        {
+            var parameters = GetLambdaParameteres(selector);
+            var i = 0;
+            while (i < parameters.Count)
+            {
+                var parameter = parameters[i];
+                if (i == 0)
+                {
+                    RegisterQuerySource(parameter, query);
+                }
+                else
+                {
+                    RegisterQuerySource(parameter, query.Joins[i - 1].Table.As<QueryExpression>());
+                }
+                i++;
+            }
         }
     }
 }
