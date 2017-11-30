@@ -8,7 +8,7 @@ namespace Zarf.Core
 {
     internal class JoinQuery : IJoinQuery
     {
-        public List<IJoinQuery> Joins { get; protected set; }
+        protected List<JoinQuery> Joins { get; set; }
 
         public LambdaExpression Predicate { get; protected set; }
 
@@ -43,7 +43,7 @@ namespace Zarf.Core
                );
         }
 
-        internal static IInternalDbQuery<TResult> Join<TResult>(IInternalDbQuery dbQuery, List<IJoinQuery> joins)
+        internal static IInternalDbQuery<TResult> Join<TResult>(IInternalDbQuery dbQuery, List<JoinQuery> joins)
         {
             var query = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
             var provider = dbQuery.GetType().GetProperty("Provider").GetValue(dbQuery) as IQueryProvider;
@@ -68,7 +68,7 @@ namespace Zarf.Core
         public JoinQuery(JoinQuery joinQuery, IInternalDbQuery dbQuery)
         {
             InternalDbQuery = dbQuery;
-            Joins = new List<IJoinQuery>() { joinQuery };
+            Joins = new List<JoinQuery>() { joinQuery };
         }
 
         public IJoinQuery<T1, T2, T3> Join<T3>(IDbQuery<T3> query, Expression<Func<T1, T2, T3, bool>> predicate, JoinType joinType = JoinType.Inner)
@@ -85,7 +85,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3> : JoinQuery<T1, T2>, IJoinQuery<T1, T2, T3>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
         {
             Joins = joins;
             InternalDbQuery = dbQuery;
@@ -105,7 +105,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3, T4> : JoinQuery<T1, T2, T3>, IJoinQuery<T1, T2, T3, T4>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
             : base(joins, dbQuery)
         {
         }
@@ -124,7 +124,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3, T4, T5> : JoinQuery<T1, T2, T3, T4>, IJoinQuery<T1, T2, T3, T4, T5>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
             : base(joins, dbQuery)
         {
         }
@@ -143,7 +143,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3, T4, T5, T6> : JoinQuery<T1, T2, T3, T4, T5>, IJoinQuery<T1, T2, T3, T4, T5, T6>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
             : base(joins, dbQuery)
         {
         }
@@ -162,7 +162,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3, T4, T5, T6, T7> : JoinQuery<T1, T2, T3, T4, T5, T6>, IJoinQuery<T1, T2, T3, T4, T5, T6, T7>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
             : base(joins, dbQuery)
         {
         }
@@ -181,7 +181,7 @@ namespace Zarf.Core
 
     internal class JoinQuery<T1, T2, T3, T4, T5, T6, T7, T8> : JoinQuery<T1, T2, T3, T4, T5, T6, T7>, IJoinQuery<T1, T2, T3, T4, T5, T6, T7, T8>
     {
-        public JoinQuery(List<IJoinQuery> joins, IInternalDbQuery dbQuery)
+        public JoinQuery(List<JoinQuery> joins, IInternalDbQuery dbQuery)
             : base(joins, dbQuery)
         {
         }

@@ -72,6 +72,10 @@ namespace Zarf.Query.ExpressionVisitors
                 {
                     AddProjection(newExp.Members[i], newExp.Arguments[i]);
                 }
+                else if (newExp.Arguments[i].Is<QueryExpression>())
+                {
+                    AddProjection(null, newExp.Arguments[i]);
+                }
             }
 
             return newExp;

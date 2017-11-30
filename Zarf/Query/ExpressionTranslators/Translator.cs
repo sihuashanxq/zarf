@@ -45,6 +45,11 @@ namespace Zarf.Query.ExpressionTranslators
             return Context.ProjectionScanner.Scan(exp);
         }
 
+        protected List<ParameterExpression> GetLambdaParameteres(Expression lambda)
+        {
+            return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();
+        }
+
         protected ParameterExpression GetFirstLambdaParameter(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();

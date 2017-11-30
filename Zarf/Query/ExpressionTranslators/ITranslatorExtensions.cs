@@ -15,8 +15,7 @@ namespace Zarf.Query.ExpressionTranslators
             {
                 yield return new ColumnExpression(
                     table,
-                    memberDescriptor.Member.ToColumn(),
-                    memberDescriptor.MemberType,
+                    memberDescriptor.Member,
                     memberDescriptor.Name);
             }
         }

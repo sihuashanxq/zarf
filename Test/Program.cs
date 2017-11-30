@@ -25,12 +25,11 @@ namespace Zarf
                    new
                    {
                        user,
-                       address,
-                       order
-                   });
+                       address
+                   }).ToList();
 
                 //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
-                //BasicTest(db);
+                BasicTest(db);
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
                 //await db.BeginTransactionAsync();
@@ -143,38 +142,16 @@ namespace Zarf
             Console.WriteLine("Inner Join..........................");
 
             Console.WriteLine();
-            Console.WriteLine("LEFT Join..........................");
-            db.Query<User>().Join(
-                db.Query<Address>().DefaultIfEmpty(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
-            Console.WriteLine();
             Console.WriteLine("Order By DESC..........................");
             db.Query<User>().OrderByDescending(item => item.Id)
                 .ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
             Console.WriteLine("RIGHT Join..........................");
-            db.Query<User>().DefaultIfEmpty().Join(
-                db.Query<Address>(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
+         
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-            db.Query<User>().DefaultIfEmpty()
-                .Join(
-                db.Query<Address>().DefaultIfEmpty(),
-                item => item.AddressId,
-                item => item.Id,
-                (user, address) => new { user.Name, address.Street })
-                .ToList().ForEach(item => Console.WriteLine($"Name:{item.Name} Street:{item.Street}"));
-
+           
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
             db.Query<User>().Concat(db.Query<User>()).ToList().ForEach(item => Console.WriteLine(item));

@@ -411,10 +411,5 @@ namespace Zarf
         {
             return new JoinQuery<TEntity, TInner>(JoinQuery.CreateJoinQuery(predicate, inner.InternalDbQuery, joinType), InternalDbQuery);
         }
-
-        public IDbQuery<TResult> Join<TInner, TKey, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TKey>> outerKeySelector, Expression<Func<TInner, TKey>> innerKeySelector, Expression<Func<TEntity, TInner, TResult>> resultSelector)
-        {
-            return new DbQuery<TResult>(InternalDbQuery.Join(inner.InternalDbQuery, outerKeySelector, innerKeySelector, resultSelector) as IInternalDbQuery<TResult>);
-        }
     }
 }
