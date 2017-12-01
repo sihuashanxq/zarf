@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
+using Zarf.Core.Internals;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -22,7 +23,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
 
             var typeOfMember = mem.Member.GetPropertyType();
-            if (typeof(IInternalDbQuery).IsAssignableFrom(typeOfMember))
+            if (typeof(IInternalQuery).IsAssignableFrom(typeOfMember))
             {
                 return new QueryExpression(typeOfMember, Context.Alias.GetNewTable());
             }

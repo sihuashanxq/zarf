@@ -5,13 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Query;
 
-namespace Zarf.Core
+namespace Zarf.Core.Internals
 {
-    internal class InternalDbQuery<TEntity> : IInternalDbQuery<TEntity>
+    internal class InternalQuery<TEntity> : IInternalQuery<TEntity>
     {
         private EntityEnumerable<TEntity> _entities;
 
-        public DbContext Context => (Provider as DbQueryProvider)?.Context;
+        public DbContext Context => (Provider as QueryProvider)?.Context;
 
         public Type ElementType => typeof(TEntity);
 
@@ -32,13 +32,13 @@ namespace Zarf.Core
             }
         }
 
-        public InternalDbQuery(IQueryProvider provider)
+        public InternalQuery(IQueryProvider provider)
         {
             Provider = provider;
             Expression = Expression.Constant(this);
         }
 
-        public InternalDbQuery(IQueryProvider provider, Expression query)
+        public InternalQuery(IQueryProvider provider, Expression query)
         {
             Provider = provider;
             Expression = query;

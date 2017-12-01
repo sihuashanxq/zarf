@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Core;
+using Zarf.Core.Internals;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
@@ -14,7 +15,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(ConstantExpression constant)
         {
-            if (!typeof(IInternalDbQuery).IsAssignableFrom(constant.Type))
+            if (!typeof(IInternalQuery).IsAssignableFrom(constant.Type))
             {
                 return constant;
             }

@@ -19,17 +19,13 @@ namespace Zarf
             using (var db = new DbUserContext())
             {
                 var x = db.Users
-                    .Join(db.Query<Address>(), (user, address) => user.Id == address.Id)
-                    .Join(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
-                    .Select((user, address, order) =>
-                   new
-                   {
-                       user,
-                       address
-                   }).ToList();
+                    .Where(item => item.Id > 5)
+                    .LeftJoin(db.Query<Address>(), (user, address) => user.Id == address.Id)
+                    .LeftJoin(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
+                    .Select((user, address, order) => new { user, address }).ToList();
 
                 //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
-                BasicTest(db);
+                //BasicTest(db);
                 //var first = db.Query<PP>().FirstOrDefault();
                 //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
                 //await db.BeginTransactionAsync();
@@ -148,10 +144,10 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("RIGHT Join..........................");
-         
+
             Console.WriteLine();
             Console.WriteLine("Full Join..........................");
-           
+
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
             db.Query<User>().Concat(db.Query<User>()).ToList().ForEach(item => Console.WriteLine(item));
@@ -240,6 +236,6 @@ namespace Zarf
             Users = this.Query<User>();
         }
 
-        public IDbQuery<User> Users { get; }
+        public IQuery<User> Users { get; }
     }
 }
