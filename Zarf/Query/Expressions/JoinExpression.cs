@@ -13,16 +13,16 @@ namespace Zarf.Query.Expressions
 
         public Expression Predicate { get; }
 
-        public FromTableExpression Table { get; }
+        public QueryExpression Query { get; }
 
-        public override Type Type => Table?.Type;
+        public override Type Type => Query?.Type;
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public JoinExpression(FromTableExpression table, Expression predicate, JoinType joinType = JoinType.Inner)
+        public JoinExpression(QueryExpression query, Expression predicate, JoinType joinType = JoinType.Inner)
         {
             Predicate = predicate;
-            Table = table;
+            Query = query;
             JoinType = joinType;
         }
 
@@ -31,7 +31,7 @@ namespace Zarf.Query.Expressions
             unchecked
             {
                 var hashCode = Predicate.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Table?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (Query?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ JoinType.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Predicate?.GetHashCode() ?? 0);
                 return hashCode;

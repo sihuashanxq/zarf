@@ -19,10 +19,10 @@ namespace Zarf
             using (var db = new DbUserContext())
             {
                 var x = db.Users
-                    .Where(item => item.Id > 5)
-                    .LeftJoin(db.Query<Address>(), (user, address) => user.Id == address.Id)
+                    .LeftJoin(db.Query<Address>().Select(item => new { item.Id, item.Street }),
+                    (user, address) => user.Id == address.Id)
                     .LeftJoin(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
-                    .Select((user, address, order) => new { user, address }).ToList();
+                    .Select((user, address, order) => new { user, address ,order}).ToList();
 
                 //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
                 //BasicTest(db);

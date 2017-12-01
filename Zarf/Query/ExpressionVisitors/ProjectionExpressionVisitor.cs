@@ -13,13 +13,16 @@ namespace Zarf.Query.ExpressionVisitors
     //一个Member中包含一个简单类型,一个简单类型后续方法调用包含一个复杂类型
     public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
     {
-        private List<ColumnDescriptor> _list;
+        private List<ColumnDescriptor> _columns;
 
         public List<ColumnDescriptor> Scan(Expression node)
         {
-            _list = new List<ColumnDescriptor>();
-            Visit(node);
-            return _list.ToList();
+            lock (this)
+            {
+                _columns = new List<ColumnDescriptor>();
+                Visit(node);
+                return _columns.ToList();
+            }
         }
 
         public List<ColumnDescriptor> Scan(Func<Expression, Expression> preHandle, Expression node)
@@ -29,19 +32,23 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitExtension(Expression node)
         {
-            if (node.Is<FromTableExpression>())
+            var query = node.As<QueryExpression>();
+            if (query != null)
             {
-                foreach (var item in node
-                 .As<FromTableExpression>()
-                 .GenerateColumns()
-                 .OfType<ColumnExpression>())
+                foreach (var item in query.Projections.Count == 0
+                    ? query.GenerateTableColumns()
+                    : query.Projections.Select(item => item.Expression).OfType<ColumnExpression>())
                 {
                     AddProjection(item.Member, item);
                 }
+
+                return node;
             }
-            else if (node.Is<ColumnExpression>())
+
+            var col = node.As<ColumnExpression>();
+            if (col != null)
             {
-                AddProjection(null, node);
+                AddProjection(col.Member, node);
             }
 
             return node;
@@ -71,10 +78,18 @@ namespace Zarf.Query.ExpressionVisitors
                 if (ReflectionUtil.SimpleTypes.Contains(newExp.Members[i].GetPropertyType()))
                 {
                     AddProjection(newExp.Members[i], newExp.Arguments[i]);
+                    continue;
                 }
-                else if (newExp.Arguments[i].Is<QueryExpression>())
+
+                if (newExp.Arguments[i].Is<QueryExpression>())
                 {
-                    AddProjection(null, newExp.Arguments[i]);
+                    var query = newExp.Arguments[i].As<QueryExpression>();
+                    foreach (var item in query.Projections.Count == 0
+                        ? query.GenerateTableColumns()
+                        : query.Projections.Select(item => item.Expression).OfType<ColumnExpression>())
+                    {
+                        AddProjection(item.Member, item);
+                    }
                 }
             }
 
@@ -89,12 +104,10 @@ namespace Zarf.Query.ExpressionVisitors
                 return;
             }
 
-            if (node.Is<FromTableExpression>())
+            var query = node.As<QueryExpression>();
+            if (query != null)
             {
-                foreach (var item in node
-                    .As<FromTableExpression>()
-                    .GenerateColumns()
-                    .OfType<ColumnExpression>())
+                foreach (var item in query.GenerateTableColumns())
                 {
                     AddProjection(item.Member, item);
                 }
@@ -102,13 +115,15 @@ namespace Zarf.Query.ExpressionVisitors
                 return;
             }
 
-            if (node.Is<ColumnExpression>())
+            var col = node.As<ColumnExpression>();
+            if (col != null)
             {
-                _list.Add(new ColumnDescriptor()
+                col.Member = member ?? col.Member;
+                _columns.Add(new ColumnDescriptor()
                 {
                     Member = member,
                     Expression = node,
-                    Ordinal = _list.Count
+                    Ordinal = _columns.Count
                 });
             }
         }

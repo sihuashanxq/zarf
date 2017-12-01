@@ -1,53 +1,50 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Zarf.Query.Expressions
 {
     public class ColumnExpression : AliasExpression
     {
-        public Column Column { get; }
+        private Type _innerType;
 
-        public MemberInfo Member { get; }
+        public Column Column { get; set; }
 
-        public FromTableExpression FromTable { get; }
+        public MemberInfo Member { get; set; }
 
-        public override Type Type { get; }
+        public QueryExpression Query { get; set; }
+
+        public override Type Type => Member?.GetPropertyType() ?? _innerType;
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public ColumnExpression(FromTableExpression table, MemberInfo member, string alias = "")
+        public ColumnExpression(QueryExpression query, MemberInfo member, string alias = "")
             : base(alias)
         {
-            FromTable = table;
+            Query = query;
             Member = member;
-
             if (Member != null)
             {
-                Type = Member.GetPropertyType();
                 Column = Member.ToColumn();
                 Alias = alias;
             }
         }
 
-        public ColumnExpression(FromTableExpression table, Column column, Type valueType, string alias = "")
+        public ColumnExpression(QueryExpression query, Column column, Type valueType, string alias = "")
             : base(alias)
         {
-            FromTable = table;
+            Query = query;
             Column = column;
-            Type = valueType;
+            _innerType = valueType;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = FromTable?.GetHashCode() ?? 0;
+                var hashCode = Query?.GetHashCode() ?? 0;
                 hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Type?.GetHashCode() ?? 0);
                 hashCode = (hashCode * 397) ^ (Column?.Name.GetHashCode() ?? 0);

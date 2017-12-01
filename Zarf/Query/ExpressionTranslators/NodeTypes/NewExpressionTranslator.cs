@@ -44,6 +44,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     throw new NotImplementedException("not supported!");
                 }
 
+                arg.As<QueryExpression>()?.ChangeTypeOfExpression(mem.GetPropertyType());
+
                 Context.EntityMemberMappingProvider.Map(mem, arg);
                 args.Add(arg);
             }

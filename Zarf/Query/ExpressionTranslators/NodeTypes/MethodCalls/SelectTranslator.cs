@@ -64,7 +64,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 }
                 else
                 {
-                    RegisterQuerySource(parameter, query.Joins[i - 1].Table.As<QueryExpression>());
+                    RegisterQuerySource(parameter, query.Joins[i - 1].Query);
                 }
                 i++;
             }

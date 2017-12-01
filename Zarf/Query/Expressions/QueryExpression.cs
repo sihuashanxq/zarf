@@ -2,78 +2,62 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
+using Zarf.Extensions;
 using Zarf.Mapping;
 
 namespace Zarf.Query.Expressions
 {
-    public class QueryExpression : FromTableExpression
+    public class QueryExpression : Expression
     {
-        /// <summary>
-        /// 查询投影
-        /// </summary>
+        protected Type TypeOfExpression { get; set; }
+
+        public Type MainType { get; }
+
+        public Table Table { get; set; }
+
+        public string Alias { get; }
+
+        public override Type Type => TypeOfExpression;
+
+        public override ExpressionType NodeType => ExpressionType.Extension;
+
         public List<ColumnDescriptor> Projections { get; }
 
-        /// <summary>
-        /// 表连接
-        /// </summary>
         public List<JoinExpression> Joins { get; }
 
-        /// <summary>
-        /// 代表其他查询集合
-        /// Union Except etc...
-        /// </summary>
         public List<SetsExpression> Sets { get; }
 
-        /// <summary>
-        /// 排序
-        /// </summary>
         public List<OrderExpression> Orders { get; }
 
-        /// <summary>
-        /// 分组
-        /// </summary>
         public List<GroupExpression> Groups { get; }
 
-        /// <summary>
-        /// 条件
-        /// </summary>
         public WhereExperssion Where { get; set; }
 
-        /// <summary>
-        /// 去重
-        /// </summary>
         public bool IsDistinct { get; set; }
 
-        /// <summary>
-        /// 限制条数
-        /// </summary>
         public int Limit { get; set; }
 
-        /// <summary>
-        /// 查询结果偏移量
-        /// </summary>
         public SkipExpression Offset { get; set; }
 
-        /// <summary>
-        /// 为空时返回默认值
-        /// </summary>
         public bool DefaultIfEmpty { get; set; }
 
-        /// <summary>
-        /// 表示一个子查询
-        /// </summary>
         public QueryExpression SubQuery { get; protected set; }
+
+        public QueryExpression Container { get; protected set; }
 
         public EntityResult Result { get; set; }
 
-        public QueryExpression(Type entityType, string alias = "")
-            : base(entityType, alias)
+        public QueryExpression(Type typeOfEntity, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
             Projections = new List<ColumnDescriptor>();
+            TypeOfExpression = typeOfEntity;
+            MainType = typeOfEntity;
+            Alias = alias;
+            Table = typeOfEntity.ToTable();
         }
 
         public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
@@ -82,11 +66,11 @@ namespace Zarf.Query.Expressions
             {
                 SubQuery = this,
                 Table = null,
-                DefaultIfEmpty = DefaultIfEmpty
+                DefaultIfEmpty = DefaultIfEmpty,
             };
 
             DefaultIfEmpty = false;
-            Parent = query;
+            Container = query;
             query.Result = query.SubQuery.Result;
             return subQueryHandle != null ? subQueryHandle(query) : query;
         }
@@ -138,6 +122,23 @@ namespace Zarf.Query.Expressions
                 Sets.Count == 0 &&
                 Joins.Count == 0 &&
                 Limit == 0;
+        }
+
+        public IEnumerable<ColumnExpression> GenerateTableColumns()
+        {
+            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
+            foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
+            {
+                yield return new ColumnExpression(
+                    this,
+                    memberDescriptor.Member,
+                    memberDescriptor.Name);
+            }
+        }
+
+        public void ChangeTypeOfExpression(Type typeOfExpression)
+        {
+            TypeOfExpression = typeOfExpression;
         }
     }
 }

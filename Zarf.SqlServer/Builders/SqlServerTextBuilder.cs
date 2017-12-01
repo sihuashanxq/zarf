@@ -86,9 +86,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitColumn(ColumnExpression column)
         {
-            if (column.FromTable != null && !column.FromTable.Alias.IsNullOrEmpty())
+            if (column.Query != null && !column.Query.Alias.IsNullOrEmpty())
             {
-                Builder.Append(column.FromTable.Alias.Escape());
+                Builder.Append(column.Query.Alias.Escape());
                 Builder.Append('.');
             }
 
@@ -161,19 +161,17 @@ namespace Zarf.SqlServer.Builders
                     break;
             }
 
-            var query = join.Table.Cast<QueryExpression>();
+            BuildSubQuery(join.Query);
 
-            BuildSubQuery(query);
-
-            if (query.IsEmptyQuery())
+            if (join.Query.IsEmptyQuery())
             {
-                BuildFromTable(query);
+                BuildFromTable(join.Query);
             }
             else
             {
                 Append(" (");
-                BuildExpression(query);
-                Append(") AS " + query.Alias.Escape());
+                BuildExpression(join.Query);
+                Append(") AS " + join.Query.Alias.Escape());
             }
 
             using (BeginStopGenColumnAlias())
@@ -458,7 +456,7 @@ namespace Zarf.SqlServer.Builders
                 return;
             }
 
-            if (query.Parent != null && query.Limit == 0)
+            if (query.Container != null && query.Limit == 0)
             {
                 Append(" TOP (100) Percent ");
             }
@@ -480,7 +478,7 @@ namespace Zarf.SqlServer.Builders
                 return;
             }
 
-            if (query.Parent != null && query.Limit == 0)
+            if (query.Container != null && query.Limit == 0)
             {
                 Append(" TOP (100) Percent ");
             }

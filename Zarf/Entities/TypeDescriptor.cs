@@ -17,7 +17,7 @@ namespace Zarf.Mapping
         {
             Type = typeOfEntity;
             MemberDescriptors = memberDescriptors;
-            Constructor = typeOfEntity.GetConstructor(Type.EmptyTypes);
+            Constructor = typeOfEntity.GetConstructor(Type.EmptyTypes) ?? typeOfEntity.GetConstructors()[0];
         }
     }
 }
