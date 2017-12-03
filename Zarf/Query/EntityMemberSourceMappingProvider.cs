@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Query
 {
@@ -35,12 +37,19 @@ namespace Zarf.Query
 
         public void UpdateExpression(Expression oMappedExpression, Expression nMappedExpression)
         {
-            foreach (var item in MemberExpressions)
+            var exps = MemberExpressions;
+            MemberExpressions = new Dictionary<MemberInfo, Expression>();
+
+            foreach (var item in exps)
             {
-                if (item.Value == oMappedExpression)
+                if (item.Value == oMappedExpression ||
+                    oMappedExpression.Equals(item.Value.As<QueryExpression>().Container))
                 {
                     MemberExpressions[item.Key] = nMappedExpression;
+                    continue;
                 }
+
+                MemberExpressions[item.Key] = item.Value;
             }
         }
     }

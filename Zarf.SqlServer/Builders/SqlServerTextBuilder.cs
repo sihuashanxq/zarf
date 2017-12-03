@@ -213,6 +213,7 @@ namespace Zarf.SqlServer.Builders
             BuildWhere(query);
 
             BuildGroups(query);
+
             BuildOrders(query);
 
             BuildSets(query);
@@ -371,6 +372,12 @@ namespace Zarf.SqlServer.Builders
             if (query.Limit != 0)
             {
                 Append(" TOP ", query.Limit);
+                return;
+            }
+
+            if (query.Container!=null&&(query.Orders.Count != 0 || query.Groups.Count != 0))
+            {
+                Append(" TOP (100) Percent ");
             }
         }
 
@@ -456,10 +463,6 @@ namespace Zarf.SqlServer.Builders
                 return;
             }
 
-            if (query.Container != null && query.Limit == 0)
-            {
-                Append(" TOP (100) Percent ");
-            }
             Append(" ORDER BY ");
 
             foreach (var order in query.Orders)
@@ -476,11 +479,6 @@ namespace Zarf.SqlServer.Builders
             if (query.Groups == null || query.Groups.Count == 0)
             {
                 return;
-            }
-
-            if (query.Container != null && query.Limit == 0)
-            {
-                Append(" TOP (100) Percent ");
             }
 
             Append(" GROUP BY ");

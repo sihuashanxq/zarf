@@ -257,7 +257,7 @@ namespace Zarf.Mapping.Bindings
 
                 foreach (var item in typeDescriptor.MemberDescriptors)
                 {
-                    var mappedExpression = FindMemberRelatedExpression(RootQuery, item.Member);
+                    var mappedExpression = FindMemberRelatedExpression(query, item.Member);
                     if (mappedExpression != null)
                     {
                         memberExpressions.Add(new MemberExpressionPair(item.Member, mappedExpression));
@@ -279,8 +279,7 @@ namespace Zarf.Mapping.Bindings
                 var activatingArgs = new List<Expression>();
                 foreach (var item in typeDescriptor.MemberDescriptors)
                 {
-                    var mappedExpression = FindMemberRelatedExpression(RootQuery, item.Member);
-                    activatingArgs.Add(Visit(mappedExpression));
+                    activatingArgs.Add(Visit(FindMemberRelatedExpression(query, item.Member)));
                 }
 
                 return CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type, activatingArgs);
@@ -386,15 +385,24 @@ namespace Zarf.Mapping.Bindings
             return Expression.Block(propertyDeclares, propertyValues.ToArray());
         }
 
-        public static Expression FindMemberRelatedExpression(QueryExpression query, MemberInfo member)
+        public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
         {
-            if (query.Projections?.Count == 0 &&
-                query.SubQuery != null)
+            foreach (var item in RootQuery.Projections)
             {
-                return FindMemberRelatedExpression(query.SubQuery, member);
+                var col = item.Expression.As<ColumnExpression>();
+                var aggrate = item.Expression.As<AggregateExpression>();
+                if (aggrate != null)
+                {
+                    col = aggrate.KeySelector.As<ColumnExpression>();
+                }
+
+                if (col != null && col.Member == member && col.Query == container)
+                {
+                    return col;
+                }
             }
 
-            return query.Projections.FirstOrDefault(item => item.Member == member)?.Expression;
+            return null;
         }
 
         public static object GetOrSetMemberValue(IMemberValueCache valueCache, MemberInfo member, object value)

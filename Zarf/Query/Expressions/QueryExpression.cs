@@ -75,9 +75,10 @@ namespace Zarf.Query.Expressions
             return subQueryHandle != null ? subQueryHandle(query) : query;
         }
 
-        public void AddJoin(JoinExpression table)
+        public void AddJoin(JoinExpression joinQuery)
         {
-            Joins.Add(table);
+            joinQuery.Query.Container = this;
+            Joins.Add(joinQuery);
         }
 
         public void AddProjections(IEnumerable<ColumnDescriptor> projections)

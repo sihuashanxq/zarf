@@ -9,8 +9,6 @@ using Zarf.Mapping;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    //Projection 不能包含Member
-    //一个Member中包含一个简单类型,一个简单类型后续方法调用包含一个复杂类型
     public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
     {
         private List<ColumnDescriptor> _columns;

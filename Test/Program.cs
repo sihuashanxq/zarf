@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Entities;
@@ -18,11 +17,12 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                var x = db.Users
-                    .LeftJoin(db.Query<Address>().Select(item => new { item.Id, item.Street }),
-                    (user, address) => user.Id == address.Id)
-                    .LeftJoin(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
-                    .Select((user, address, order) => new { user, address ,order}).ToList();
+                //var x = db.Users
+                //    .LeftJoin(db.Query<Address>().Select(item => new { item.Id, item.Street }
+                //    ).OrderBy(item => item.Id),
+                //    (user, address) => user.Id == address.Id)
+                //    .LeftJoin(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
+                //    .Select((user, address, order) => new { user, address, order }).ToList();
 
                 //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
                 //BasicTest(db);
@@ -92,7 +92,9 @@ namespace Zarf
                 //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
-
+                var y = db.Users.Join(db.Users, (a, b) => a.Id == b.Id + 1)
+                    .Select((a, b) => new { a, b })
+                    .Select(item => new { item.a.Id, x = item.b.Id }).ToList();
                 Console.ReadKey();
             }
         }

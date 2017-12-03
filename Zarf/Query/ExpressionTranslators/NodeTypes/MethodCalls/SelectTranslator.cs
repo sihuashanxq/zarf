@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var methodBody = methodCall.Method.GetGenericMethodDefinition();
-            if (query.Sets.Count != 0)
+            if (query.Sets.Count != 0 || query.Projections.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
             }
@@ -46,7 +46,23 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            query.Projections.AddRange(GetColumns(template));
+            var columns = GetColumns(template);
+            var alias = new List<string>();
+
+            //这里添加一个增加列被修改的映射
+            //ProjectionFinder 读取这个映射
+            //foreach (var item in columns)
+            //{
+            //    var col = item.Expression.As<ColumnExpression>();
+            //    if (alias.Contains(col.Alias))
+            //    {
+            //        col.Alias = col.Alias + "1";
+            //    }
+
+            //    alias.Add( col.Alias);
+            //}
+
+            query.Projections.AddRange(columns);
             query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;
         }
