@@ -35,7 +35,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             var previousQuery = previousNaviation.RefrenceQuery;
             var propertyEleType = propertyPath.Member.GetPropertyType().GetCollectionElementType();
-            var innerQuery = new QueryExpression(propertyEleType, Context.Alias.GetNewTable());
+            var innerQuery = new QueryExpression(propertyEleType, Context.ColumnCaching, Context.Alias.GetNewTable());
 
             //关联关系
             var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
@@ -46,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var condtion = Compiler.Compile(lambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));
-            innerQuery.Projections.AddRange(Context.ProjectionScanner.Scan(innerQuery));
+            innerQuery.AddColumns(Context.ProjectionScanner.Scan(innerQuery));
 
             Context.PropertyNavigationContext.AddPropertyNavigation(
                 propertyPath.Member,

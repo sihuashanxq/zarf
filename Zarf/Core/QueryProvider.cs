@@ -10,12 +10,12 @@ namespace Zarf
     {
         public DbContext Context { get; }
 
-        public IQueryInterpreter QueryInterpreter { get; }
+        public IQueryExecutor QueryInterpreter { get; }
 
         public QueryProvider(DbContext dbContext)
         {
             Context = dbContext;
-            QueryInterpreter = new QueryInterpreter(dbContext.DbContextParts);
+            QueryInterpreter = new QueryExecutor(dbContext.DbContextParts);
         }
 
         public IQueryable CreateQuery(Expression query)

@@ -202,24 +202,24 @@ namespace Zarf.Mapping.Bindings
                 return;
             }
 
-            if (query.Projections.Count == 0)
+            if (query.Columns.Count == 0)
             {
                 foreach (var item in query.GenerateTableColumns())
                 {
-                    var projection = new ColumnDescriptor()
+                    var col = new ColumnDescriptor()
                     {
                         Member = item.Member,
                         Expression = item,
-                        Ordinal = query.Projections.Count
+                        Ordinal = query.Columns.Count
                     };
 
-                    query.Projections.Add(projection);
-                    Context.ProjectionMappingProvider.Map(projection);
+                    query.AddColumns(new[] { col});
+                    Context.ProjectionMappingProvider.Map(col);
                 }
                 return;
             }
 
-            foreach (var item in query.Projections)
+            foreach (var item in query.Columns)
             {
                 var col = item;
                 if (item.Expression.Is<AggregateExpression>())
@@ -387,7 +387,7 @@ namespace Zarf.Mapping.Bindings
 
         public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
         {
-            foreach (var item in RootQuery.Projections)
+            foreach (var item in RootQuery.Columns)
             {
                 var col = item.Expression.As<ColumnExpression>();
                 var aggrate = item.Expression.As<AggregateExpression>();

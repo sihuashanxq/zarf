@@ -94,7 +94,9 @@ namespace Zarf
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
                 var y = db.Users.Join(db.Users, (a, b) => a.Id == b.Id + 1)
                     .Select((a, b) => new { a, b })
-                    .Select(item => new { item.a.Id, x = item.b.Id }).ToList();
+                    .Select(item => new { item.a.Id, x = item.b.Id })
+                    .Select(item => new { a = item.Id, b = item.x }).ToList();
+              
                 Console.ReadKey();
             }
         }

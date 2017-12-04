@@ -2,6 +2,7 @@
 using System.Reflection;
 using Zarf.Core;
 using Zarf.Core.Internals;
+using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -11,32 +12,52 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public MemberExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(MemberExpression mem)
         {
-            //new {item.User.Id,} item.User
-            var objExp = Context.EntityMemberMappingProvider.GetExpression(mem.Member);
-            if (objExp != null)
+            var objExp = Context.MemberAccessMapper.GetMappedExpression(mem.Member);
+            if (objExp.Is<QueryExpression>())
             {
-                return objExp;
+                return objExp;   //new {item.User.Id,} item.User
             }
 
             var typeOfMember = mem.Member.GetPropertyType();
             if (typeof(IInternalQuery).IsAssignableFrom(typeOfMember))
             {
-                return new QueryExpression(typeOfMember, Context.Alias.GetNewTable());
+                return new QueryExpression(typeOfMember,Context.ColumnCaching, Context.Alias.GetNewTable());
             }
 
-            objExp = GetCompiledExpression(mem.Expression);
+            if (objExp.Is<ColumnExpression>())
+            {
+                objExp = objExp.As<ColumnExpression>().Query;
+            }
+            else
+            {
+                objExp = GetCompiledExpression(mem.Expression);
+            }
+
+            var query = objExp.As<QueryExpression>();
+            if (query != null)
+            {
+                var col = Context.ColumnCaching.GetColumn(new QueryColumnCacheKey(query, mem.Member));
+                if (col == null)
+                {
+                    return new ColumnExpression(query, mem.Member);
+                }
+
+                while (query.Container != null)
+                {
+                    query = query.Container;
+                }
+
+                return new ColumnExpression(query, new Column(col.Alias), col.Type);
+            }
+
             if (EvalMemberValue(mem.Member, objExp, out var value))
             {
                 return value;
-            }
-
-            if (objExp.Is<QueryExpression>())
-            {
-                return new ColumnExpression(objExp.Cast<QueryExpression>(), mem.Member);
             }
 
             return mem;

@@ -26,7 +26,7 @@ namespace Zarf.Query.ExpressionTranslators
 
         protected void RegisterQuerySource(ParameterExpression parameter, QueryExpression query)
         {
-            Context.QuerySourceProvider.AddSource(parameter, query);
+            Context.LambdaParameterMapper.Map(parameter, query);
         }
 
         protected TNodeType GetCompiledExpression<TNodeType>(Expression exp)

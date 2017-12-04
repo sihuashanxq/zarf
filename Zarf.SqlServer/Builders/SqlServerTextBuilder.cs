@@ -391,13 +391,13 @@ namespace Zarf.SqlServer.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Projections == null)
+            if (query.Columns == null)
             {
                 Append('*');
             }
             else
             {
-                query.Projections.ForEach(item =>
+                query.Columns.ForEach(item =>
                 {
                     BuildExpression(item.Expression);
                     Append(',');

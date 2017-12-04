@@ -8,7 +8,7 @@ namespace Zarf.Query.Expressions
     public class SubQueryExpression : QueryExpression
     {
         public SubQueryExpression(Type entityType, string alias)
-            : base(entityType, alias)
+            : base(entityType, null, alias)
         {
             //TODO
         }

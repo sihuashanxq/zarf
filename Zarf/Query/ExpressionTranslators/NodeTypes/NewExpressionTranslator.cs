@@ -45,9 +45,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
 
                 arg.As<QueryExpression>()?.ChangeTypeOfExpression(mem.GetPropertyType());
-
-                Context.EntityMemberMappingProvider.Map(mem, arg);
                 args.Add(arg);
+                Context.MemberAccessMapper.Map(mem, arg);
             }
 
             return newExp.Update(args);

@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
+using Zarf.Query.Internals;
 
 namespace Zarf.Query.Expressions
 {
     public class QueryExpression : Expression
     {
         protected Type TypeOfExpression { get; set; }
-
-        public Type MainType { get; }
 
         public Table Table { get; set; }
 
@@ -21,7 +21,7 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public List<ColumnDescriptor> Projections { get; }
+        public List<ColumnDescriptor> Columns { get; }
 
         public List<JoinExpression> Joins { get; }
 
@@ -47,22 +47,27 @@ namespace Zarf.Query.Expressions
 
         public EntityResult Result { get; set; }
 
-        public QueryExpression(Type typeOfEntity, string alias = "")
+        public IQueryColumnCaching ColumnCaching { get; }
+
+        protected HashSet<string> ColumnAliases { get; }
+
+        public QueryExpression(Type typeOfEntity, IQueryColumnCaching columnCaching, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Projections = new List<ColumnDescriptor>();
+            Columns = new List<ColumnDescriptor>();
+            ColumnAliases = new HashSet<string>();
             TypeOfExpression = typeOfEntity;
-            MainType = typeOfEntity;
-            Alias = alias;
             Table = typeOfEntity.ToTable();
+            ColumnCaching = columnCaching;
+            Alias = alias;
         }
 
-        public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
+        public QueryExpression PushDownSubQuery(string alias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
         {
-            var query = new QueryExpression(Type, fromTableAlias)
+            var query = new QueryExpression(Type, ColumnCaching, alias)
             {
                 SubQuery = this,
                 Table = null,
@@ -81,10 +86,22 @@ namespace Zarf.Query.Expressions
             Joins.Add(joinQuery);
         }
 
-        public void AddProjections(IEnumerable<ColumnDescriptor> projections)
+        public void AddColumns(IEnumerable<ColumnDescriptor> columns)
         {
-            Projections.Clear();
-            Projections.AddRange(projections);
+            foreach (var col in columns
+                .Select(item => item.Expression)
+                .OfType<ColumnExpression>())
+            {
+                while (ColumnAliases.Contains(col.Alias))
+                {
+                    col.Alias = col.Alias + "_1";
+                }
+
+                ColumnAliases.Add(col.Alias);
+                ColumnCaching.AddColumn(col);
+            }
+
+            Columns.AddRange(columns);
         }
 
         public void AddWhere(Expression predicate)
@@ -97,11 +114,10 @@ namespace Zarf.Query.Expressions
             if (Where == null)
             {
                 Where = new WhereExperssion(predicate);
+                return;
             }
-            else
-            {
-                Where.Combine(predicate);
-            }
+
+            Where.Combine(predicate);
         }
 
         /// <summary>
@@ -117,7 +133,7 @@ namespace Zarf.Query.Expressions
                 Where == null &&
                 Offset == null &&
                 SubQuery == null &&
-                Projections.Count == 0 &&
+                Columns.Count == 0 &&
                 Orders.Count == 0 &&
                 Groups.Count == 0 &&
                 Sets.Count == 0 &&

@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     throw new NotImplementedException("not supported!");
                 }
 
-                Context.EntityMemberMappingProvider.Map(binding.Member, bindExpression);
+                Context.MemberAccessMapper.Map(binding.Member, bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 
