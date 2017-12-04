@@ -86,9 +86,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitColumn(ColumnExpression column)
         {
-            if (column.FromTable != null && !column.FromTable.Alias.IsNullOrEmpty())
+            if (column.Query != null && !column.Query.Alias.IsNullOrEmpty())
             {
-                Builder.Append(column.FromTable.Alias.Escape());
+                Builder.Append(column.Query.Alias.Escape());
                 Builder.Append('.');
             }
 
@@ -161,19 +161,17 @@ namespace Zarf.SqlServer.Builders
                     break;
             }
 
-            var query = join.Table.Cast<QueryExpression>();
+            BuildSubQuery(join.Query);
 
-            BuildSubQuery(query);
-
-            if (query.IsEmptyQuery())
+            if (join.Query.IsEmptyQuery())
             {
-                BuildFromTable(query);
+                BuildFromTable(join.Query);
             }
             else
             {
                 Append(" (");
-                BuildExpression(query);
-                Append(") AS " + query.Alias.Escape());
+                BuildExpression(join.Query);
+                Append(") AS " + join.Query.Alias.Escape());
             }
 
             using (BeginStopGenColumnAlias())
@@ -215,6 +213,7 @@ namespace Zarf.SqlServer.Builders
             BuildWhere(query);
 
             BuildGroups(query);
+
             BuildOrders(query);
 
             BuildSets(query);
@@ -373,6 +372,12 @@ namespace Zarf.SqlServer.Builders
             if (query.Limit != 0)
             {
                 Append(" TOP ", query.Limit);
+                return;
+            }
+
+            if (query.Container!=null&&(query.Orders.Count != 0 || query.Groups.Count != 0))
+            {
+                Append(" TOP (100) Percent ");
             }
         }
 
@@ -386,13 +391,13 @@ namespace Zarf.SqlServer.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Projections == null)
+            if (query.Columns == null)
             {
                 Append('*');
             }
             else
             {
-                query.Projections.ForEach(item =>
+                query.Columns.ForEach(item =>
                 {
                     BuildExpression(item.Expression);
                     Append(',');
@@ -458,10 +463,6 @@ namespace Zarf.SqlServer.Builders
                 return;
             }
 
-            if (query.Parent != null && query.Limit == 0)
-            {
-                Append(" TOP (100) Percent ");
-            }
             Append(" ORDER BY ");
 
             foreach (var order in query.Orders)
@@ -478,11 +479,6 @@ namespace Zarf.SqlServer.Builders
             if (query.Groups == null || query.Groups.Count == 0)
             {
                 return;
-            }
-
-            if (query.Parent != null && query.Limit == 0)
-            {
-                Append(" TOP (100) Percent ");
             }
 
             Append(" GROUP BY ");

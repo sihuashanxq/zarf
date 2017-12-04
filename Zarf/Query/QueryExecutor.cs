@@ -8,11 +8,11 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query
 {
-    public class QueryInterpreter : IQueryInterpreter
+    public class QueryExecutor : IQueryExecutor
     {
         private IDbContextParts _dbContextParts;
 
-        public QueryInterpreter(IDbContextParts dbContextParts)
+        public QueryExecutor(IDbContextParts dbContextParts)
         {
             _dbContextParts = dbContextParts;
         }

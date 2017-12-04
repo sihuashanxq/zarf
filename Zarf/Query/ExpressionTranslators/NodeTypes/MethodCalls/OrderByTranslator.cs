@@ -41,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             if (query.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
             RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);

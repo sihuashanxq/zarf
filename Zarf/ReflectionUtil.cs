@@ -120,8 +120,8 @@ namespace Zarf
             SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
             Select = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
-            Include = typeof(DbQueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
-            ThenInclude = typeof(DbQueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
+            Include = typeof(QueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
+            ThenInclude = typeof(QueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
         public static IEnumerable<TEntity> Where<TOEntity, TEntity>

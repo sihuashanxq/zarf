@@ -30,7 +30,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             {
                 if (query.Sets.Count != 0)
                 {
-                    query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                    query = query.PushDownSubQuery(Context.Alias.GetNewTable());
                     query.Result = query.SubQuery.Result;
                 }
 

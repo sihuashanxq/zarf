@@ -4,16 +4,16 @@ using System.Reflection;
 
 namespace Zarf.Query
 {
-    public class EntityMemberSourceMappingProvider : IEntityMemberSourceMappingProvider
+    public class MemberAccessMapper : IMemberAccessMapper
     {
         protected virtual Dictionary<MemberInfo, Expression> MemberExpressions { get; set; }
 
-        public EntityMemberSourceMappingProvider()
+        public MemberAccessMapper()
         {
             MemberExpressions = new Dictionary<MemberInfo, Expression>();
         }
 
-        public Expression GetExpression(MemberInfo memberInfo)
+        public Expression GetMappedExpression(MemberInfo memberInfo)
         {
             if (IsMapped(memberInfo))
             {
@@ -31,17 +31,6 @@ namespace Zarf.Query
         public void Map(MemberInfo memberInfo, Expression mapExpression)
         {
             MemberExpressions[memberInfo] = mapExpression;
-        }
-
-        public void UpdateExpression(Expression oMappedExpression, Expression nMappedExpression)
-        {
-            foreach (var item in MemberExpressions)
-            {
-                if (item.Value == oMappedExpression)
-                {
-                    MemberExpressions[item.Key] = nMappedExpression;
-                }
-            }
         }
     }
 }

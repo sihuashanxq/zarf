@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
 using Zarf.Core;
+using System.Linq.Expressions;
+using Zarf.Query.Internals;
 
 namespace Zarf.Query
 {
@@ -36,13 +38,13 @@ namespace Zarf.Query
 
     public class QueryContext : IQueryContext
     {
-        public IEntityMemberSourceMappingProvider EntityMemberMappingProvider { get; }
+        public IMemberAccessMapper MemberAccessMapper { get; }
 
         public IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
 
         public IPropertyNavigationContext PropertyNavigationContext { get; }
 
-        public IQuerySourceProvider QuerySourceProvider { get; }
+        public ILambdaParameterMapper LambdaParameterMapper { get; }
 
         public IProjectionScanner ProjectionScanner { get; }
 
@@ -52,31 +54,28 @@ namespace Zarf.Query
 
         public IDbContextParts DbContextParts { get; }
 
+        public IQueryColumnCaching ColumnCaching { get; }
+
         public QueryContext(
-            IEntityMemberSourceMappingProvider memberMappingProvider,
+            IMemberAccessMapper memberMappingProvider,
             IEntityProjectionMappingProvider projectionMappingProvider,
             IPropertyNavigationContext navigationContext,
-            IQuerySourceProvider sourceProvider,
+            ILambdaParameterMapper sourceProvider,
             IProjectionScanner projectionFinder,
             IAliasGenerator aliasGenerator,
             IMemberValueCache memValueCache,
             IDbContextParts dbContextParts
             )
         {
-            EntityMemberMappingProvider = memberMappingProvider;
+            MemberAccessMapper = memberMappingProvider;
             ProjectionMappingProvider = projectionMappingProvider;
             PropertyNavigationContext = navigationContext;
-            QuerySourceProvider = sourceProvider;
+            LambdaParameterMapper = sourceProvider;
             ProjectionScanner = projectionFinder;
             Alias = aliasGenerator;
             MemberValueCache = memValueCache;
             DbContextParts = dbContextParts;
-        }
-
-        public QueryExpression UpdateRefrenceSource(QueryExpression query)
-        {
-            EntityMemberMappingProvider.UpdateExpression(query.SubQuery, query);
-            return query;
+            ColumnCaching = new QueryColumnCaching();
         }
     }
 }

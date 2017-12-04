@@ -1,17 +1,19 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 using Zarf.Core;
 using Zarf.Entities;
+using Zarf.Core.Internals;
 
 namespace Zarf
 {
-    public interface IDbQuery<TEntity>
+    public interface IQuery<TEntity>
     {
-        IInternalDbQuery<TEntity> InternalDbQuery { get; set; }
+        DbContext DbContext { get; }
 
-        IDbQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
+        IInternalQuery<TEntity> InternalQuery { get; }
+
+        IQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 
         TEntity First();
 
@@ -37,43 +39,43 @@ namespace Zarf
 
         TEntity LastOrDefault();
 
-        IDbQuery<TEntity> Skip(int count);
+        IQuery<TEntity> Skip(int count);
 
-        IDbQuery<TEntity> Take(int count);
+        IQuery<TEntity> Take(int count);
 
-        IDbQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
+        IQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector);
 
         bool All(Expression<Func<TEntity, bool>> predicate);
 
         bool Any(Expression<Func<TEntity, bool>> predicate);
 
-        IDbQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
+        IQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TEntity> OrderByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector);
+        IQuery<TEntity> OrderByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TEntity> ThenBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
+        IQuery<TEntity> ThenBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TEntity> ThenByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector);
+        IQuery<TEntity> ThenByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
+        IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector);
 
-        IDbQuery<TResult> Join<TInner, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector);
+        IQuery<TResult> Join<TInner, TResult>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector);
 
-        IJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner);
+        IJoinQuery<TEntity, TInner> Join<TInner>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner);
 
-        IDbQuery<TEntity> DefaultIfEmpty();
+        IQuery<TEntity> DefaultIfEmpty();
 
-        IDbQuery<TEntity> Distinct();
+        IQuery<TEntity> Distinct();
 
-        IDbQuery<TEntity> Except(IDbQuery<TEntity> source2);
+        IQuery<TEntity> Except(IQuery<TEntity> source2);
 
-        IDbQuery<TEntity> Intersect(IDbQuery<TEntity> source2);
+        IQuery<TEntity> Intersect(IQuery<TEntity> source2);
 
-        IDbQuery<TEntity> Union(IDbQuery<TEntity> source2);
+        IQuery<TEntity> Union(IQuery<TEntity> source2);
 
-        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
+        IIncludeQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
 
-        IIncludeDbQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath);
+        IIncludeQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath);
 
         int Sum(Expression<Func<TEntity, int>> selector);
 
@@ -115,7 +117,7 @@ namespace Zarf
 
         decimal Average(Expression<Func<TEntity, decimal>> selector);
 
-        IDbQuery<TEntity> Concat(IDbQuery<TEntity> source2);
+        IQuery<TEntity> Concat(IQuery<TEntity> source2);
 
         int Count();
 

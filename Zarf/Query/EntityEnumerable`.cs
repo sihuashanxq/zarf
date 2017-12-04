@@ -11,12 +11,12 @@ namespace Zarf.Query
 
         protected Expression Expression { get; }
 
-        protected IQueryInterpreter Interpreter { get; }
+        protected IQueryExecutor Interpreter { get; }
 
         public EntityEnumerable(Expression query, IDbContextParts dbContextParts)
         {
             Expression = query;
-            Interpreter = new QueryInterpreter(dbContextParts);
+            Interpreter = new QueryExecutor(dbContextParts);
         }
 
         public virtual IEnumerator<TEntity> GetEnumerator()

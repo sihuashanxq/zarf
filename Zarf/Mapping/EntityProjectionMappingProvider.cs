@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 namespace Zarf.Mapping
 {
     public class EntityProjectionMappingProvider : IEntityProjectionMappingProvider
     {
-        private Dictionary<Expression, ColumnDescriptor> _cahces = new Dictionary<Expression, ColumnDescriptor>();
+        private ConcurrentDictionary<Expression, ColumnDescriptor> _cahces = new ConcurrentDictionary<Expression, ColumnDescriptor>();
 
         public void Map(ColumnDescriptor item)
         {
-            _cahces[item.Expression] = item;
+            _cahces.AddOrUpdate(item.Expression, item, (key, o) => item);
         }
 
         public int GetOrdinal(Expression node)

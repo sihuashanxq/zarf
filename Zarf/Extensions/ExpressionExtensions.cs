@@ -38,10 +38,5 @@ namespace Zarf.Extensions
 
             return constant.Value.Cast<T>();
         }
-
-        public static IEnumerable<ColumnExpression> GenerateColumns(this FromTableExpression table)
-        {
-            return ITranslatorExtensions.GenerateTableColumns(null, table);
-        }
     }
 }

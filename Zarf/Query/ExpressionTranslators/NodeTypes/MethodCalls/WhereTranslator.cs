@@ -24,9 +24,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
+            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
             RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);

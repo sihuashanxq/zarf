@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
+using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
@@ -48,7 +49,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             return query;
         }
 
-        private QueryExpression GetJoinQuery(IInternalDbQuery dbQuery)
+        private QueryExpression GetJoinQuery(IInternalQuery dbQuery)
         {
             var query = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
             if (query == null)

@@ -29,9 +29,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Except Query Expression");
 
-            if (setsQuery.Projections.Count == 0)
+            if (setsQuery.Columns.Count == 0)
             {
-                setsQuery.Projections.AddRange(GetColumns(setsQuery));
+                setsQuery.AddColumns(GetColumns(setsQuery));
             }
 
             query.Sets.Add(new ExceptExpression(setsQuery));

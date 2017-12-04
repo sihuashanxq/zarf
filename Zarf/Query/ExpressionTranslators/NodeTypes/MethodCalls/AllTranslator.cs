@@ -27,9 +27,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
+            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable(), Context.UpdateRefrenceSource);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
          
             RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
@@ -42,8 +42,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             else
                 query.AddWhere(Expression.Not(key));
 
-            query.Projections.Clear();
-            query.Projections.Add(col);
+            query.AddColumns(new[] { col});
             return new AllExpression(query);
         }
     }

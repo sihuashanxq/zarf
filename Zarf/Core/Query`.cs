@@ -3,24 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using Zarf.Core;
+using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
 
 namespace Zarf
 {
-    public class DbQuery<TEntity> : IDbQuery<TEntity>
+    public class Query<TEntity> : IQuery<TEntity>
     {
-        public IInternalDbQuery<TEntity> InternalDbQuery { get; set; }
+        private IInternalQuery<TEntity> _internalQuery;
 
-        public DbQuery(IQueryProvider provider)
+        public IInternalQuery<TEntity> InternalQuery => _internalQuery;
+
+        public DbContext DbContext { get; }
+
+        public Query(DbContext dbContext)
         {
-            InternalDbQuery = new InternalDbQuery<TEntity>(provider);
+            DbContext = dbContext;
+            _internalQuery = new InternalQuery<TEntity>(new QueryProvider(DbContext));
         }
 
-        internal DbQuery(IInternalDbQuery<TEntity> internalDbQuery)
+        internal Query(IInternalQuery<TEntity> internalDbQuery)
         {
-            InternalDbQuery = internalDbQuery;
+            _internalQuery = internalDbQuery;
+            DbContext = internalDbQuery.Provider.As<QueryProvider>().Context;
         }
 
         /// <summary>
@@ -30,144 +38,144 @@ namespace Zarf
         /// <returns></returns>
         public IEnumerator<TEntity> GetEnumerator()
         {
-            return InternalDbQuery.GetEnumerator();
+            return InternalQuery.GetEnumerator();
         }
 
-        public IDbQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
+        public IQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
         {
-            InternalDbQuery = InternalDbQuery.Where(predicate) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Where(predicate) as IInternalQuery<TEntity>;
             return this;
         }
 
         public List<TEntity> ToList()
         {
-            return InternalDbQuery.ToList();
+            return InternalQuery.ToList();
         }
 
         public TEntity[] ToArray()
         {
-            return InternalDbQuery.ToArray();
+            return InternalQuery.ToArray();
         }
 
         public IEnumerable<TEntity> AsEnumerable()
         {
-            return InternalDbQuery.AsEnumerable();
+            return InternalQuery.AsEnumerable();
         }
 
         public TEntity First()
         {
-            return InternalDbQuery.First();
+            return InternalQuery.First();
         }
 
         public TEntity First(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.First(predicate);
+            return InternalQuery.First(predicate);
         }
 
         public TEntity FirstOrDefault()
         {
-            return InternalDbQuery.FirstOrDefault();
+            return InternalQuery.FirstOrDefault();
         }
 
         public TEntity FirstOrDefault(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.FirstOrDefault(predicate);
+            return InternalQuery.FirstOrDefault(predicate);
         }
 
         public TEntity Single()
         {
-            return InternalDbQuery.Single();
+            return InternalQuery.Single();
         }
 
         public TEntity Single(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.Single(predicate);
+            return InternalQuery.Single(predicate);
         }
 
         public TEntity SingleOrDefault()
         {
-            return InternalDbQuery.SingleOrDefault();
+            return InternalQuery.SingleOrDefault();
         }
 
         public TEntity SingleOrDefault(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.SingleOrDefault(predicate);
+            return InternalQuery.SingleOrDefault(predicate);
         }
 
         public TEntity Last(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.Last(predicate);
+            return InternalQuery.Last(predicate);
         }
 
         public TEntity Last()
         {
-            return InternalDbQuery.Last();
+            return InternalQuery.Last();
         }
 
         public TEntity LastOrDefault(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.LastOrDefault(predicate);
+            return InternalQuery.LastOrDefault(predicate);
         }
 
         public TEntity LastOrDefault()
         {
-            return InternalDbQuery.LastOrDefault();
+            return InternalQuery.LastOrDefault();
         }
 
-        public IDbQuery<TEntity> Skip(int count)
+        public IQuery<TEntity> Skip(int count)
         {
-            InternalDbQuery = InternalDbQuery.Skip(count) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Skip(count) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> Take(int count)
+        public IQuery<TEntity> Take(int count)
         {
-            InternalDbQuery = InternalDbQuery.Take(count) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Take(count) as IInternalQuery<TEntity>;
             return this;
         }
 
         public bool All(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.All(predicate);
+            return InternalQuery.All(predicate);
         }
 
         public bool Any(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.Any(predicate);
+            return InternalQuery.Any(predicate);
         }
 
-        public IDbQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
+        public IQuery<TResult> Select<TResult>(Expression<Func<TEntity, TResult>> selector)
         {
-            return new DbQuery<TResult>(InternalDbQuery.Select(selector) as IInternalDbQuery<TResult>);
+            return new Query<TResult>(InternalQuery.Select(selector) as IInternalQuery<TResult>);
         }
 
-        public IDbQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        public IQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            InternalDbQuery = InternalDbQuery.OrderBy(keySelector) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.OrderBy(keySelector) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> OrderByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        public IQuery<TEntity> OrderByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            InternalDbQuery = InternalDbQuery.OrderByDescending(keySelector) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.OrderByDescending(keySelector) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> ThenBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        public IQuery<TEntity> ThenBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            InternalDbQuery = InternalDbQuery.ThenBy(keySelector) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.ThenBy(keySelector) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> ThenByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        public IQuery<TEntity> ThenByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            InternalDbQuery = InternalDbQuery.ThenByDescending(keySelector) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.ThenByDescending(keySelector) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        public IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            InternalDbQuery = InternalDbQuery.GroupBy(keySelector) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.GroupBy(keySelector) as IInternalQuery<TEntity>;
             return this;
         }
 
@@ -179,17 +187,17 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation)
+        public IIncludeQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation)
         {
-            return new IncludeDbQuery<TEntity, TProperty>(
-                InternalDbQuery.Include(
+            return new IncludeQuery<TEntity, TProperty>(
+                InternalQuery.Include(
                     propertyPath,
                     propertyRelation ?? CreateDeafultKeyRealtion<TEntity, TProperty>()
                     )
                 );
         }
 
-        public IIncludeDbQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath)
+        public IIncludeQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath)
         {
             return Include(propertyPath, null);
         }
@@ -236,180 +244,180 @@ namespace Zarf
             return foreignKey;
         }
 
-        public IDbQuery<TEntity> DefaultIfEmpty()
+        public IQuery<TEntity> DefaultIfEmpty()
         {
-            InternalDbQuery = InternalDbQuery.DefaultIfEmpty() as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.DefaultIfEmpty() as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> Distinct()
+        public IQuery<TEntity> Distinct()
         {
-            InternalDbQuery = InternalDbQuery.Distinct() as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Distinct() as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> Except(IDbQuery<TEntity> other)
+        public IQuery<TEntity> Except(IQuery<TEntity> other)
         {
-            InternalDbQuery = InternalDbQuery.Except(other.InternalDbQuery) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Except(other.InternalQuery) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> Intersect(IDbQuery<TEntity> other)
+        public IQuery<TEntity> Intersect(IQuery<TEntity> other)
         {
-            InternalDbQuery = InternalDbQuery.Intersect(other.InternalDbQuery) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Intersect(other.InternalQuery) as IInternalQuery<TEntity>;
             return this;
         }
 
-        public IDbQuery<TEntity> Union(IDbQuery<TEntity> other)
+        public IQuery<TEntity> Union(IQuery<TEntity> other)
         {
-            InternalDbQuery = InternalDbQuery.Union(other.InternalDbQuery) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Union(other.InternalQuery) as IInternalQuery<TEntity>;
             return this;
         }
 
         public int Sum(Expression<Func<TEntity, int>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public long Sum(Expression<Func<TEntity, long>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public decimal? Sum(Expression<Func<TEntity, decimal?>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public double? Sum(Expression<Func<TEntity, double?>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public float Sum(Expression<Func<TEntity, float>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public long? Sum(Expression<Func<TEntity, long?>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public float? Sum(Expression<Func<TEntity, float?>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public double Sum(Expression<Func<TEntity, double>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public int? Sum(Expression<Func<TEntity, int?>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public decimal Sum(Expression<Func<TEntity, decimal>> selector)
         {
-            return InternalDbQuery.Sum(selector);
+            return InternalQuery.Sum(selector);
         }
 
         public double Average(Expression<Func<TEntity, int>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public double Average(Expression<Func<TEntity, long>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public decimal? Average(Expression<Func<TEntity, decimal?>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public double? Average(Expression<Func<TEntity, double?>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public float Average(Expression<Func<TEntity, float>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public double? Average(Expression<Func<TEntity, long?>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public float? Average(Expression<Func<TEntity, float?>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public double Average(Expression<Func<TEntity, double>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public double? Average(Expression<Func<TEntity, int?>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
         public decimal Average(Expression<Func<TEntity, decimal>> selector)
         {
-            return InternalDbQuery.Average(selector);
+            return InternalQuery.Average(selector);
         }
 
-        public IDbQuery<TEntity> Concat(IDbQuery<TEntity> other)
+        public IQuery<TEntity> Concat(IQuery<TEntity> other)
         {
-            InternalDbQuery = InternalDbQuery.Concat(other.InternalDbQuery) as IInternalDbQuery<TEntity>;
+            _internalQuery = InternalQuery.Concat(other.InternalQuery) as IInternalQuery<TEntity>;
             return this;
         }
 
         public int Count()
         {
-            return InternalDbQuery.Count();
+            return InternalQuery.Count();
         }
 
         public int Count(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.Count(predicate);
+            return InternalQuery.Count(predicate);
         }
 
         public long LongCount()
         {
-            return InternalDbQuery.LongCount();
+            return InternalQuery.LongCount();
         }
 
         public long LongCount(Expression<Func<TEntity, bool>> predicate)
         {
-            return InternalDbQuery.LongCount(predicate);
+            return InternalQuery.LongCount(predicate);
         }
 
         public TResult Max<TResult>(Expression<Func<TEntity, TResult>> selector)
         {
-            return InternalDbQuery.Max(selector);
+            return InternalQuery.Max(selector);
         }
 
         public TResult Min<TResult>(Expression<Func<TEntity, TResult>> selector)
         {
-            return InternalDbQuery.Max(selector);
+            return InternalQuery.Max(selector);
         }
 
-        public IDbQuery<TResult> Join<TInner, TResult>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector)
+        public IQuery<TResult> Join<TInner, TResult>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType, Expression<Func<TEntity, TInner, TResult>> resultSelector)
         {
             return Join(inner, predicate, joinType).Select(resultSelector);
         }
 
-        public IJoinQuery<TEntity, TInner> Join<TInner>(IDbQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner)
+        public IJoinQuery<TEntity, TInner> Join<TInner>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            return new JoinQuery<TEntity, TInner>(JoinQuery.CreateJoinQuery(predicate, inner.InternalDbQuery, joinType), InternalDbQuery);
+            return new JoinQuery<TEntity, TInner>(JoinQuery.CreateJoinQuery(predicate, inner.InternalQuery, joinType), InternalQuery);
         }
     }
 }

@@ -15,10 +15,10 @@ namespace Zarf.Query
         public IQueryContext CreateContext(IDbContextParts dbContextParts)
         {
             return new QueryContext(
-                    new EntityMemberSourceMappingProvider(),
+                    new MemberAccessMapper(),
                     new EntityProjectionMappingProvider(),
                     new PropertyNavigationContext(),
-                    new QuerySourceProvider(),
+                    new LambdaParameterMapper(),
                     new ProjectionExpressionVisitor(),
                     new AliasGenerator(),
                     new MemberValueCache(),
@@ -27,10 +27,10 @@ namespace Zarf.Query
         }
 
         public IQueryContext CreateContext(
-            IEntityMemberSourceMappingProvider sourceMappingProvider = null,
+            IMemberAccessMapper sourceMappingProvider = null,
             IEntityProjectionMappingProvider mappingProvider = null,
             IPropertyNavigationContext navigationContext = null,
-            IQuerySourceProvider sourceProvider = null,
+            ILambdaParameterMapper sourceProvider = null,
             IProjectionScanner scanner = null,
             IAliasGenerator aliasGenerator = null,
             IMemberValueCache memValue = null,
@@ -38,10 +38,10 @@ namespace Zarf.Query
             )
         {
             return new QueryContext(
-                sourceMappingProvider ?? new EntityMemberSourceMappingProvider(),
+                sourceMappingProvider ?? new MemberAccessMapper(),
                 mappingProvider ?? new EntityProjectionMappingProvider(),
                 navigationContext ?? new PropertyNavigationContext(),
-                sourceProvider ?? new QuerySourceProvider(),
+                sourceProvider ?? new LambdaParameterMapper(),
                 scanner ?? new ProjectionExpressionVisitor(),
                 aliasGenerator ?? new AliasGenerator(),
                 memValue ?? new MemberValueCache(),

@@ -24,17 +24,21 @@ namespace Zarf.Mapping
             return Caches.GetOrAdd(typeOfEntity, key =>
             {
                 var members = new List<IMemberDescriptor>();
-                foreach (var property in typeOfEntity
+                var properties = typeOfEntity
                     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(item => item.CanRead && item.CanWrite)
-                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.PropertyType)))
+                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || (item.CanRead && item.CanWrite))
+                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.PropertyType));
+
+                var fileds = typeOfEntity
+                    .GetFields(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.FieldType));
+
+                foreach (var property in properties)
                 {
                     members.Add(new MemberDescriptor(property));
                 }
 
-                foreach (var field in typeOfEntity
-                    .GetFields(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.FieldType)))
+                foreach (var field in fileds)
                 {
                     members.Add(new MemberDescriptor(field));
                 }

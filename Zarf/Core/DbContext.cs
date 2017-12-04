@@ -29,9 +29,9 @@ namespace Zarf
             DbModifyExecutor = new DbModifyExecutor(DbContextParts.EntityCommandFacotry, dbContextParts.CommandTextBuilder, Tracker);
         }
 
-        public IDbQuery<TEntity> Query<TEntity>()
+        public IQuery<TEntity> Query<TEntity>()
         {
-            return new DbQuery<TEntity>(new DbQueryProvider(this));
+            return new Query<TEntity>(this);
         }
 
         public void TrackEntity<TEntity>(TEntity entity)

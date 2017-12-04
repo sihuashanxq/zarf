@@ -1,105 +1,107 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Entities;
+using Zarf.Extensions;
 using Zarf.Mapping;
+using Zarf.Query.Internals;
 
 namespace Zarf.Query.Expressions
 {
-    public class QueryExpression : FromTableExpression
+    public class QueryExpression : Expression
     {
-        /// <summary>
-        /// 查询投影
-        /// </summary>
-        public List<ColumnDescriptor> Projections { get; }
+        protected Type TypeOfExpression { get; set; }
 
-        /// <summary>
-        /// 表连接
-        /// </summary>
+        public Table Table { get; set; }
+
+        public string Alias { get; }
+
+        public override Type Type => TypeOfExpression;
+
+        public override ExpressionType NodeType => ExpressionType.Extension;
+
+        public List<ColumnDescriptor> Columns { get; }
+
         public List<JoinExpression> Joins { get; }
 
-        /// <summary>
-        /// 代表其他查询集合
-        /// Union Except etc...
-        /// </summary>
         public List<SetsExpression> Sets { get; }
 
-        /// <summary>
-        /// 排序
-        /// </summary>
         public List<OrderExpression> Orders { get; }
 
-        /// <summary>
-        /// 分组
-        /// </summary>
         public List<GroupExpression> Groups { get; }
 
-        /// <summary>
-        /// 条件
-        /// </summary>
         public WhereExperssion Where { get; set; }
 
-        /// <summary>
-        /// 去重
-        /// </summary>
         public bool IsDistinct { get; set; }
 
-        /// <summary>
-        /// 限制条数
-        /// </summary>
         public int Limit { get; set; }
 
-        /// <summary>
-        /// 查询结果偏移量
-        /// </summary>
         public SkipExpression Offset { get; set; }
 
-        /// <summary>
-        /// 为空时返回默认值
-        /// </summary>
         public bool DefaultIfEmpty { get; set; }
 
-        /// <summary>
-        /// 表示一个子查询
-        /// </summary>
         public QueryExpression SubQuery { get; protected set; }
+
+        public QueryExpression Container { get; protected set; }
 
         public EntityResult Result { get; set; }
 
-        public QueryExpression(Type entityType, string alias = "")
-            : base(entityType, alias)
+        public IQueryColumnCaching ColumnCaching { get; }
+
+        protected HashSet<string> ColumnAliases { get; }
+
+        public QueryExpression(Type typeOfEntity, IQueryColumnCaching columnCaching, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Projections = new List<ColumnDescriptor>();
+            Columns = new List<ColumnDescriptor>();
+            ColumnAliases = new HashSet<string>();
+            TypeOfExpression = typeOfEntity;
+            Table = typeOfEntity.ToTable();
+            ColumnCaching = columnCaching;
+            Alias = alias;
         }
 
-        public QueryExpression PushDownSubQuery(string fromTableAlias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
+        public QueryExpression PushDownSubQuery(string alias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
         {
-            var query = new QueryExpression(Type, fromTableAlias)
+            var query = new QueryExpression(Type, ColumnCaching, alias)
             {
                 SubQuery = this,
                 Table = null,
-                DefaultIfEmpty = DefaultIfEmpty
+                DefaultIfEmpty = DefaultIfEmpty,
             };
 
             DefaultIfEmpty = false;
-            Parent = query;
+            Container = query;
             query.Result = query.SubQuery.Result;
             return subQueryHandle != null ? subQueryHandle(query) : query;
         }
 
-        public void AddJoin(JoinExpression table)
+        public void AddJoin(JoinExpression joinQuery)
         {
-            Joins.Add(table);
+            joinQuery.Query.Container = this;
+            Joins.Add(joinQuery);
         }
 
-        public void AddProjections(IEnumerable<ColumnDescriptor> projections)
+        public void AddColumns(IEnumerable<ColumnDescriptor> columns)
         {
-            Projections.Clear();
-            Projections.AddRange(projections);
+            foreach (var col in columns
+                .Select(item => item.Expression)
+                .OfType<ColumnExpression>())
+            {
+                while (ColumnAliases.Contains(col.Alias))
+                {
+                    col.Alias = col.Alias + "_1";
+                }
+
+                ColumnAliases.Add(col.Alias);
+                ColumnCaching.AddColumn(col);
+            }
+
+            Columns.AddRange(columns);
         }
 
         public void AddWhere(Expression predicate)
@@ -112,11 +114,10 @@ namespace Zarf.Query.Expressions
             if (Where == null)
             {
                 Where = new WhereExperssion(predicate);
+                return;
             }
-            else
-            {
-                Where.Combine(predicate);
-            }
+
+            Where.Combine(predicate);
         }
 
         /// <summary>
@@ -132,12 +133,29 @@ namespace Zarf.Query.Expressions
                 Where == null &&
                 Offset == null &&
                 SubQuery == null &&
-                Projections.Count == 0 &&
+                Columns.Count == 0 &&
                 Orders.Count == 0 &&
                 Groups.Count == 0 &&
                 Sets.Count == 0 &&
                 Joins.Count == 0 &&
                 Limit == 0;
+        }
+
+        public IEnumerable<ColumnExpression> GenerateTableColumns()
+        {
+            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
+            foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
+            {
+                yield return new ColumnExpression(
+                    this,
+                    memberDescriptor.Member,
+                    memberDescriptor.Name);
+            }
+        }
+
+        public void ChangeTypeOfExpression(Type typeOfExpression)
+        {
+            TypeOfExpression = typeOfExpression;
         }
     }
 }

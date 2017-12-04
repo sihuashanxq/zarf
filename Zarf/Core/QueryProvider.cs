@@ -2,19 +2,20 @@
 using System.Linq.Expressions;
 using Zarf.Query;
 using Zarf.Core;
+using Zarf.Core.Internals;
 
 namespace Zarf
 {
-    public class DbQueryProvider : IQueryProvider
+    public class QueryProvider : IQueryProvider
     {
         public DbContext Context { get; }
 
-        public IQueryInterpreter QueryInterpreter { get; }
+        public IQueryExecutor QueryInterpreter { get; }
 
-        public DbQueryProvider(DbContext dbContext)
+        public QueryProvider(DbContext dbContext)
         {
             Context = dbContext;
-            QueryInterpreter = new QueryInterpreter(dbContext.DbContextParts);
+            QueryInterpreter = new QueryExecutor(dbContext.DbContextParts);
         }
 
         public IQueryable CreateQuery(Expression query)
@@ -24,7 +25,7 @@ namespace Zarf
 
         public IQueryable<TElement> CreateQuery<TElement>(Expression query)
         {
-            return new InternalDbQuery<TElement>(this, query);
+            return new InternalQuery<TElement>(this, query);
         }
 
         public object Execute(Expression query)

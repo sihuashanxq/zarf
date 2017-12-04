@@ -12,7 +12,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(ParameterExpression parameter)
         {
-            return Context.QuerySourceProvider.GetSource(parameter) ?? parameter;
+            return Context.LambdaParameterMapper.GetMappedExpression(parameter) ?? parameter;
         }
     }
 }

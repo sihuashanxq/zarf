@@ -21,7 +21,7 @@ namespace Zarf
         /// </summary>
         public static bool IsAnonymouseType(Type type)
         {
-            return type.Name.Contains(" ");
+            return type.Name.Contains(AnonymouseTypePrefix);
         }
 
         public static Expression ExpressionTrue = Expression.Equal(Expression.Constant(true), Expression.Constant(true));

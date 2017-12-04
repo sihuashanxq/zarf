@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Core;
+using Zarf.Core.Internals;
 
 namespace Zarf
 {
-    public class IncludeDbQuery<TEntity, TProperty> : DbQuery<TEntity>, IIncludeDbQuery<TEntity, TProperty>
+    public class IncludeQuery<TEntity, TProperty> : Query<TEntity>, IIncludeQuery<TEntity, TProperty>
     {
-        public IncludeDbQuery(IInternalDbQuery<TEntity> internalDbQuery) : base(internalDbQuery)
+        public IncludeQuery(IInternalQuery<TEntity> internalDbQuery) : base(internalDbQuery)
         {
 
         }
@@ -21,19 +22,19 @@ namespace Zarf
         /// <param name="dbQuery">原始查询</param>
         /// <param name="propertyPath">属性路径</param>
         /// <param name="propertyRelation">关联关系</param>
-        public IIncludeDbQuery<TEntity, TKey> ThenInclude<TKey>(
+        public IIncludeQuery<TEntity, TKey> ThenInclude<TKey>(
             Expression<Func<TProperty, IEnumerable<TKey>>>
             propertyPath, Expression<Func<TProperty, TKey, bool>> propertyRelation)
         {
-            return new IncludeDbQuery<TEntity, TKey>(
-                InternalDbQuery.ThenInclude(
+            return new IncludeQuery<TEntity, TKey>(
+                InternalQuery.ThenInclude(
                     propertyPath,
                     propertyRelation ?? CreateDeafultKeyRealtion<TProperty, TKey>()
                 )
             );
         }
 
-        public IIncludeDbQuery<TEntity, TKey> ThenInclude<TKey>(Expression<Func<TProperty, IEnumerable<TKey>>> propertyPath)
+        public IIncludeQuery<TEntity, TKey> ThenInclude<TKey>(Expression<Func<TProperty, IEnumerable<TKey>>> propertyPath)
         {
             return ThenInclude(propertyPath, null);
         }
