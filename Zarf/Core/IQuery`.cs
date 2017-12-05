@@ -7,7 +7,12 @@ using Zarf.Core.Internals;
 
 namespace Zarf
 {
-    public interface IQuery<TEntity>
+    public interface IQuery
+    {
+
+    }
+
+    public interface IQuery<TEntity> : IQuery
     {
         DbContext DbContext { get; }
 

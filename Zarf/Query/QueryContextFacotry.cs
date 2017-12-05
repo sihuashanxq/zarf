@@ -16,7 +16,7 @@ namespace Zarf.Query
         {
             return new QueryContext(
                     new MemberAccessMapper(),
-                    new EntityProjectionMappingProvider(),
+                    new QueryColumnOrdinalMapper(),
                     new PropertyNavigationContext(),
                     new LambdaParameterMapper(),
                     new ProjectionExpressionVisitor(),
@@ -28,7 +28,7 @@ namespace Zarf.Query
 
         public IQueryContext CreateContext(
             IMemberAccessMapper sourceMappingProvider = null,
-            IEntityProjectionMappingProvider mappingProvider = null,
+            IQueryColumnOrdinalMapper mappingProvider = null,
             IPropertyNavigationContext navigationContext = null,
             ILambdaParameterMapper sourceProvider = null,
             IProjectionScanner scanner = null,
@@ -39,7 +39,7 @@ namespace Zarf.Query
         {
             return new QueryContext(
                 sourceMappingProvider ?? new MemberAccessMapper(),
-                mappingProvider ?? new EntityProjectionMappingProvider(),
+                mappingProvider ?? new QueryColumnOrdinalMapper(),
                 navigationContext ?? new PropertyNavigationContext(),
                 sourceProvider ?? new LambdaParameterMapper(),
                 scanner ?? new ProjectionExpressionVisitor(),

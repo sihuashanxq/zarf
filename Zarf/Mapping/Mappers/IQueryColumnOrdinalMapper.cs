@@ -3,11 +3,11 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {
-    public interface IEntityProjectionMappingProvider
+    public interface IQueryColumnOrdinalMapper
     {
         bool IsMapped(Expression node);
 
-        void Map(ColumnDescriptor projection);
+        void Map(ColumnDescriptor col);
 
         int GetOrdinal(Expression node);
     }

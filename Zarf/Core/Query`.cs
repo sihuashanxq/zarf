@@ -43,8 +43,7 @@ namespace Zarf
 
         public IQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
         {
-            _internalQuery = InternalQuery.Where(predicate) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Where(predicate) as IInternalQuery<TEntity>);
         }
 
         public List<TEntity> ToList()
@@ -124,14 +123,12 @@ namespace Zarf
 
         public IQuery<TEntity> Skip(int count)
         {
-            _internalQuery = InternalQuery.Skip(count) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Skip(count) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> Take(int count)
         {
-            _internalQuery = InternalQuery.Take(count) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Take(count) as IInternalQuery<TEntity>);
         }
 
         public bool All(Expression<Func<TEntity, bool>> predicate)
@@ -151,32 +148,27 @@ namespace Zarf
 
         public IQuery<TEntity> OrderBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            _internalQuery = InternalQuery.OrderBy(keySelector) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.OrderBy(keySelector) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> OrderByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            _internalQuery = InternalQuery.OrderByDescending(keySelector) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.OrderByDescending(keySelector) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> ThenBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            _internalQuery = InternalQuery.ThenBy(keySelector) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.ThenBy(keySelector) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> ThenByDescending<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            _internalQuery = InternalQuery.ThenByDescending(keySelector) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.ThenByDescending(keySelector) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
-            _internalQuery = InternalQuery.GroupBy(keySelector) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.GroupBy(keySelector) as IInternalQuery<TEntity>);
         }
 
         /// <summary>
@@ -246,32 +238,27 @@ namespace Zarf
 
         public IQuery<TEntity> DefaultIfEmpty()
         {
-            _internalQuery = InternalQuery.DefaultIfEmpty() as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.DefaultIfEmpty() as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> Distinct()
         {
-            _internalQuery = InternalQuery.Distinct() as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Distinct() as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> Except(IQuery<TEntity> other)
         {
-            _internalQuery = InternalQuery.Except(other.InternalQuery) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Except(other.InternalQuery) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> Intersect(IQuery<TEntity> other)
         {
-            _internalQuery = InternalQuery.Intersect(other.InternalQuery) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Intersect(other.InternalQuery) as IInternalQuery<TEntity>);
         }
 
         public IQuery<TEntity> Union(IQuery<TEntity> other)
         {
-            _internalQuery = InternalQuery.Union(other.InternalQuery) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Union(other.InternalQuery) as IInternalQuery<TEntity>);
         }
 
         public int Sum(Expression<Func<TEntity, int>> selector)
@@ -376,8 +363,7 @@ namespace Zarf
 
         public IQuery<TEntity> Concat(IQuery<TEntity> other)
         {
-            _internalQuery = InternalQuery.Concat(other.InternalQuery) as IInternalQuery<TEntity>;
-            return this;
+            return new Query<TEntity>(InternalQuery.Concat(other.InternalQuery) as IInternalQuery<TEntity>);
         }
 
         public int Count()

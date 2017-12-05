@@ -17,7 +17,7 @@ namespace Zarf.Query
 
         IPropertyNavigationContext PropertyNavigationContext { get; }
 
-        IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
+        IQueryColumnOrdinalMapper ProjectionMappingProvider { get; }
 
         IAliasGenerator Alias { get; }
 

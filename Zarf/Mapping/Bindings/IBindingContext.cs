@@ -8,7 +8,7 @@ namespace Zarf.Mapping.Bindings
     {
         Expression Query { get; }
 
-        IEntityProjectionMappingProvider MappingProvider { get; }
+        IQueryColumnOrdinalMapper MappingProvider { get; }
 
         EntityCreationHandleProvider CreationHandleProvider { get; set; }
     }

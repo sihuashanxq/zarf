@@ -30,7 +30,18 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
-            query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]).UnWrap());
+
+            var predicate = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
+            if (true)
+            {
+                var exists = new ExistsExpression(predicate.As<LambdaExpression>().Body.As<BinaryExpression>().Left.As<QueryExpression>());
+                exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
+                query.AddWhere(exists);
+            }
+            else
+            {
+                query.AddWhere(predicate);
+            }
 
             if (methodCall.Method.Name == "SingleOrDefault")
             {

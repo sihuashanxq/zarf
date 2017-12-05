@@ -35,7 +35,6 @@ namespace Zarf.Mapping.Bindings.Binders
                 [ReflectionUtil.DateTimeType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetDateTime)),
                 [ReflectionUtil.GuidType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetGuid)),
                 [ReflectionUtil.BooleanType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetBoolean)),
-
                 [ReflectionUtil.CharNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetCharNullable)),
                 [ReflectionUtil.ByteNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetByteNullable)),
                 [ReflectionUtil.IntNullableType] = typeof(MemberValueGetterProvider).GetMethod(nameof(GetInt32Nullable)),

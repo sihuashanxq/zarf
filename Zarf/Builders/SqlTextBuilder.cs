@@ -67,6 +67,9 @@ namespace Zarf.Builders
                 case AnyExpression any:
                     VisitAny(any);
                     break;
+                case ExistsExpression exists:
+                    VisitExists(exists);
+                    break;
                 case DbStoreExpression store:
                     VisitStore(store);
                     break;
@@ -102,6 +105,8 @@ namespace Zarf.Builders
         protected abstract Expression VisitAll(AllExpression all);
 
         protected abstract Expression VisitAny(AnyExpression any);
+
+        protected abstract Expression VisitExists(ExistsExpression exists);
 
         protected abstract Expression VisitStore(DbStoreExpression store);
 

@@ -26,7 +26,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var typeOfMember = mem.Member.GetPropertyType();
             if (typeof(IInternalQuery).IsAssignableFrom(typeOfMember))
             {
-                return new QueryExpression(typeOfMember,Context.ColumnCaching, Context.Alias.GetNewTable());
+                return new QueryExpression(typeOfMember, Context.ColumnCaching, Context.Alias.GetNewTable());
             }
 
             if (objExp.Is<ColumnExpression>())
@@ -72,8 +72,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         private bool EvalMemberValue(MemberInfo memberInfo, Expression objExp, out Expression value)
         {
             object obj = null;
-
-            if (!objExp.Is<ConstantExpression>())
+            if (objExp != null && !objExp.Is<ConstantExpression>())
             {
                 value = null;
                 return false;

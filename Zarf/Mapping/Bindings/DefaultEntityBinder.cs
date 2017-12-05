@@ -32,7 +32,7 @@ namespace Zarf.Mapping.Bindings
     {
         public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader), "reader");
 
-        public IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
+        public IQueryColumnOrdinalMapper ProjectionMappingProvider { get; }
 
         public IPropertyNavigationContext NavigationContext { get; }
 

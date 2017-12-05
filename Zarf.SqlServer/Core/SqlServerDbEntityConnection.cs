@@ -54,6 +54,7 @@ namespace Zarf.SqlServer.Core
             {
                 Close();
                 SqlTransaction = null;
+                _transCount = 0;
             }
         }
 
@@ -69,6 +70,7 @@ namespace Zarf.SqlServer.Core
                 SqlTransaction.Commit();
                 Close();
                 SqlTransaction = null;
+                _transCount = 0;
             }
         }
 

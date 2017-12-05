@@ -40,7 +40,7 @@ namespace Zarf.Query
     {
         public IMemberAccessMapper MemberAccessMapper { get; }
 
-        public IEntityProjectionMappingProvider ProjectionMappingProvider { get; }
+        public IQueryColumnOrdinalMapper ProjectionMappingProvider { get; }
 
         public IPropertyNavigationContext PropertyNavigationContext { get; }
 
@@ -58,7 +58,7 @@ namespace Zarf.Query
 
         public QueryContext(
             IMemberAccessMapper memberMappingProvider,
-            IEntityProjectionMappingProvider projectionMappingProvider,
+            IQueryColumnOrdinalMapper projectionMappingProvider,
             IPropertyNavigationContext navigationContext,
             ILambdaParameterMapper sourceProvider,
             IProjectionScanner projectionFinder,

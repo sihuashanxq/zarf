@@ -8,7 +8,7 @@ namespace Zarf.Query
 
         IQueryContext CreateContext(
             IMemberAccessMapper sourceMappingProvider = null,
-            IEntityProjectionMappingProvider mappingProvider = null,
+            IQueryColumnOrdinalMapper mappingProvider = null,
             IPropertyNavigationContext navigationContext = null,
             ILambdaParameterMapper sourceProvider = null,
             IProjectionScanner scanner = null,

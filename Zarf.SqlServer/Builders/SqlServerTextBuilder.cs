@@ -371,11 +371,11 @@ namespace Zarf.SqlServer.Builders
         {
             if (query.Limit != 0)
             {
-                Append(" TOP ", query.Limit);
+                Append(" TOP  ", query.Limit," ");
                 return;
             }
 
-            if (query.Container!=null&&(query.Orders.Count != 0 || query.Groups.Count != 0))
+            if (query.Container != null && (query.Orders.Count != 0 || query.Groups.Count != 0))
             {
                 Append(" TOP (100) Percent ");
             }
@@ -649,6 +649,14 @@ namespace Zarf.SqlServer.Builders
             }
 
             Append(";");
+        }
+
+        protected override Expression VisitExists(ExistsExpression exists)
+        {
+            Append(" EXISTS (");
+            BuildExpression(exists.Query);
+            Append(") ");
+            return exists;
         }
     }
 }

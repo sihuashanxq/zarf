@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public MethodCallExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-            Register(AggregateTranslator.SupprotedMethods, new AggregateTranslator(queryContext,queryCompiper));
+            Register(AggregateTranslator.SupprotedMethods, new AggregateTranslator(queryContext, queryCompiper));
             Register(SelectTranslator.SupprotedMethods, new SelectTranslator(queryContext, queryCompiper));
             Register(DefaultIfEmptyTranslator.SupprotedMethods, new DefaultIfEmptyTranslator(queryContext, queryCompiper));
             Register(DistinctTranslator.SupprotedMethods, new DistinctTranslator(queryContext, queryCompiper));
@@ -41,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var translator = GetTranslator(methodCall);
             if (translator != null)
             {
-                return translator.Translate( methodCall);
+                return translator.Translate(methodCall);
             }
 
             return TranslateMethodCall(methodCall);
@@ -72,12 +72,18 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        private Expression TranslateMethodCall( MethodCallExpression methodCall)
+        private Expression TranslateMethodCall(MethodCallExpression methodCall)
         {
-            var arguments = new List<Expression>();
-            var @object = Compiler.Compile(methodCall.Object);
-            var methodInfo = methodCall.Method;
+            var objExp = Compiler.Compile(methodCall.Object);
+            if (objExp != null &&
+                objExp.NodeType == ExpressionType.Constant &&
+                typeof(IQuery).IsAssignableFrom(objExp.Type))
+            {
+                return TranslateSubQuery(objExp.As<ConstantExpression>(), methodCall);
+            }
 
+            var arguments = new List<Expression>();
+            var methodInfo = methodCall.Method;
             foreach (var item in methodCall.Arguments)
             {
                 arguments.Add(Compiler.Compile(item));
@@ -87,13 +93,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var sqlFunction = methodCall.Method.GetCustomAttribute<SqlFunctionAttribute>();
             if (sqlFunction != null)
             {
-                return new SqlFunctionExpression(methodCall.Method, sqlFunction.Name, @object, arguments);
+                return new SqlFunctionExpression(methodCall.Method, sqlFunction.Name, objExp, arguments);
             }
 
-            if (@object == null || @object.NodeType == ExpressionType.Constant)
+            if (objExp == null || objExp.NodeType == ExpressionType.Constant)
             {
                 var parameters = new object[methodCall.Arguments.Count];
-                var instance = @object.As<ConstantExpression>()?.Value;
+                var instance = objExp.As<ConstantExpression>()?.Value;
                 var canEval = true;
                 for (var i = 0; i < arguments.Count; i++)
                 {
@@ -112,7 +118,27 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
             }
 
-            return Expression.Call(@object, methodInfo, arguments);
+            return Expression.Call(objExp, methodInfo, arguments);
+        }
+
+        private Expression TranslateSubQuery(ConstantExpression objExp, MethodCallExpression methodCall)
+        {
+            var query = objExp.As<ConstantExpression>().Value;
+            var internalQuery = query.GetType().GetProperty("InternalQuery").GetValue(query);
+            if (!methodCall.Method.ReturnType.IsCollection())
+            {
+                if (methodCall.Method.Name == "FirstOrDefault")
+                {
+                    var m = ReflectionUtil
+                        .AllQueryableMethods
+                        .FirstOrDefault(item => item.Name == "FirstOrDefault" && item.GetParameters().Length == 2)
+                        .MakeGenericMethod(methodCall.Method.ReturnType);
+                    var exp = Expression.Call(null, m, Expression.Constant(internalQuery), methodCall.Arguments[0]);
+                    return GetCompiledExpression(exp);
+                }
+            }
+
+            return null;
         }
     }
 }

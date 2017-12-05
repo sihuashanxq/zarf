@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Zarf.Mapping
 {
-    public class EntityProjectionMappingProvider : IEntityProjectionMappingProvider
+    public class QueryColumnOrdinalMapper : IQueryColumnOrdinalMapper
     {
         private ConcurrentDictionary<Expression, ColumnDescriptor> _cahces = new ConcurrentDictionary<Expression, ColumnDescriptor>();
 
