@@ -23,7 +23,7 @@ namespace Zarf.Query.ExpressionVisitors
                 return Expression.Lambda(lambdaBody, lambda.Parameters);
             }
 
-            return lambdaBody;
+            return lambda;
         }
 
         public override Expression Visit(Expression node)
@@ -36,10 +36,12 @@ namespace Zarf.Query.ExpressionVisitors
             var queryTranslator = TranslatorProvider.GetTranslator(node);
             if (queryTranslator != null)
             {
-                return queryTranslator.Translate(node);
+                node = queryTranslator.Translate(node);
+                return node;
             }
 
-            return base.Visit(node);
+            node = base.Visit(node);
+            return node;
         }
 
         public Expression Compile(Expression query)

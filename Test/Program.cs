@@ -96,8 +96,8 @@ namespace Zarf
                     .Select((a, b) => new { a, b })
                     .Select(item => new { item.a.Id, x = item.b.Id })
                     .Select(item => new { a = item.Id, b = item.x }).ToList();
-
-                var x = db.Users.Where(item => db.Users.FirstOrDefault(z => z.Id == item.Id) != null)
+                var zz = false;
+                var x = db.Users.Where(item => !(db.Users.FirstOrDefault(zzz => zzz.Id > 0) != null))
                     .ToList();
 
                 Console.ReadKey();

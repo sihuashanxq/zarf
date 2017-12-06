@@ -304,6 +304,11 @@ namespace Zarf.SqlServer.Builders
             {
                 case ExpressionType.Not:
                     Append(" NOT ( ");
+                    if (unary.Operand.Is<ConstantExpression>() && unary.Operand.Type == typeof(bool))
+                    {
+                        Append(" 1 =");
+                    }
+
                     BuildExpression(unary.Operand);
                     Append(" )");
                     break;
@@ -371,7 +376,7 @@ namespace Zarf.SqlServer.Builders
         {
             if (query.Limit != 0)
             {
-                Append(" TOP  ", query.Limit," ");
+                Append(" TOP  ", query.Limit, " ");
                 return;
             }
 
@@ -653,6 +658,11 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
+            if (exists.Query.Columns.Count == 0)
+            {
+                exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
+            }
+
             Append(" EXISTS (");
             BuildExpression(exists.Query);
             Append(") ");

@@ -15,14 +15,10 @@ namespace Zarf.Query.ExpressionVisitors
             switch (node.NodeType)
             {
                 case ExpressionType.Lambda:
-                    node = VisitLambda(node.Cast<LambdaExpression>());
-                    break;
+                    return VisitLambda(node.Cast<LambdaExpression>());
                 default:
-                    node = base.Visit(node);
-                    break;
+                    return base.Visit(node);
             }
-
-            return node;
         }
 
         protected virtual Expression VisitLambda(LambdaExpression lambda)
