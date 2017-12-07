@@ -68,11 +68,11 @@ namespace Zarf.Mapping.Bindings
             }
             else if (query.Is<AllExpression>())
             {
-                RootQuery = query.As<AllExpression>().Expression.As<QueryExpression>();
+                RootQuery = query.As<AllExpression>().Query.As<QueryExpression>();
             }
             else if (query.Is<AnyExpression>())
             {
-                RootQuery = query.As<AnyExpression>().Expression.As<QueryExpression>();
+                RootQuery = query.As<AnyExpression>().Query.As<QueryExpression>();
             }
             else
             {

@@ -39,7 +39,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             var column = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
             var predicate = Expression.Lambda(Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset)));
-            query.AddWhere(predicate);
+            query.CombineCondtion(predicate);
 
             return query;
         }

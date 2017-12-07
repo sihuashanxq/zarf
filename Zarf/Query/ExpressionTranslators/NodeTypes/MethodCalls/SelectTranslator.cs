@@ -41,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
             else
             {
-                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+                MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
             }
 
             var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
@@ -52,18 +52,18 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         protected virtual void RegisterJoinSelectQueries(QueryExpression query, Expression selector)
         {
-            var parameters = GetLambdaParameteres(selector);
+            var parameters = GetParameteres(selector);
             var i = 0;
             while (i < parameters.Count)
             {
                 var parameter = parameters[i];
                 if (i == 0)
                 {
-                    RegisterQuerySource(parameter, query);
+                    MapParameterWithQuery(parameter, query);
                 }
                 else
                 {
-                    RegisterQuerySource(parameter, query.Joins[i - 1].Query);
+                    MapParameterWithQuery(parameter, query.Joins[i - 1].Query);
                 }
                 i++;
             }

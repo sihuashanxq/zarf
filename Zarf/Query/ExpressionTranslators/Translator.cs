@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators
 {
@@ -13,10 +14,13 @@ namespace Zarf.Query.ExpressionTranslators
 
         public IQueryCompiler Compiler { get; }
 
+        public RelationExpressionVisitor RelationVisitor { get; }
+
         public Translator(IQueryContext queryContext, IQueryCompiler queryCompiper)
         {
             Context = queryContext;
             Compiler = queryCompiper;
+            RelationVisitor = new RelationExpressionVisitor();
         }
 
         public abstract Expression Translate(TExpression query);
@@ -24,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators
         public Expression Translate(Expression query)
             => Translate(query.Cast<TExpression>());
 
-        protected void RegisterQuerySource(ParameterExpression parameter, QueryExpression query)
+        protected void MapParameterWithQuery(ParameterExpression parameter, QueryExpression query)
         {
             Context.LambdaParameterMapper.Map(parameter, query);
         }
@@ -45,19 +49,24 @@ namespace Zarf.Query.ExpressionTranslators
             return Context.ProjectionScanner.Scan(exp);
         }
 
-        protected List<ParameterExpression> GetLambdaParameteres(Expression lambda)
+        protected List<ParameterExpression> GetParameteres(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();
         }
 
-        protected ParameterExpression GetFirstLambdaParameter(Expression lambda)
+        protected ParameterExpression GetFirstParameter(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();
         }
 
-        protected ParameterExpression GetLastLambdaParameter(Expression lambda)
+        protected ParameterExpression GetLastParameter(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.LastOrDefault();
+        }
+
+        protected Expression HandleCondtion(Expression predicate)
+        {
+            return RelationVisitor.Visit(predicate);
         }
     }
 }

@@ -39,10 +39,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             //关联关系
             var lambda = methodCall.Arguments[2].UnWrap().As<LambdaExpression>();
-            RegisterQuerySource(GetFirstLambdaParameter(lambda), previousQuery);
+            MapParameterWithQuery(GetFirstParameter(lambda), previousQuery);
 
             var relation = Compiler.Compile(lambda);
-            RegisterQuerySource(GetLastLambdaParameter(lambda), innerQuery);
+            MapParameterWithQuery(GetLastParameter(lambda), innerQuery);
             var condtion = Compiler.Compile(lambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));

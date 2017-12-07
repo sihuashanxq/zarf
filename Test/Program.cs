@@ -92,13 +92,15 @@ namespace Zarf
                 //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
-                var y = db.Users.Join(db.Users, (a, b) => a.Id == b.Id + 1)
+                var y = db.Users.Join(db.Users.Select(item => new { item.Id }),
+                    (a, b) => a.Id == b.Id + 1)
                     .Select((a, b) => new { a, b })
                     .Select(item => new { item.a.Id, x = item.b.Id })
                     .Select(item => new { a = item.Id, b = item.x }).ToList();
-                var zz = false;
-                var x = db.Users.Where(item => !(db.Users.FirstOrDefault(zzz => zzz.Id > 0) != null))
-                    .ToList();
+
+                var x = db.Users.FirstOrDefault(item => (true & (
+                db.Users.FirstOrDefault(xx => xx.Id == 2) != null)))
+                    ;
 
                 Console.ReadKey();
             }

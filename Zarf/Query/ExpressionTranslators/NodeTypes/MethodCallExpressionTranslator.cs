@@ -136,6 +136,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     var exp = Expression.Call(null, m, Expression.Constant(internalQuery), methodCall.Arguments[0]);
                     return GetCompiledExpression(exp);
                 }
+
+                if (methodCall.Method.Name == "Count")
+                {
+                    var m = ReflectionUtil
+                        .AllQueryableMethods
+                        .FirstOrDefault(item => item.Name == "Count" && item.GetParameters().Length == 1)
+                        .MakeGenericMethod(internalQuery.GetType().GetGenericArguments()[0]);
+                    var exp = Expression.Call(null, m, Expression.Constant(internalQuery));
+                    return GetCompiledExpression(exp);
+                }
             }
 
             return null;

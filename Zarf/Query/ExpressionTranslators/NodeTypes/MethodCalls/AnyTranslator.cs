@@ -30,10 +30,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
 
             query.AddColumns(new[] { new ColumnDescriptor(Utils.ExpressionOne) });
-            query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]));
+            query.CombineCondtion(GetCompiledExpression(methodCall.Arguments[1]));
             return new AllExpression(query);
         }
     }

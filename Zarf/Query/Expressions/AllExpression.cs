@@ -5,23 +5,23 @@ namespace Zarf.Query.Expressions
 {
     public class AllExpression : Expression
     {
-        public Expression Expression { get; }
+        public QueryExpression Query { get; }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public override Type Type { get; }
 
-        public AllExpression(Expression expression)
+        public AllExpression(QueryExpression query)
         {
             Type = typeof(bool);
-            Expression = expression;
+            Query = query;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return Expression.GetHashCode();
+                return Query.GetHashCode();
             }
         }
 

@@ -32,15 +32,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
          
-            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
 
             var key = GetCompiledExpression(methodCall.Arguments[1].UnWrap()).UnWrap();
             var col = new ColumnDescriptor(Utils.ExpressionOne);
 
             if (key.NodeType == ExpressionType.Lambda)
-                query.AddWhere(Expression.Not(key.As<LambdaExpression>().Body));
+                query.CombineCondtion(Expression.Not(key.As<LambdaExpression>().Body));
             else
-                query.AddWhere(Expression.Not(key));
+                query.CombineCondtion(Expression.Not(key));
 
             query.AddColumns(new[] { col});
             return new AllExpression(query);

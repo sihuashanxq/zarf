@@ -5,6 +5,7 @@ using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
@@ -24,104 +25,34 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
-            {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
-            }
+            var query = GetQueryExpression(methodCall.Arguments[0]);
+            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+            HandleQueryCondtion(query, methodCall.Arguments[1]);
 
-            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
-
-            var predicate = new RealtionExpressionVisitor().Visit(GetCompiledExpression(methodCall.Arguments[1]).UnWrap());
             if (methodCall.Method.Name == "SingleOrDefault")
             {
                 query.DefaultIfEmpty = true;
             }
 
-            query.AddWhere(predicate);
             return query;
         }
-    }
 
-    public class RealtionExpressionVisitor : ExpressionVisitors.ExpressionVisitorBase
-    {
-        public override Expression Visit(Expression node)
+        private QueryExpression GetQueryExpression(Expression exp)
         {
-            if (!node.Is<BinaryExpression>())
+            var query = GetCompiledExpression<QueryExpression>(exp);
+            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
             {
-                return base.Visit(node);
+                return query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            //NOT AND ÊÇ UnaryExpression
-            var binary = node.As<BinaryExpression>();
-            if (binary.Left.NodeType != ExpressionType.Extension && binary.Right.NodeType != ExpressionType.Extension)
-            {
-                return base.Visit(binary);
-            }
-
-            //QueryExpression AggrateExpression AllExpression AnyExpression
-            switch (binary.NodeType)
-            {
-                case ExpressionType.Equal:
-                    return Expression.Not(VisitNotEqual(binary.Left, binary.Right));
-                case ExpressionType.NotEqual:
-                    return VisitNotEqual(binary.Left, binary.Right);
-                case ExpressionType.And:
-                    break;
-                case ExpressionType.AndAlso:
-                    break;
-                case ExpressionType.GreaterThan:
-                    break;
-                case ExpressionType.GreaterThanOrEqual:
-                    break;
-                case ExpressionType.LessThan:
-                    break;
-                case ExpressionType.LessThanOrEqual:
-                    break;
-                case ExpressionType.Not:
-                    return VisitNot(binary.Left, binary.Right);
-                case ExpressionType.Or:
-                    break;
-                case ExpressionType.OrElse:
-                    break;
-            }
-
-            throw new System.Exception();
+            return query;
         }
 
-        protected override Expression VisitLambda(LambdaExpression lambda)
+        private void HandleQueryCondtion(QueryExpression query, Expression condtion)
         {
-            var lambdaBody = Visit(lambda.Body);
-            if (lambdaBody != lambda.Body)
-            {
-                return Expression.Lambda(lambdaBody, lambda.Parameters);
-            }
-
-            return lambda;
-        }
-
-        protected virtual Expression VisitNotEqual(Expression left, Expression right)
-        {
-            if (left.Is<QueryExpression>() && right.IsNullValueConstant())
-            {
-                return new ExistsExpression(left.As<QueryExpression>());
-            }
-
-            if (right.Is<QueryExpression>() && left.IsNullValueConstant())
-            {
-                return new ExistsExpression(right.As<QueryExpression>());
-            }
-
-            return null;
-        }
-
-        protected virtual Expression VisitNot(Expression oprand)
-        {
-            if (oprand.Is<AnyExpression>() || oprand.Is<AllExpression>())
-            {
-
-            }
-            return null;
+            condtion = GetCompiledExpression(condtion);
+            condtion = HandleCondtion(condtion);
+            query.CombineCondtion(condtion);
         }
     }
 }

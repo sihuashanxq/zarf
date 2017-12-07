@@ -36,7 +36,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (methodCall.Arguments.Count == 2)
             {
-                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+                MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
                 column = GetColumns(GetCompiledExpression(methodCall.Arguments[1])).FirstOrDefault().Expression.As<ColumnExpression>();
                 column.Alias = string.Empty;
             }
@@ -44,6 +44,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var aggregate = new AggregateExpression(methodCall.Method, column);
             query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
             query.AddColumns(new[] { new ColumnDescriptor() { Expression = aggregate, Ordinal = query.Columns.Count } });
+            query.ChangeTypeOfExpression(methodCall.Method.ReturnType);
             return query;
         }
     }

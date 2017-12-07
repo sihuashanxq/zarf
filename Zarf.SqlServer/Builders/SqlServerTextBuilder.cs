@@ -169,9 +169,8 @@ namespace Zarf.SqlServer.Builders
             }
             else
             {
-                Append(" (");
                 BuildExpression(join.Query);
-                Append(") AS " + join.Query.Alias.Escape());
+                Append(" AS " + join.Query.Alias.Escape());
             }
 
             using (BeginStopGenColumnAlias())
@@ -198,7 +197,7 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitQuery(QueryExpression query)
         {
-            Append(" SELECT  ");
+            Append(" ( SELECT  ");
 
             BuildDistinct(query);
             BuildLimit(query);
@@ -218,6 +217,7 @@ namespace Zarf.SqlServer.Builders
 
             BuildSets(query);
 
+            Append(" ) ");
             return query;
         }
 
@@ -234,7 +234,7 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitAll(AllExpression all)
         {
             Append(" IF NOT EXISTS(");
-            BuildExpression(all.Expression);
+            BuildExpression(all.Query);
             Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return all;
         }
@@ -242,7 +242,7 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitAny(AnyExpression any)
         {
             Append(" IF EXISTS(");
-            BuildExpression(any.Expression);
+            BuildExpression(any.Query);
             Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return any;
         }
@@ -277,7 +277,7 @@ namespace Zarf.SqlServer.Builders
             }
             else if (NumbericTypes.Contains(constant.Type))
             {
-                Builder.Append(constant.Value);
+                Append(constant.Value);
             }
             else if (constant.Value.Is<DateTime>())
             {
@@ -415,9 +415,7 @@ namespace Zarf.SqlServer.Builders
         {
             if (query.SubQuery != null)
             {
-                Append('(');
                 BuildExpression(query.SubQuery);
-                Append(')');
             }
         }
 

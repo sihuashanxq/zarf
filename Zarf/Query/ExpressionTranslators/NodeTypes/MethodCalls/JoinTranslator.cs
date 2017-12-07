@@ -35,12 +35,17 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 throw new Exception("error join query!");
             }
 
+            if (query.Where != null)
+            {
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+            }
+
             foreach (var item in joins)
             {
                 queries.Add(GetJoinQuery(item.InternalDbQuery));
                 for (var i = 0; i < item.Predicate.Parameters.Count; i++)
                 {
-                    RegisterQuerySource(item.Predicate.Parameters[i], queries[i]);
+                    MapParameterWithQuery(item.Predicate.Parameters[i], queries[i]);
                 }
 
                 query.AddJoin(new JoinExpression(queries.Last(), GetCompiledExpression(item.Predicate), item.JoinType));

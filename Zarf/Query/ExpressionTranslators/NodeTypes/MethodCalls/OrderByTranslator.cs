@@ -44,7 +44,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
+            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
 
             query.Orders.Add(new OrderExpression(
                   GetColumns(

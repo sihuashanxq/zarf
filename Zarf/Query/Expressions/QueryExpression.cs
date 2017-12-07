@@ -88,23 +88,27 @@ namespace Zarf.Query.Expressions
 
         public void AddColumns(IEnumerable<ColumnDescriptor> columns)
         {
-            foreach (var col in columns
-                .Select(item => item.Expression)
-                .OfType<ColumnExpression>())
+            foreach (var item in columns)
             {
+                var col = item.Expression.As<ColumnExpression>()?.Clone();
+                if (col == null)
+                {
+                    continue;
+                }
+     
                 while (ColumnAliases.Contains(col.Alias))
                 {
                     col.Alias = col.Alias + "_1";
                 }
-
+                item.Expression = col;
                 ColumnAliases.Add(col.Alias);
                 ColumnCaching.AddColumn(col);
             }
-
+          
             Columns.AddRange(columns);
         }
 
-        public void AddWhere(Expression predicate)
+        public void CombineCondtion(Expression predicate)
         {
             if (predicate == null)
             {

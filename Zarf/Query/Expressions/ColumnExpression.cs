@@ -40,6 +40,15 @@ namespace Zarf.Query.Expressions
             _innerType = valueType;
         }
 
+        public ColumnExpression Clone()
+        {
+            return new ColumnExpression(Query, Member, Alias)
+            {
+                _innerType = _innerType,
+                Column = Column
+            };
+        }
+
         public override int GetHashCode()
         {
             unchecked

@@ -39,28 +39,32 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
 
             var query = objExp.As<QueryExpression>();
-            if (query != null)
+            if (query == null)
             {
-                var col = Context.ColumnCaching.GetColumn(new QueryColumnCacheKey(query, mem.Member));
-                if (col == null)
-                {
-                    return new ColumnExpression(query, mem.Member);
-                }
-
-                while (query.Container != null)
-                {
-                    query = query.Container;
-                }
-
-                return new ColumnExpression(query, new Column(col.Alias), col.Type);
+                return EvalMemberValue(mem.Member, objExp, out var value) ? value : mem;
             }
 
-            if (EvalMemberValue(mem.Member, objExp, out var value))
+            var col = Context.ColumnCaching.GetColumn(new QueryColumnCacheKey(query, mem.Member));
+            if (col == null)
             {
-                return value;
+                return new ColumnExpression(query, mem.Member);
             }
 
-            return mem;
+            while (query.Container != null)
+            {
+                var cachedCol = Context.ColumnCaching
+                    .GetColumn(new QueryColumnCacheKey(query.Container, mem.Member))
+                    ?.Clone();
+
+                if (cachedCol != null)
+                {
+                    return cachedCol;
+                }
+
+                query = query.Container;
+            }
+
+            return new ColumnExpression(query, new Column(col.Column?.Name ?? col.Alias), col.Type);
         }
 
         /// <summary>

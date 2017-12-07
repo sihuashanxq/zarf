@@ -25,7 +25,6 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-
             if (methodCall.Arguments.Count == 2)
             {
                 if (query.Sets.Count != 0)
@@ -34,8 +33,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                     query.Result = query.SubQuery.Result;
                 }
 
-                RegisterQuerySource(GetFirstLambdaParameter(methodCall.Arguments[1]), query);
-                query.AddWhere(GetCompiledExpression(methodCall.Arguments[1]).UnWrap());
+                MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+                var where = GetCompiledExpression(methodCall.Arguments[1]);
+                where = HandleCondtion(where);
+                query.CombineCondtion(where);
             }
 
             query.DefaultIfEmpty = methodCall.Method.Name == "FirstOrDefault";
