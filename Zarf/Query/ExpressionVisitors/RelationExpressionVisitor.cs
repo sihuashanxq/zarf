@@ -113,8 +113,8 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected virtual Expression VisitAll(AllExpression all)
         {
-            all.Query.Where = new WhereExperssion(Expression.Not(Visit(all.Query.Where.Predicate)));
-            return new ExistsExpression(all.Query);
+            all.Query.Where = new WhereExperssion(Visit(all.Query.Where.Predicate));
+            return Expression.Not(new ExistsExpression(all.Query));
         }
 
         protected virtual Expression VisitAny(AnyExpression any)

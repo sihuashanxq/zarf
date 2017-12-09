@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static OrderByTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods
+            SupprotedMethods = ReflectionUtil.QueryableMethods
                 .Where(
                     item =>
                         item.Name == "ThenBy" ||

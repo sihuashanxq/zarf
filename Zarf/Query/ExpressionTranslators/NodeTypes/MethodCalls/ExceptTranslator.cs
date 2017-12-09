@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static ExceptTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Except");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Except");
         }
 
         public ExceptTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

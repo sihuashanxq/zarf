@@ -16,9 +16,9 @@ namespace Zarf
 
         public static MethodInfo Join { get; }
 
-        public static MethodInfo Select { get; }
+        public static MethodInfo JoinSelect { get; }
 
-        public static MethodInfo[] AllQueryableMethods { get; }
+        public static MethodInfo[] QueryableMethods { get; }
 
         public static readonly Type CharType = typeof(char);
 
@@ -116,20 +116,15 @@ namespace Zarf
 
         static ReflectionUtil()
         {
-            AllQueryableMethods = typeof(Queryable).GetMethods();
+            QueryableMethods = typeof(Queryable).GetMethods();
             SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
-            Select = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
+            JoinSelect = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
             Include = typeof(QueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
             ThenInclude = typeof(QueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
-        public static IEnumerable<TEntity> Where<TOEntity, TEntity>
-        (
-            this IEnumerable<TEntity> entities,
-            TOEntity oEntity,
-            Func<TOEntity, TEntity, bool> predicate
-        )
+        public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> predicate)
         {
             foreach (var entity in entities)
             {
@@ -138,6 +133,50 @@ namespace Zarf
                     yield return entity;
                 }
             }
+        }
+
+        /// <summary>
+        /// Get The  Method Of <see cref="Query{TEntity}"/> 
+        /// Mapped <see cref="Queryable"/> Extension Method
+        /// </summary>
+        /// <param name="givenMethod">The Method Of <see cref="Query{TEntity}"/></param>
+        /// <returns><see cref="MethodInfo"/></returns>
+        public static MethodInfo FindSameDefinitionQueryableMethod(MethodInfo givenMethod, Type giveType)
+        {
+            var querableCandidates = QueryableMethods.Where(item => item.Name == givenMethod.Name);
+            var givenParameters = givenMethod.GetParameters();
+
+            foreach (var item in querableCandidates)
+            {
+                var condidation = item.MakeGenericMethod(giveType);
+                if (condidation.ReturnType != givenMethod.ReturnType)
+                {
+                    continue;
+                }
+
+                var condParameters = condidation.GetParameters();
+                if (condParameters.Length != givenParameters.Length + 1)
+                {
+                    continue;
+                }
+
+                var matched = true;
+                for (var i = 1; i < condParameters.Length; i++)
+                {
+                    if (condParameters[i].ParameterType != givenParameters[i - 1].ParameterType)
+                    {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if (matched)
+                {
+                    return condidation;
+                }
+            }
+
+            throw new Exception($"can not find {givenMethod.Name}the mapped Queryable Method");
         }
     }
 }

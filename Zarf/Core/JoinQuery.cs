@@ -37,7 +37,7 @@ namespace Zarf.Core
             return new InternalQuery<TResult>(
                dbQuery.Provider,
                Expression.Call(
-                   ReflectionUtil.Select.MakeGenericMethod(typeof(TResult)),
+                   ReflectionUtil.JoinSelect.MakeGenericMethod(typeof(TResult)),
                    dbQuery.Expression,
                    selector
                    )

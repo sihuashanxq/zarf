@@ -7,7 +7,7 @@ using Zarf.Query;
 
 namespace Zarf.Core.Internals
 {
-    internal class InternalQuery<TEntity> : IInternalQuery<TEntity>
+    public class InternalQuery<TEntity> : IInternalQuery<TEntity>
     {
         private EntityEnumerable<TEntity> _entities;
 
@@ -19,7 +19,7 @@ namespace Zarf.Core.Internals
 
         public IQueryProvider Provider { get; }
 
-        public EntityEnumerable<TEntity> EntityEnumerable
+        protected EntityEnumerable<TEntity> InternalEnumerable
         {
             get
             {
@@ -30,6 +30,16 @@ namespace Zarf.Core.Internals
 
                 return _entities;
             }
+        }
+
+        public Expression GetExpression()
+        {
+            return Expression;
+        }
+
+        public Type GetTypeOfEntity()
+        {
+            return typeof(TEntity);
         }
 
         public InternalQuery(IQueryProvider provider)
@@ -46,7 +56,7 @@ namespace Zarf.Core.Internals
 
         public IEnumerator<TEntity> GetEnumerator()
         {
-            return EntityEnumerable.GetEnumerator();
+            return InternalEnumerable.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

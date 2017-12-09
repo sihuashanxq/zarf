@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         static AnyTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Any");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Any");
         }
 
         public AnyTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -34,7 +34,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             query.AddColumns(new[] { new ColumnDescriptor(Utils.ExpressionOne) });
             query.CombineCondtion(GetCompiledExpression(methodCall.Arguments[1]));
-            return new AllExpression(query);
+            return new AnyExpression(query);
         }
     }
 }

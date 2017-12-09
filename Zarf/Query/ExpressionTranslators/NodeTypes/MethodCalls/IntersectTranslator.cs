@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static IntersectTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Intersect");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Intersect");
         }
 
         public IntersectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

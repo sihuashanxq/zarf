@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static DistinctTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Distinct");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Distinct");
         }
 
         public DistinctTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

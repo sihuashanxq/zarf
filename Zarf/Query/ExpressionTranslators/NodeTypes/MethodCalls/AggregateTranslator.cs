@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         static AggregateTranslator()
         {
             var methods = new[] { "Max", "Sum", "Min", "Average", "Count", "LongCount" };
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => methods.Contains(item.Name));
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => methods.Contains(item.Name));
         }
 
         public AggregateTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

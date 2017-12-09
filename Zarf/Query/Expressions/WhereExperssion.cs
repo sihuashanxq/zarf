@@ -11,31 +11,29 @@ namespace Zarf.Query.Expressions
 
         public override Type Type => Predicate.Type;
 
-        public WhereExperssion(Expression condition)
+        public WhereExperssion(Expression condtion)
         {
-            if (condition.NodeType == ExpressionType.Lambda)
-            {
-                condition = (condition as LambdaExpression).Body;
-            }
+            Combine(condtion);
+        }
 
-            if (condition.Is<ConstantExpression>())
+        public void Combine(Expression condtion)
+        {
+            var predicate = condtion.UnWrap().As<LambdaExpression>()?.Body ?? condtion;
+            if (predicate.Is<ConstantExpression>())
             {
-                condition = (bool)condition.As<ConstantExpression>().Value
+                predicate = (bool)predicate.As<ConstantExpression>().Value
                     ? Utils.ExpressionTrue
                     : Utils.ExpressionFalse;
             }
 
-            Predicate = condition;
-        }
-
-        public void Combine(Expression condition)
-        {
-            if (condition.NodeType == ExpressionType.Lambda)
+            if (Predicate == null)
             {
-                condition = (condition as LambdaExpression).Body;
+                Predicate = predicate;
             }
-
-            Predicate = AndAlso(Predicate, condition);
+            else
+            {
+                Predicate = AndAlso(Predicate, predicate);
+            }
         }
 
         public override int GetHashCode()

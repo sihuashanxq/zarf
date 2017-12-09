@@ -9,7 +9,7 @@ namespace Zarf
 {
     public interface IQuery
     {
-
+        IInternalQuery GetInternalQuery();
     }
 
     public interface IQuery<TEntity> : IQuery

@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static TakeTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Take");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Take");
         }
 
         public TakeTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

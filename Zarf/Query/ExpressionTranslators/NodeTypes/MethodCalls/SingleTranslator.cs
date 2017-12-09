@@ -12,7 +12,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SingleTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Single" || item.Name == "SingleOrDefault");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Single" || item.Name == "SingleOrDefault");
         }
 
         public SingleTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

@@ -31,6 +31,11 @@ namespace Zarf
             DbContext = internalDbQuery.Provider.As<QueryProvider>().Context;
         }
 
+        public IInternalQuery GetInternalQuery()
+        {
+            return _internalQuery;
+        }
+
         /// <summary>
         /// 通过实现GetEnumerator方法使DbQuery支持foreach访问
         /// 不实现IEnumerable接口,Linq API太多了

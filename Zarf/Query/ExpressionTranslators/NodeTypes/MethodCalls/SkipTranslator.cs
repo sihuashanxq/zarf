@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SkipTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Skip");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Skip");
         }
 
         public SkipTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

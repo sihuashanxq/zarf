@@ -15,7 +15,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static WhereTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Where");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Where");
         }
 
         public WhereTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

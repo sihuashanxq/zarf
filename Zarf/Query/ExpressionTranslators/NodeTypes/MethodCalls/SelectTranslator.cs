@@ -17,8 +17,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SelectTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Select")
-                .Concat(new[] { ReflectionUtil.Select });
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select")
+                .Concat(new[] { ReflectionUtil.JoinSelect });
         }
 
         public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -35,7 +35,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            if (methodBody == ReflectionUtil.Select)
+            if (methodBody == ReflectionUtil.JoinSelect)
             {
                 RegisterJoinSelectQueries(query, methodCall.Arguments[1]);
             }

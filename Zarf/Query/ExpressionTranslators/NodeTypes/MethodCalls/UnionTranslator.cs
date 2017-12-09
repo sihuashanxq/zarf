@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static UnionTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "Union" || item.Name == "Concat");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Union" || item.Name == "Concat");
         }
 
         public UnionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)

@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static DefaultIfEmptyTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "DefaultIfEmpty");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "DefaultIfEmpty");
         }
 
         public DefaultIfEmptyTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

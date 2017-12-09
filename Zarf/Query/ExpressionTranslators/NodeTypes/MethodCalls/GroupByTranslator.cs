@@ -13,7 +13,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static GroupByTranslator()
         {
-            SupprotedMethods = ReflectionUtil.AllQueryableMethods.Where(item => item.Name == "GroupBy");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "GroupBy");
         }
 
         public GroupByTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
