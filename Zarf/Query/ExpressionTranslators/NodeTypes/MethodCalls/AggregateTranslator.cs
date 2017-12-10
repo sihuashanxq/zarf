@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -6,6 +7,7 @@ using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators.Methods;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
@@ -27,7 +29,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var column = new ColumnExpression(query, null, methodCall.Method.ReturnType, "1");
+            ColumnExpression column = null;
+            AggregateExpression aggregate = null;
 
             if (query.Columns.Count != 0 || query.Sets.Count != 0)
             {
@@ -37,11 +40,34 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             if (methodCall.Arguments.Count == 2)
             {
                 MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-                column = GetColumns(GetCompiledExpression(methodCall.Arguments[1])).FirstOrDefault().Expression.As<ColumnExpression>();
-                column.Alias = string.Empty;
+                var keySelector = GetCompiledExpression(methodCall.Arguments[1]);
+                var keySelectorExp = GetColumns(keySelector).FirstOrDefault()?.Expression;
+                if (keySelectorExp == null)
+                {
+                    keySelectorExp = keySelector.UnWrap().As<LambdaExpression>().Body;
+                }
+
+                if (keySelectorExp.Is<QueryExpression>())
+                {
+                    throw new Exception("Cannot perform an aggregate function on an expression containing an aggregate or a subquery.");
+                }
+
+                if (keySelectorExp.Is<ConstantExpression>())
+                {
+                    aggregate = new AggregateExpression(methodCall.Method, keySelectorExp, query, Context.Alias.GetNewColumn());
+                }
+                else
+                {
+                    column = keySelectorExp.As<ColumnExpression>();
+                    aggregate = new AggregateExpression(methodCall.Method, column, query, column.Column?.Name ?? Context.Alias.GetNewColumn());
+                }
+            }
+            else
+            {
+                column = new ColumnExpression(query, new Column(Context.Alias.GetNewColumn()), methodCall.Method.ReturnType);
+                aggregate = new AggregateExpression(methodCall.Method, column, query, column.Column.Name);
             }
 
-            var aggregate = new AggregateExpression(methodCall.Method, column);
             query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
             query.AddColumns(new[] { new ColumnDescriptor() { Expression = aggregate, Ordinal = query.Columns.Count } });
             query.ChangeTypeOfExpression(methodCall.Method.ReturnType);

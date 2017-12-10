@@ -126,11 +126,7 @@ namespace Zarf
 
         int Count();
 
-        int Count(Expression<Func<TEntity, bool>> predicate);
-
         long LongCount();
-
-        long LongCount(Expression<Func<TEntity, bool>> predicate);
 
         TResult Max<TResult>(Expression<Func<TEntity, TResult>> selector);
 

@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionVisitors
             switch (node.NodeType)
             {
                 case ExpressionType.Equal:
-                    return Expression.Not(VisitNotEqual(node.As<BinaryExpression>()));
+                    return VisitNotEqual(node.As<BinaryExpression>());
                 case ExpressionType.NotEqual:
                     return VisitNotEqual(node.As<BinaryExpression>());
                 case ExpressionType.Or:
@@ -39,6 +39,32 @@ namespace Zarf.Query.ExpressionVisitors
             }
 
             return base.Visit(node);
+        }
+
+        protected virtual Expression VisitEqual(BinaryExpression binary)
+        {
+            var query = null as QueryExpression;
+            if (binary.Left.Is<QueryExpression>() && binary.Right.IsNullValueConstant())
+            {
+                query = binary.Left.As<QueryExpression>();
+            }
+            else if (binary.Right.Is<QueryExpression>() && binary.Left.IsNullValueConstant())
+            {
+                query = binary.Right.As<QueryExpression>();
+            }
+
+            if (query != null)
+            {
+                query.Where = new WhereExperssion(Visit(query.Where.Predicate));
+                return Expression.Not(new ExistsExpression(query));
+            }
+
+            if (!ReflectionUtil.SimpleTypes.Contains(binary.Left.Type))
+            {
+                throw new System.NotSupportedException($"not supported compared the value of {binary.Left.Type.Name}");
+            }
+
+            return base.Visit(binary);
         }
 
         protected virtual Expression VisitNotEqual(BinaryExpression binary)

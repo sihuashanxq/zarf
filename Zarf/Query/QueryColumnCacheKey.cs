@@ -3,7 +3,6 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Query
 {
-
     public class QueryColumnCacheKey
     {
         public QueryExpression Query { get; }
@@ -20,8 +19,8 @@ namespace Zarf.Query
         {
             unchecked
             {
-                var hashCode = Query.GetHashCode();
-                hashCode = (hashCode * 397) ^ Member.GetHashCode();
+                var hashCode = Query?.GetHashCode() ?? 0;
+                hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

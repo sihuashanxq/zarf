@@ -46,6 +46,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         public Expression Compile(Expression query)
         {
+            if (query == null)
+            {
+                return query;
+            }
+
             if (query.NodeType == ExpressionType.Extension)
             {
                 return query;

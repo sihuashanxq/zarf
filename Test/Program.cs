@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Core.Internals;
@@ -92,8 +93,7 @@ namespace Zarf
                 //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
-                var x = db.Users.Select(item => new { u = db.Users.FirstOrDefault(z=> z.Id == 1) })
-                   .ToList();
+                var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
 
                 Console.ReadKey();
             }

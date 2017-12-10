@@ -73,9 +73,17 @@ namespace Zarf.SqlServer.Builders
                 }
                 else
                 {
-                    BuildExpression(aggregate.KeySelector);
+                    using (BeginStopGenColumnAlias())
+                    {
+                        BuildExpression(aggregate.KeySelector);
+                    }
                 }
                 Append(')');
+
+                if (!aggregate.Alias.IsNullOrEmpty())
+                {
+                    Append(" AS ", aggregate.Alias);
+                }
             }
             else
             {
@@ -175,10 +183,15 @@ namespace Zarf.SqlServer.Builders
 
             using (BeginStopGenColumnAlias())
             {
-                Append(" ON ");
-                BuildExpression(join.Predicate);
-                return join;
+                if (join.JoinType != JoinType.Cross)
+                {
+                    Append(" ON ");
+                    BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
+                }
             }
+
+            BuildJoins(join.Query);
+            return join;
         }
 
         protected override Expression VisitOrder(OrderExpression order)
@@ -402,11 +415,22 @@ namespace Zarf.SqlServer.Builders
             }
             else
             {
-                query.Columns.ForEach(item =>
+                foreach (var item in query.Columns)
                 {
+                    if (item.Expression.Is<AggregateExpression>())
+                    {
+                        Console.WriteLine("Aggreate");
+                        var aggrate = item.Expression.As<AggregateExpression>();
+                        if (aggrate.Query != query)
+                        {
+                            Append(aggrate.Query.Alias.Escape(), ".", aggrate.Alias.Escape(), ",");
+                            continue;
+                        }
+                    }
+
                     BuildExpression(item.Expression);
                     Append(',');
-                });
+                }
                 Builder.Length--;
             }
         }

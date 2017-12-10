@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
+using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
@@ -45,8 +46,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            query.AddColumns(GetColumns(template));
-            query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
+            var tem = new ResultExpressionVisitor(query).Visit(template);
+            query.AddColumns(GetColumns(tem));
+            query.Result = new EntityResult(tem, methodCall.Method.ReturnType.GetCollectionElementType());
+            query.ChangeTypeOfExpression(query.Result.ElementType);
             return query;
         }
 
@@ -56,17 +59,72 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var i = 0;
             while (i < parameters.Count)
             {
-                var parameter = parameters[i];
                 if (i == 0)
-                {
-                    MapParameterWithQuery(parameter, query);
-                }
+                    MapParameterWithQuery(parameters[i++], query);
                 else
-                {
-                    MapParameterWithQuery(parameter, query.Joins[i - 1].Query);
-                }
-                i++;
+                    MapParameterWithQuery(parameters[i++], query.Joins[i - 1].Query);
             }
+        }
+    }
+
+    public class ResultExpressionVisitor : ExpressionVisitors.ExpressionVisitorBase
+    {
+        public QueryExpression Root { get; }
+
+        public ResultExpressionVisitor(QueryExpression root)
+        {
+            Root = root;
+        }
+
+        public override Expression Visit(Expression node)
+        {
+            if (node.Is<QueryExpression>())
+            {
+                var q = node.As<QueryExpression>();
+                Root.AddJoin(new JoinExpression(node.As<QueryExpression>(), null, JoinType.Cross));
+                q.Limit = 1;
+                if (q.Columns.Count == 0)
+                {
+                    foreach (var item in q.GenerateTableColumns())
+                    {
+                        q.AddColumns(new[] { new ColumnDescriptor() {
+                            Member=item.As<ColumnExpression>()?.Member,
+                            Expression=item
+                        }});
+                    }
+                }
+
+                return node;
+            }
+            else if (node.NodeType == ExpressionType.Extension)
+            {
+                return node;
+            }
+
+            return base.Visit(node);
+
+            if (node.Is<AllExpression>())
+            {
+
+            }
+
+            if (node.Is<AnyExpression>())
+            {
+
+            }
+
+            return base.Visit(node);
+        }
+
+        protected override Expression VisitLambda(LambdaExpression lambda)
+        {
+            var lambdaBody = Visit(lambda.Body);
+            if (lambdaBody != lambda.Body)
+            {
+                return Expression.Lambda(lambdaBody, lambda.Parameters);
+            }
+
+            return lambda;
         }
     }
 }

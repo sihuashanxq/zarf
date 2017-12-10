@@ -30,23 +30,49 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitExtension(Expression node)
         {
-            var query = node.As<QueryExpression>();
-            if (query != null)
-            {
-                foreach (var item in query.Columns.Count == 0
-                    ? query.GenerateTableColumns()
-                    : query.Columns.Select(item => item.Expression).OfType<ColumnExpression>())
-                {
-                    AddProjection(item.Member, item);
-                }
-
-                return node;
-            }
-
             var col = node.As<ColumnExpression>();
             if (col != null)
             {
                 AddProjection(col.Member, node);
+                return node;
+            }
+
+            var query = node.As<QueryExpression>();
+            if (query != null)
+            {
+                if (query.Columns.Count == 0)
+                {
+                    foreach (var item in
+                    query.GenerateTableColumns())
+                    {
+                        AddProjection(item.As<ColumnExpression>()?.Member, item);
+                    }
+                }
+                else
+                {
+                    foreach (var item in query.Columns.Select(item => item.Expression))
+                    {
+                        if (item.Is<ColumnExpression>())
+                        {
+                            col = item.As<ColumnExpression>();
+                            AddProjection(col.Member, col);
+                        }
+                        else if (item.Is<AggregateExpression>())
+                        {
+                            var key = item.As<AggregateExpression>().KeySelector;
+                            if (key.Is<ColumnExpression>())
+                            {
+                                col = key.As<ColumnExpression>();
+                                AddProjection(col.Member, col);
+                            }
+                            else
+                            {
+                                AddProjection(null, key);
+                            }
+                        }
+                    }
+                }
+                return node;
             }
 
             return node;
@@ -81,13 +107,7 @@ namespace Zarf.Query.ExpressionVisitors
 
                 if (newExp.Arguments[i].Is<QueryExpression>())
                 {
-                    var query = newExp.Arguments[i].As<QueryExpression>();
-                    foreach (var item in query.Columns.Count == 0
-                        ? query.GenerateTableColumns()
-                        : query.Columns.Select(item => item.Expression).OfType<ColumnExpression>())
-                    {
-                        AddProjection(item.Member, item);
-                    }
+                    Visit(newExp.Arguments[i]);
                 }
             }
 
@@ -96,7 +116,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         private void AddProjection(MemberInfo member, Expression node)
         {
-            if (node.NodeType != ExpressionType.Extension)
+            if (node.NodeType != ExpressionType.Extension && node.NodeType != ExpressionType.Constant)
             {
                 Visit(node);
                 return;
@@ -105,11 +125,7 @@ namespace Zarf.Query.ExpressionVisitors
             var query = node.As<QueryExpression>();
             if (query != null)
             {
-                foreach (var item in query.GenerateTableColumns())
-                {
-                    AddProjection(item.Member, item);
-                }
-
+                Visit(query);
                 return;
             }
 

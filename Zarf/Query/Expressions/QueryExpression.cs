@@ -95,7 +95,7 @@ namespace Zarf.Query.Expressions
                 {
                     continue;
                 }
-     
+
                 while (ColumnAliases.Contains(col.Alias))
                 {
                     col.Alias = col.Alias + "_1";
@@ -104,7 +104,7 @@ namespace Zarf.Query.Expressions
                 ColumnAliases.Add(col.Alias);
                 ColumnCaching.AddColumn(col);
             }
-          
+
             Columns.AddRange(columns);
         }
 
@@ -131,30 +131,47 @@ namespace Zarf.Query.Expressions
         /// <returns></returns>
         public bool IsEmptyQuery()
         {
-            return
-                !IsDistinct &&
-                //!DefaultIfEmpty &&
-                Where == null &&
-                Offset == null &&
-                SubQuery == null &&
-                Columns.Count == 0 &&
-                Orders.Count == 0 &&
-                Groups.Count == 0 &&
-                Sets.Count == 0 &&
-                Joins.Count == 0 &&
-                Limit == 0;
+            var isEmpty = !IsDistinct && Where == null &&
+                Offset == null && SubQuery == null &&
+                Orders.Count == 0 && Groups.Count == 0 &&
+                Sets.Count == 0 && Limit == 0;
+
+            if (!isEmpty)
+            {
+                foreach (var item in Joins)
+                {
+                    if (!item.Query.IsEmptyQuery())
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return isEmpty;
         }
 
-        public IEnumerable<ColumnExpression> GenerateTableColumns()
+        public IEnumerable<Expression> GenerateTableColumns()
         {
+            if (Columns.Count != 0)
+            {
+                return Columns.Select(item => item.Expression);
+            }
+
             var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
+            var cols = new List<Expression>();
+
             foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
             {
-                yield return new ColumnExpression(
-                    this,
-                    memberDescriptor.Member,
-                    memberDescriptor.Name);
+                var col = new ColumnExpression(this, memberDescriptor.Member, memberDescriptor.Name);
+                cols.Add(col);
             }
+
+            foreach (var item in Joins.Select(item => item.Query))
+            {
+                cols.AddRange(item.Columns.Select(a => a.Expression));
+            }
+
+            return cols;
         }
 
         public void ChangeTypeOfExpression(Type typeOfExpression)

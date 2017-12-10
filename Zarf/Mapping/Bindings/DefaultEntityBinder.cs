@@ -51,7 +51,7 @@ namespace Zarf.Mapping.Bindings
             Context = context;
         }
 
-        public Func<IDataReader, TEntity> Bind<TEntity>(IBindingContext context)
+        public Delegate Bind<TEntity>(IBindingContext context)
         {
             var bindQuery = context.Query.As<QueryExpression>()?.Result?.EntityNewExpression ?? context.Query;
             if (bindQuery.Is<LambdaExpression>())
@@ -82,7 +82,7 @@ namespace Zarf.Mapping.Bindings
             InitializeQueryColumns(RootQuery);
 
             var body = Visit(bindQuery);
-            return (Func<IDataReader, TEntity>)Expression.Lambda(body, DataReader).Compile();
+            return Expression.Lambda(body, DataReader).Compile();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
@@ -197,26 +197,20 @@ namespace Zarf.Mapping.Bindings
 
         protected void InitializeQueryColumns(QueryExpression query)
         {
-            if (query == null)
-            {
-                return;
-            }
-
             if (query.Columns.Count == 0)
             {
                 foreach (var item in query.GenerateTableColumns())
                 {
-                    var col = new ColumnDescriptor()
+                    query.AddColumns(new[]
                     {
-                        Member = item.Member,
-                        Expression = item,
-                        Ordinal = query.Columns.Count
-                    };
-
-                    query.AddColumns(new[] { col});
-                    Context.ProjectionMappingProvider.Map(col);
+                        new ColumnDescriptor()
+                        {
+                            Member = item.As<ColumnExpression>()?.Member,
+                            Expression = item,
+                            Ordinal = query.Columns.Count
+                        }
+                    });
                 }
-                return;
             }
 
             foreach (var item in query.Columns)
@@ -225,12 +219,24 @@ namespace Zarf.Mapping.Bindings
                 if (item.Expression.Is<AggregateExpression>())
                 {
                     var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
-                    col = new ColumnDescriptor()
+                    if (column == null)
                     {
-                        Expression = column ?? item.Expression,
-                        Member = column?.Member,
-                        Ordinal = item.Ordinal
-                    };
+                        col = new ColumnDescriptor()
+                        {
+                            Expression = item.Expression.As<AggregateExpression>().KeySelector,
+                            Member = null,
+                            Ordinal = item.Ordinal
+                        };
+                    }
+                    else
+                    {
+                        col = new ColumnDescriptor()
+                        {
+                            Expression = column ?? item.Expression,
+                            Member = column?.Member,
+                            Ordinal = item.Ordinal
+                        };
+                    }
                 }
 
                 if (!Context.ProjectionMappingProvider.IsMapped(col.Expression))
@@ -248,8 +254,12 @@ namespace Zarf.Mapping.Bindings
             }
 
             var eType = query.Type.GetCollectionElementType();
-            var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
+            if (ReflectionUtil.SimpleTypes.Contains(eType))
+            {
+                return Visit(query.Columns.FirstOrDefault().Expression);
+            }
 
+            var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
             if (typeDescriptor.Constructor.GetParameters().Length == 0)
             {
                 var memberExpressions = new List<MemberExpressionPair>();
@@ -279,7 +289,14 @@ namespace Zarf.Mapping.Bindings
                 var activatingArgs = new List<Expression>();
                 foreach (var item in typeDescriptor.MemberDescriptors)
                 {
-                    activatingArgs.Add(Visit(FindMemberRelatedExpression(query, item.Member)));
+                    if (!ReflectionUtil.SimpleTypes.Contains(item.MemberType))
+                    {
+                        query.ChangeTypeOfExpression(item.MemberType);
+                        activatingArgs.Add(BindQueryExpression(query));
+                        query.ChangeTypeOfExpression(eType);
+                    }
+                    else
+                        activatingArgs.Add(Visit(FindMemberRelatedExpression(query, item.Member)));
                 }
 
                 return CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type, activatingArgs);
@@ -396,9 +413,18 @@ namespace Zarf.Mapping.Bindings
                     col = aggrate.KeySelector.As<ColumnExpression>();
                 }
 
-                if (col != null && col.Member == member && col.Query == container)
+                if (col != null && col.Member == member)
                 {
-                    return col;
+                    var q = col.Query;
+                    while (q != null)
+                    {
+                        if (q != container)
+                        {
+                            q = q.Container;
+                        }
+
+                        return col;
+                    }
                 }
             }
 

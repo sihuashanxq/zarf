@@ -75,7 +75,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         private Expression TranslateMethodCall(MethodCallExpression methodCall)
         {
-            var objExp =GetCompiledExpression(methodCall.Object);
+            var objExp = GetCompiledExpression(methodCall.Object);
             if (objExp != null && typeof(IQuery).IsAssignableFrom(objExp.Type))
             {
                 return TranslateSubQuery(objExp.As<ConstantExpression>(), methodCall);
@@ -122,8 +122,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         private Expression TranslateSubQuery(ConstantExpression iQueryConstant, MethodCallExpression methodCall)
         {
-            if (methodCall.Method.ReturnType.IsCollection() ||
-                typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType))
+            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType) && methodCall.Method.Name != "ToList")
             {
                 var body = Expression.Call(iQueryConstant, methodCall.Method, methodCall.Arguments);
                 var facotry = (Func<IQuery>)Expression.Lambda(body).Compile();
@@ -131,8 +130,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return Expression.Constant(v);
             }
 
-            var iQuery = iQueryConstant.As<ConstantExpression>().Value as IQuery;
-            var iInternalQuery = iQuery.GetInternalQuery();
+            var iQuery = iQueryConstant.As<ConstantExpression>()?.Value as IQuery;
+            var iInternalQuery = iQuery?.GetInternalQuery();
             var args = new[] { iInternalQuery.GetExpression() }.Concat(methodCall.Arguments);
             var queryMethod = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, iInternalQuery.GetTypeOfEntity());
             var exp = Expression.Call(null, queryMethod, args.ToArray());

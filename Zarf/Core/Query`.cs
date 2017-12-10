@@ -376,19 +376,9 @@ namespace Zarf
             return InternalQuery.Count();
         }
 
-        public int Count(Expression<Func<TEntity, bool>> predicate)
-        {
-            return InternalQuery.Count(predicate);
-        }
-
         public long LongCount()
         {
             return InternalQuery.LongCount();
-        }
-
-        public long LongCount(Expression<Func<TEntity, bool>> predicate)
-        {
-            return InternalQuery.LongCount(predicate);
         }
 
         public TResult Max<TResult>(Expression<Func<TEntity, TResult>> selector)

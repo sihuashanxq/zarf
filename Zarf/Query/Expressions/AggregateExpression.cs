@@ -13,14 +13,20 @@ namespace Zarf.Query.Expressions
 
         public Expression KeySelector { get; }
 
+        public QueryExpression Query { get; }
+
+        public string Alias { get; }
+
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public override Type Type => Method.ReturnType;
 
-        public AggregateExpression(MethodInfo method, Expression keySelector)
+        public AggregateExpression(MethodInfo method, Expression keySelector, QueryExpression query, string alias = "")
         {
             Method = method;
             KeySelector = keySelector;
+            Query = query;
+            Alias = alias;
         }
 
         public override int GetHashCode()

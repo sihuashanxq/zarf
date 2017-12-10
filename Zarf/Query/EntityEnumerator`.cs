@@ -20,11 +20,11 @@ namespace Zarf.Query
 
         private int _currentIndex = 0;
 
-        protected Func<IDataReader, TEntity> ObjectActivator { get; }
+        protected Delegate ObjectActivator { get; }
 
         protected string CommandText { get; }
 
-        public EntityEnumerator(Func<IDataReader, TEntity> activator, IDataReader dataReader)
+        public EntityEnumerator(Delegate activator, IDataReader dataReader)
         {
             ObjectActivator = activator;
             _dbDataReader = dataReader;
@@ -51,7 +51,7 @@ namespace Zarf.Query
 
             if (_dbDataReader.Read())
             {
-                _current = ObjectActivator(_dbDataReader);
+                _current = (TEntity)ObjectActivator.DynamicInvoke(_dbDataReader);
                 _currentIndex++;
                 _cacheItems.Add(_current);
                 return true;

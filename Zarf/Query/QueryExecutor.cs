@@ -47,7 +47,7 @@ namespace Zarf.Query
             {
                 if (dataReader.Read())
                 {
-                    return entityActivator(dataReader).Cast<TResult>();
+                    return entityActivator.DynamicInvoke(dataReader).Cast<TResult>();
                 }
             }
 

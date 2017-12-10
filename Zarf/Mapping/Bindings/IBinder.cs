@@ -5,6 +5,7 @@ namespace Zarf.Mapping.Bindings
 {
     public interface IBinder
     {
-        Func<IDataReader, TEntity> Bind<TEntity>(IBindingContext bindingContext);
+        //Func<IDataReader, TEntity> Bind<TEntity>(IBindingContext bindingContext);
+        Delegate Bind<TEntity>(IBindingContext bindingContext);
     }
 }

@@ -27,11 +27,11 @@ namespace Zarf.Mapping
                 var properties = typeOfEntity
                     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Where(item => Utils.IsAnonymouseType(typeOfEntity) || (item.CanRead && item.CanWrite))
-                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.PropertyType));
+                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.PropertyType));
 
                 var fileds = typeOfEntity
                     .GetFields(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(item => ReflectionUtil.SimpleTypes.Contains(item.FieldType));
+                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.FieldType));
 
                 foreach (var property in properties)
                 {
