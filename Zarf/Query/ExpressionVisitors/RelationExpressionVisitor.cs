@@ -21,6 +21,11 @@ namespace Zarf.Query.ExpressionVisitors
                 return VisitAny(node.As<AnyExpression>());
             }
 
+            if (node.Is<QueryExpression>())
+            {
+                node.As<QueryExpression>().IsPartOfPredicate = true;
+            }
+
             if (node.NodeType == ExpressionType.Extension)
             {
                 return node;

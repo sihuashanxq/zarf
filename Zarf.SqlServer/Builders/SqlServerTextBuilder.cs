@@ -78,6 +78,7 @@ namespace Zarf.SqlServer.Builders
                         BuildExpression(aggregate.KeySelector);
                     }
                 }
+
                 Append(')');
 
                 if (!aggregate.Alias.IsNullOrEmpty())
@@ -178,7 +179,7 @@ namespace Zarf.SqlServer.Builders
             else
             {
                 BuildExpression(join.Query);
-                Append(" AS " + join.Query.Alias.Escape());
+                Append("  AS " + join.Query.Alias.Escape());
             }
 
             using (BeginStopGenColumnAlias())
@@ -190,7 +191,11 @@ namespace Zarf.SqlServer.Builders
                 }
             }
 
-            BuildJoins(join.Query);
+            if (join.Query.IsEmptyQuery())
+            {
+                BuildJoins(join.Query);
+            }
+
             return join;
         }
 
@@ -210,7 +215,12 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitQuery(QueryExpression query)
         {
-            Append(" ( SELECT  ");
+            if (query.IsPartOfPredicate || query.Container != null)
+            {
+                Append(" ( ");
+            }
+
+            Append(" SELECT  ");
 
             BuildDistinct(query);
             BuildLimit(query);
@@ -230,7 +240,11 @@ namespace Zarf.SqlServer.Builders
 
             BuildSets(query);
 
-            Append(" ) ");
+            if (query.IsPartOfPredicate || query.Container != null)
+            {
+                Append(" ) ");
+            }
+
             return query;
         }
 
@@ -409,13 +423,13 @@ namespace Zarf.SqlServer.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Columns == null)
+            if (query.Projections == null)
             {
                 Append('*');
             }
             else
             {
-                foreach (var item in query.Columns)
+                foreach (var item in query.Projections)
                 {
                     if (item.Expression.Is<AggregateExpression>())
                     {
@@ -680,9 +694,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
-            if (exists.Query.Columns.Count == 0)
+            if (exists.Query.Projections.Count == 0)
             {
-                exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
+                exists.Query.Projections.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
             }
 
             Append(" EXISTS (");

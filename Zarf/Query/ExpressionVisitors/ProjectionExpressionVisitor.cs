@@ -40,17 +40,16 @@ namespace Zarf.Query.ExpressionVisitors
             var query = node.As<QueryExpression>();
             if (query != null)
             {
-                if (query.Columns.Count == 0)
+                if (query.Projections.Count == 0)
                 {
-                    foreach (var item in
-                    query.GenerateTableColumns())
+                    foreach (var item in query.GenerateTableColumns())
                     {
                         AddProjection(item.As<ColumnExpression>()?.Member, item);
                     }
                 }
                 else
                 {
-                    foreach (var item in query.Columns.Select(item => item.Expression))
+                    foreach (var item in query.Projections.Select(item => item.Expression))
                     {
                         if (item.Is<ColumnExpression>())
                         {
@@ -62,7 +61,8 @@ namespace Zarf.Query.ExpressionVisitors
                             var key = item.As<AggregateExpression>().KeySelector;
                             if (key.Is<ColumnExpression>())
                             {
-                                col = key.As<ColumnExpression>();
+                                col = key.As<ColumnExpression>().Clone();
+                                col.Query = query;
                                 AddProjection(col.Member, col);
                             }
                             else

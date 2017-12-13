@@ -25,8 +25,7 @@ namespace Zarf.Query.ExpressionTranslators
 
         public abstract Expression Translate(TExpression query);
 
-        public Expression Translate(Expression query)
-            => Translate(query.Cast<TExpression>());
+        public Expression Translate(Expression query) => Translate(query.Cast<TExpression>());
 
         protected void MapParameterWithQuery(ParameterExpression parameter, QueryExpression query)
         {

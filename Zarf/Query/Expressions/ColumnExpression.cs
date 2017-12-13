@@ -6,22 +6,25 @@ using Zarf.Extensions;
 
 namespace Zarf.Query.Expressions
 {
-    public class ColumnExpression : AliasExpression
+    public class ColumnExpression : Expression
     {
-        private Type _innerType;
+        private Type _type;
 
         public Column Column { get; set; }
 
         public MemberInfo Member { get; set; }
 
+        public Expression Source { get; set; }
+
         public QueryExpression Query { get; set; }
 
-        public override Type Type => Member?.GetPropertyType() ?? _innerType;
+        public string Alias { get; set; }
+
+        public override Type Type => Member?.GetPropertyType() ?? _type;
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public ColumnExpression(QueryExpression query, MemberInfo member, string alias = "")
-            : base(alias)
         {
             Query = query;
             Member = member;
@@ -33,18 +36,17 @@ namespace Zarf.Query.Expressions
         }
 
         public ColumnExpression(QueryExpression query, Column column, Type valueType, string alias = "")
-            : base(alias)
         {
             Query = query;
             Column = column;
-            _innerType = valueType;
+            _type = valueType;
         }
 
         public ColumnExpression Clone()
         {
             return new ColumnExpression(Query, Member, Alias)
             {
-                _innerType = _innerType,
+                _type = _type,
                 Column = Column
             };
         }

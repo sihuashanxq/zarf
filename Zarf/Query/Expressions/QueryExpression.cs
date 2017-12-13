@@ -21,7 +21,7 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public List<ColumnDescriptor> Columns { get; }
+        public List<ColumnDescriptor> Projections { get; }
 
         public List<JoinExpression> Joins { get; }
 
@@ -51,13 +51,18 @@ namespace Zarf.Query.Expressions
 
         protected HashSet<string> ColumnAliases { get; }
 
+        /// <summary>
+        /// is part of a prediacte ,such as where (select top 1 1 id from [user])=1
+        /// </summary>
+        public bool IsPartOfPredicate { get; internal set; }
+
         public QueryExpression(Type typeOfEntity, IQueryColumnCaching columnCaching, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Columns = new List<ColumnDescriptor>();
+            Projections = new List<ColumnDescriptor>();
             ColumnAliases = new HashSet<string>();
             TypeOfExpression = typeOfEntity;
             Table = typeOfEntity.ToTable();
@@ -100,12 +105,47 @@ namespace Zarf.Query.Expressions
                 {
                     col.Alias = col.Alias + "_1";
                 }
+
                 item.Expression = col;
                 ColumnAliases.Add(col.Alias);
                 ColumnCaching.AddColumn(col);
             }
 
-            Columns.AddRange(columns);
+            Projections.AddRange(columns);
+        }
+
+        public void AddProjection(Expression exp)
+        {
+
+        }
+
+        public void RedirectColumnQuery(ColumnExpression col)
+        {
+            if (col.Query == this)
+            {
+                return;
+            }
+
+            if (col.Query == SubQuery)
+            {
+                return;
+            }
+
+            foreach (var item in Joins)
+            {
+                if (col.Query == item.Query)
+                {
+                    return;
+                }
+            }
+
+            if (col.Query.Container == null)
+            {
+                return;
+            }
+
+            col.Query = col.Query.Container;
+            RedirectColumnQuery(col);
         }
 
         public void CombineCondtion(Expression predicate)
@@ -152,9 +192,9 @@ namespace Zarf.Query.Expressions
 
         public IEnumerable<Expression> GenerateTableColumns()
         {
-            if (Columns.Count != 0)
+            if (Projections.Count != 0)
             {
-                return Columns.Select(item => item.Expression);
+                return Projections.Select(item => item.Expression);
             }
 
             var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
@@ -168,7 +208,7 @@ namespace Zarf.Query.Expressions
 
             foreach (var item in Joins.Select(item => item.Query))
             {
-                cols.AddRange(item.Columns.Select(a => a.Expression));
+                cols.AddRange(item.Projections.Select(a => a.Expression));
             }
 
             return cols;

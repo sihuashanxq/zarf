@@ -10,6 +10,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
+        public static Dictionary<Expression, Expression> Maped = new Dictionary<Expression, Expression>();
+
         public NewExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper)
             : base(queryContext, queryCompiper)
         {
@@ -39,12 +41,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     col.Alias = mem.Name;
                 }
 
-                if (arg is QueryExpression && mem.GetPropertyType().IsCollection())
-                {
-                    throw new NotImplementedException("not supported!");
-                }
-
                 arg.As<QueryExpression>()?.ChangeTypeOfExpression(mem.GetPropertyType());
+
+                Maped[newExp.Arguments[i]] = new AliasExpression(mem.Name, arg);
+
                 args.Add(arg);
                 Context.MemberAccessMapper.Map(mem, arg);
             }

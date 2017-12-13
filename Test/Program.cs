@@ -19,82 +19,15 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                //var x = db.Users
-                //    .LeftJoin(db.Query<Address>().Select(item => new { item.Id, item.Street }
-                //    ).OrderBy(item => item.Id),
-                //    (user, address) => user.Id == address.Id)
-                //    .LeftJoin(db.Query<Order>(), (user, address, order) => user.Id == order.AddressID)
-                //    .Select((user, address, order) => new { user, address, order }).ToList();
-
                 //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
                 //BasicTest(db);
-                //var first = db.Query<PP>().FirstOrDefault();
-                //var sencond = db.Query<PP>().Skip(1).FirstOrDefault();
-                //await db.BeginTransactionAsync();
-                //await db.AddAsync();
-                //await db.UpdateAsync();
-                //await db.DeleteAsync();
-                //await db.SaveAsync();
-
-                ////事务测试
-                //var t1 = db.BeginTransaction();
-                //var p1 = new PP()
-                //{
-                //    Name = "3333333"
-                //};
-
-                //db.Add(new PP { Name = "3" });
-                //db.Add(p1);
-                //var count = db.Save();
-
-                //var t2 = db.BeginTransaction();
-                //p1.Name = "34";
-                //db.Update(p1);
-                //count = db.Save();
-                //t2.Commit();     //t2.Rollback() 数据库中存在3333333 与 3, t2.Commit()数据库中存在 34,3
-
-                //t1.Commit();
-
-                //db.Update(sencond);
-                //var user = new User()
-                //{
-                //    Name = "张三",
-                //    Age = 33,
-                //    BDay = DateTime.Now,
-                //    Id = 999
-                //};
-
-                //var user2 = new User
-                //{
-                //    Name = "王五",
-                //    Age = 44,
-                //    BDay = DateTime.Now,
-                //    Id = 1001
-                //};
-
-                //db.AddRange(new[] { user, user2 });
-                //db.Add(user);
-                //db.Users.Add(user);
-                //db.Users.AddRange(new[] { user, user2 });
-
-                //user.Name = "李四";
-
-                //db.Users.Update(user);
-                //db.Update(user, item => item.Id);
-
-                //user.Age = 22;
-                //db.Update(user);
-
-                //db.Delete(user);
-                //db.Users.Delete(user);
-
-                //db.Delete(user, item => user.Age);
 
                 //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
-                var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
-
+                //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
+                //BasicTest(db);
+                db.Users.Select(item => new { Id = item.Id + 1 }).ToList();
                 Console.ReadKey();
             }
         }
