@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Query.Expressions;
 
@@ -11,6 +9,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public ConstantExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(ConstantExpression constant)

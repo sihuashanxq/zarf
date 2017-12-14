@@ -31,9 +31,9 @@ namespace Zarf.Query.Expressions
             unchecked
             {
                 var hashCode = Predicate.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Query?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ JoinType.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Predicate?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 37) ^ (Query?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 37) ^ JoinType.GetHashCode();
+                hashCode = (hashCode * 37) ^ (Predicate?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

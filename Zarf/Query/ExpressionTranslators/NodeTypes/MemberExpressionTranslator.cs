@@ -17,6 +17,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberExpression mem)
         {
+            //这里是否需要返回一个这么复杂的一个QueryExpression
+            //所有的东西都重新基于全新设计的ExpressionVisitor实现
             var objExp = Context.MemberAccessMapper.GetMappedExpression(mem.Member);
             if (objExp.Is<QueryExpression>())
             {

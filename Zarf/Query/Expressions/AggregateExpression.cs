@@ -34,7 +34,7 @@ namespace Zarf.Query.Expressions
             unchecked
             {
                 var hashCode = Method.GetHashCode();
-                hashCode = (hashCode * 397) ^ (KeySelector?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 37) ^ (KeySelector?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

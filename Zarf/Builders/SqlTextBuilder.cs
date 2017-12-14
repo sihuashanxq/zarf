@@ -73,10 +73,15 @@ namespace Zarf.Builders
                 case DbStoreExpression store:
                     VisitStore(store);
                     break;
+                case AliasExpression alias:
+                    VisitAlias(alias);
+                    break;
             }
 
             return node;
         }
+
+        protected abstract Expression VisitAlias(AliasExpression alias);
 
         protected abstract Expression VisitQuery(QueryExpression query);
 

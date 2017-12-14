@@ -26,8 +26,8 @@ namespace Zarf.Mapping
             unchecked
             {
                 var hashCode = 0;
-                hashCode = (hashCode * 397) ^ (Expression?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (Member?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 37) ^ (Expression?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 37) ^ (Member?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

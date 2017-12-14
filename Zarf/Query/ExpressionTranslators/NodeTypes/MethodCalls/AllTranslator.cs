@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var col = new ColumnDescriptor(Utils.ExpressionOne);
 
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
+            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }

@@ -18,38 +18,73 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         }
 
-        public override Expression Translate(NewExpression newExp)
+        public override Expression Translate(NewExpression newExpression)
         {
-            if (newExp.Arguments?.Count == 0)
+            if (newExpression.Arguments?.Count == 0)
             {
-                return newExp;
+                return newExpression;
             }
 
-            var args = new List<Expression>();
-            for (var i = 0; i < newExp.Arguments.Count; i++)
+            var arguments = new List<Expression>();
+            for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var mem = newExp.Members?[i];
-                if (mem == null)
+                var argument = GetCompiledExpression(newExpression.Arguments[i]);
+                //这里不应该返回 QueryExpression就是返回一个简单的Item
+                //Item.Id 表示的Source.Id Source=QueryExpression
+                if (argument.Is<QueryExpression>())
                 {
+                    arguments.Add(newExpression.Arguments[i]);
                     continue;
                 }
 
-                var arg = GetCompiledExpression(newExp.Arguments[i]);
-                var col = arg.As<ColumnExpression>();
-                if (col != null)
-                {
-                    col.Alias = mem.Name;
-                }
-
-                arg.As<QueryExpression>()?.ChangeTypeOfExpression(mem.GetPropertyType());
-
-                Maped[newExp.Arguments[i]] = new AliasExpression(mem.Name, arg);
-
-                args.Add(arg);
-                Context.MemberAccessMapper.Map(mem, arg);
+                argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
+                arguments.Add(argument);
+                Maped[newExpression.Arguments[i]] = argument;
             }
 
-            return newExp.Update(args);
+            return newExpression.Update(arguments);
         }
+
+        //public override Expression Translate(NewExpression newExpression)
+        //{
+        //    if (newExpression.Arguments?.Count == 0)
+        //    {
+        //        return newExpression;
+        //    }
+
+        //    var arguments = new List<Expression>();
+        //    for (var i = 0; i < newExpression.Arguments.Count; i++)
+        //    {
+        //        if (newExpression.Members == null)
+        //        {
+        //            continue;
+        //        }
+
+        //        var mem = newExpression.Members[i];
+        //        if (mem == null)
+        //        {
+        //            continue;
+        //        }
+
+        //        var argument = GetCompiledExpression(newExpression.Arguments[i]);
+
+        //        var col = argument.As<ColumnExpression>();
+        //        if (col != null)
+        //        {
+        //            col.Alias = mem.Name;
+        //        }
+
+        //        argument = new AliasExpression(mem.Name, argument);
+
+        //        argument.As<QueryExpression>()?.ChangeTypeOfExpression(mem.GetPropertyType());
+
+        //        Maped[newExpression.Arguments[i]] = new AliasExpression(mem.Name, argument);
+
+        //        arguments.Add(argument);
+        //        Context.MemberAccessMapper.Map(mem, argument);
+        //    }
+
+        //    return newExpression.Update(arguments);
+        //}
     }
 }

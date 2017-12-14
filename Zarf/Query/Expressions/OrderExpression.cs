@@ -28,7 +28,7 @@ namespace Zarf.Query.Expressions
                 var hashCode = 0;
                 foreach (var column in Columns)
                 {
-                    hashCode = (hashCode * 397) ^ column.GetHashCode();
+                    hashCode = (hashCode * 37) ^ column.GetHashCode();
                 }
 
                 return hashCode;

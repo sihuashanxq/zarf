@@ -35,7 +35,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             //UNION 默认比较 Concat 不比较
             if (methodCall.Method.Name == "Union")
             {
-                if (query.Projections.Count == 0)
+                if (query.Columns.Count == 0)
                 {
                     query.AddColumns(GetColumns(query));
                 }
@@ -44,7 +44,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query.IsDistinct = true;
             }
 
-            if (setsQuery.Projections.Count == 0)
+            if (setsQuery.Columns.Count == 0)
             {
                 setsQuery.AddColumns(GetColumns(setsQuery));
             }

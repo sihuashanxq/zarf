@@ -27,7 +27,7 @@ namespace Zarf
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
                 //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
                 //BasicTest(db);
-                db.Users.Select(item => new { Id = item.Id + 1 }).ToList();
+                db.Users.Select(item => new { Id = item.Id + 1, X = item }).ToList();
                 Console.ReadKey();
             }
         }

@@ -21,7 +21,9 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public List<ColumnDescriptor> Projections { get; }
+        public List<ColumnDescriptor> Columns { get; }
+
+        public List<Expression> Projections { get; }
 
         public List<JoinExpression> Joins { get; }
 
@@ -62,7 +64,8 @@ namespace Zarf.Query.Expressions
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
-            Projections = new List<ColumnDescriptor>();
+            Columns = new List<ColumnDescriptor>();
+            Projections = new List<Expression>();
             ColumnAliases = new HashSet<string>();
             TypeOfExpression = typeOfEntity;
             Table = typeOfEntity.ToTable();
@@ -111,12 +114,12 @@ namespace Zarf.Query.Expressions
                 ColumnCaching.AddColumn(col);
             }
 
-            Projections.AddRange(columns);
+            Columns.AddRange(columns);
         }
 
         public void AddProjection(Expression exp)
         {
-
+            Projections.Add(exp);
         }
 
         public void RedirectColumnQuery(ColumnExpression col)
@@ -192,9 +195,9 @@ namespace Zarf.Query.Expressions
 
         public IEnumerable<Expression> GenerateTableColumns()
         {
-            if (Projections.Count != 0)
+            if (Columns.Count != 0)
             {
-                return Projections.Select(item => item.Expression);
+                return Columns.Select(item => item.Expression);
             }
 
             var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
@@ -208,7 +211,7 @@ namespace Zarf.Query.Expressions
 
             foreach (var item in Joins.Select(item => item.Query))
             {
-                cols.AddRange(item.Projections.Select(a => a.Expression));
+                cols.AddRange(item.Columns.Select(a => a.Expression));
             }
 
             return cols;

@@ -28,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
-            if (query.Projections.Count == 0)
+            if (query.Columns.Count == 0)
             {
                 query.AddColumns(GetColumns(query));
             }

@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var methodBody = methodCall.Method.GetGenericMethodDefinition();
-            if (query.Sets.Count != 0 || query.Projections.Count != 0)
+            if (query.Sets.Count != 0 || query.Columns.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
@@ -46,8 +46,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            var tem = new ResultExpressionVisitor(query).Visit(methodCall.Arguments[1]);
-            query.AddColumns(GetColumns(template));
+            new NewProjectionExpressionVisitor(query).Visit(template);
+
+            var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
+
             query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
             query.ChangeTypeOfExpression(query.Result.ElementType);
             return query;

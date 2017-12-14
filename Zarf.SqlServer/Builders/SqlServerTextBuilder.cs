@@ -119,6 +119,13 @@ namespace Zarf.SqlServer.Builders
             return column;
         }
 
+        protected override Expression VisitAlias(AliasExpression alias)
+        {
+            Visit(alias.Expression);
+            Append(" AS ", alias.Alias);
+            return alias;
+        }
+
         protected override Expression VisitExcept(ExceptExpression except)
         {
             Append(" Except ");
@@ -225,6 +232,11 @@ namespace Zarf.SqlServer.Builders
             BuildDistinct(query);
             BuildLimit(query);
             BuildProjections(query);
+
+            foreach (var item in query.Projections)
+            {
+                Visit(item);
+            }
 
             Append(" FROM ");
 
@@ -423,13 +435,13 @@ namespace Zarf.SqlServer.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Projections == null)
+            if (query.Columns == null)
             {
                 Append('*');
             }
             else
             {
-                foreach (var item in query.Projections)
+                foreach (var item in query.Columns)
                 {
                     if (item.Expression.Is<AggregateExpression>())
                     {
@@ -694,9 +706,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
-            if (exists.Query.Projections.Count == 0)
+            if (exists.Query.Columns.Count == 0)
             {
-                exists.Query.Projections.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
+                exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
             }
 
             Append(" EXISTS (");

@@ -197,7 +197,7 @@ namespace Zarf.Mapping.Bindings
 
         protected void InitializeQueryColumns(QueryExpression query)
         {
-            if (query.Projections.Count == 0)
+            if (query.Columns.Count == 0)
             {
                 foreach (var item in query.GenerateTableColumns())
                 {
@@ -207,13 +207,13 @@ namespace Zarf.Mapping.Bindings
                         {
                             Member = item.As<ColumnExpression>()?.Member,
                             Expression = item,
-                            Ordinal = query.Projections.Count
+                            Ordinal = query.Columns.Count
                         }
                     });
                 }
             }
 
-            foreach (var item in query.Projections)
+            foreach (var item in query.Columns)
             {
                 var col = item;
                 if (item.Expression.Is<AggregateExpression>())
@@ -256,7 +256,7 @@ namespace Zarf.Mapping.Bindings
             var eType = query.Type.GetCollectionElementType();
             if (ReflectionUtil.SimpleTypes.Contains(eType))
             {
-                return Visit(query.Projections.FirstOrDefault().Expression);
+                return Visit(query.Columns.FirstOrDefault().Expression);
             }
 
             var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
@@ -404,7 +404,7 @@ namespace Zarf.Mapping.Bindings
 
         public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
         {
-            foreach (var item in RootQuery.Projections)
+            foreach (var item in RootQuery.Columns)
             {
                 var col = item.Expression.As<ColumnExpression>();
                 var aggrate = item.Expression.As<AggregateExpression>();

@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberInitExpression memInit)
         {
-            var newExp = GetCompiledExpression<NewExpression>(memInit.NewExpression);
+            var newExpression = GetCompiledExpression<NewExpression>(memInit.NewExpression);
             var bindings = new List<MemberBinding>();
 
             foreach (var binding in memInit.Bindings.OfType<MemberAssignment>())
@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 
-            return memInit.Update(newExp, bindings);
+            return memInit.Update(newExpression, bindings);
         }
     }
 }

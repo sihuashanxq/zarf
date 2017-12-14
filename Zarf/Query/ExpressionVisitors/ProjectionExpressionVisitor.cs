@@ -12,7 +12,7 @@ namespace Zarf.Query.ExpressionVisitors
     public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
     {
         private List<ColumnDescriptor> _columns;
-
+        
         public List<ColumnDescriptor> Scan(Expression node)
         {
             lock (this)
@@ -40,7 +40,7 @@ namespace Zarf.Query.ExpressionVisitors
             var query = node.As<QueryExpression>();
             if (query != null)
             {
-                if (query.Projections.Count == 0)
+                if (query.Columns.Count == 0)
                 {
                     foreach (var item in query.GenerateTableColumns())
                     {
@@ -49,7 +49,7 @@ namespace Zarf.Query.ExpressionVisitors
                 }
                 else
                 {
-                    foreach (var item in query.Projections.Select(item => item.Expression))
+                    foreach (var item in query.Columns.Select(item => item.Expression))
                     {
                         if (item.Is<ColumnExpression>())
                         {

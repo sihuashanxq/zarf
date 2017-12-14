@@ -32,7 +32,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             ColumnExpression col = null;
             AggregateExpression aggregate = null;
 
-            if (query.Projections.Count != 0 || query.Sets.Count != 0)
+            if (query.Columns.Count != 0 || query.Sets.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
@@ -69,7 +69,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
-            query.AddColumns(new[] { new ColumnDescriptor() { Expression = aggregate, Ordinal = query.Projections.Count } });
+            query.AddColumns(new[] { new ColumnDescriptor() { Expression = aggregate, Ordinal = query.Columns.Count } });
             query.ChangeTypeOfExpression(methodCall.Method.ReturnType);
             return query;
         }

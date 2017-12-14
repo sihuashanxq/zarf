@@ -27,7 +27,7 @@ namespace Zarf.Query.Expressions
                 var hashCode = Offset.GetHashCode();
                 foreach (var order in Orders)
                 {
-                    hashCode = (hashCode * 397) ^ order.GetHashCode();
+                    hashCode = (hashCode * 37) ^ order.GetHashCode();
                 }
 
                 return hashCode;
