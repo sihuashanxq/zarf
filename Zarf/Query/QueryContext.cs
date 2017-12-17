@@ -56,6 +56,12 @@ namespace Zarf.Query
 
         public IQueryColumnCaching ColumnCaching { get; }
 
+        public MemberBindingMapper MemberBindingMapper { get; }
+
+        public ProjectionContainerMapper Container { get; }
+
+        public QueryModelMapper QueryModelMapper { get; }
+
         public QueryContext(
             IMemberAccessMapper memberMappingProvider,
             IQueryColumnOrdinalMapper projectionMappingProvider,
@@ -76,6 +82,9 @@ namespace Zarf.Query
             MemberValueCache = memValueCache;
             DbContextParts = dbContextParts;
             ColumnCaching = new QueryColumnCaching();
+            MemberBindingMapper = new MemberBindingMapper();
+            Container = new ProjectionContainerMapper();
+            QueryModelMapper = new QueryModelMapper();
         }
     }
 }

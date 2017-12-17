@@ -68,7 +68,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 aggregate = new AggregateExpression(methodCall.Method, col, query, col.Column.Name);
             }
 
-            query.Result = new EntityResult(aggregate, methodCall.Method.ReturnType);
+            query.QueryModel = new QueryEntityModel(aggregate, methodCall.Method.ReturnType);
             query.AddColumns(new[] { new ColumnDescriptor() { Expression = aggregate, Ordinal = query.Columns.Count } });
             query.ChangeTypeOfExpression(methodCall.Method.ReturnType);
             return query;

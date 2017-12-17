@@ -5,6 +5,7 @@ using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators.Methods;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -17,8 +18,27 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberExpression mem)
         {
-            //这里是否需要返回一个这么复杂的一个QueryExpression
-            //所有的东西都重新基于全新设计的ExpressionVisitor实现
+            var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
+            if (queryModel != null)
+            {
+                var n = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
+                var y = Context.MemberBindingMapper.GetMapedExpression(n);
+                if (y.NodeType != ExpressionType.Extension)
+                {
+                    y = GetCompiledExpression(y);
+                }
+
+                if (y.Is<AliasExpression>())
+                {
+                    var nn = y.As<AliasExpression>();
+                    var q = Context.Container.GetContainer(nn);
+
+                    return new ColumnExpression(q, new Column(nn.Alias), nn.Type);
+                }
+
+                return y;
+            }
+
             var objExp = Context.MemberAccessMapper.GetMappedExpression(mem.Member);
             if (objExp.Is<QueryExpression>())
             {

@@ -31,9 +31,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var methodBody = methodCall.Method.GetGenericMethodDefinition();
-            if (query.Sets.Count != 0 || query.Columns.Count != 0)
+            if (query.Sets.Count != 0 || query.Projections.Count != 0)
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+                query = query.PushDownSubQuery(query.Alias);
             }
 
             if (methodBody == ReflectionUtil.JoinSelect)
@@ -42,16 +42,20 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
             else
             {
+                if (query.QueryModel != null)
+                {
+                    Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
+                }
+
                 MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
             }
 
-            var template = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            new NewProjectionExpressionVisitor(query).Visit(template);
+            var model = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
+            new NewProjectionExpressionVisitor(query, Context.Container).Visit(model);
 
             var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
 
-            query.Result = new EntityResult(template, methodCall.Method.ReturnType.GetCollectionElementType());
-            query.ChangeTypeOfExpression(query.Result.ElementType);
+            query.QueryModel = new QueryEntityModel(methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body, methodCall.Method.ReturnType.GetCollectionElementType());
             return query;
         }
 
@@ -68,5 +72,4 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
         }
     }
-
 }

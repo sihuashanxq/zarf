@@ -17,7 +17,7 @@ namespace Zarf.Query.Expressions
 
         public string Alias { get; }
 
-        public override Type Type => TypeOfExpression;
+        public override Type Type => typeof(object);
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
@@ -47,7 +47,7 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression Container { get; protected set; }
 
-        public EntityResult Result { get; set; }
+        public QueryEntityModel QueryModel { get; set; }
 
         public IQueryColumnCaching ColumnCaching { get; }
 
@@ -73,19 +73,19 @@ namespace Zarf.Query.Expressions
             Alias = alias;
         }
 
-        public QueryExpression PushDownSubQuery(string alias, Func<QueryExpression, QueryExpression> subQueryHandle = null)
+        public QueryExpression PushDownSubQuery(string alias)
         {
-            var query = new QueryExpression(Type, ColumnCaching, alias)
+            var query = new QueryExpression(Type, ColumnCaching, Alias)
             {
                 SubQuery = this,
                 Table = null,
                 DefaultIfEmpty = DefaultIfEmpty,
+                QueryModel = QueryModel
             };
 
             DefaultIfEmpty = false;
             Container = query;
-            query.Result = query.SubQuery.Result;
-            return subQueryHandle != null ? subQueryHandle(query) : query;
+            return query;
         }
 
         public void AddJoin(JoinExpression joinQuery)

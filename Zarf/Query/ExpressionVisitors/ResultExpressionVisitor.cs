@@ -18,11 +18,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         public override Expression Visit(Expression node)
         {
-            var x = NewExpressionTranslator.Maped;
-            if (NewExpressionTranslator.Maped.ContainsKey(node))
-            {
-                return Expression.Constant(1);
-            }
+            //var x = NewExpressionTranslator.Maped;
+            //if (NewExpressionTranslator.Maped.ContainsKey(node))
+            //{
+            //    return Expression.Constant(1);
+            //}
 
             return base.Visit(node);
         }

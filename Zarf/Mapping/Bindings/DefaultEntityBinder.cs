@@ -53,7 +53,7 @@ namespace Zarf.Mapping.Bindings
 
         public Delegate Bind<TEntity>(IBindingContext context)
         {
-            var bindQuery = context.Query.As<QueryExpression>()?.Result?.EntityNewExpression ?? context.Query;
+            var bindQuery = context.Query.As<QueryExpression>()?.QueryModel?.Model ?? context.Query;
             if (bindQuery.Is<LambdaExpression>())
             {
                 bindQuery = bindQuery.As<LambdaExpression>().Body;

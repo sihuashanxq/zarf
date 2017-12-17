@@ -1,4 +1,6 @@
-﻿namespace Zarf.Entities
+﻿using System;
+
+namespace Zarf.Entities
 {
     public class Table
     {

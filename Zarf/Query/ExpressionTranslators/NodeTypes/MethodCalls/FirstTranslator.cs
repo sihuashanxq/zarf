@@ -30,7 +30,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 if (query.Sets.Count != 0)
                 {
                     query = query.PushDownSubQuery(Context.Alias.GetNewTable());
-                    query.Result = query.SubQuery.Result;
+                    query.QueryModel = query.SubQuery.QueryModel;
                 }
 
                 MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);

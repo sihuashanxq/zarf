@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Entities;
+using Zarf.Query;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf
 {
@@ -27,7 +30,10 @@ namespace Zarf
                 // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
                 //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
                 //BasicTest(db);
-                db.Users.Select(item => new { Id = item.Id + 1, X = item }).ToList();
+                var x = db.Users.Select(item => new { Id = item.Id + 1, X = item })
+                    .Select(item => new { Y = item.X.Id, Id = item.Id })
+                    .Select(item => new { Id = item.Y, Name = item.Id }).ToList();
+
                 Console.ReadKey();
             }
         }
