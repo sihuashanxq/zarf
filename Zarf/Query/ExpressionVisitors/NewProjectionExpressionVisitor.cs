@@ -8,16 +8,22 @@ using Zarf.Extensions;
 
 namespace Zarf.Query.ExpressionVisitors
 {
+    /// <summary>
+    /// 根据子查询生成Column
+    /// </summary>
     public class NewProjectionExpressionVisitor : ExpressionVisitorBase
     {
         public QueryExpression Query { get; }
 
-        public ProjectionContainerMapper Container { get; }
+        public ProjectionOwnerMapper Owner { get; }
 
-        public NewProjectionExpressionVisitor(QueryExpression query, ProjectionContainerMapper container)
+        public ILambdaParameterMapper ParameterMapper { get; }
+
+        public NewProjectionExpressionVisitor(QueryExpression query, ProjectionOwnerMapper owner, ILambdaParameterMapper parameterMapper)
         {
             Query = query;
-            Container = container;
+            Owner = owner;
+            ParameterMapper = parameterMapper;
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
@@ -31,8 +37,31 @@ namespace Zarf.Query.ExpressionVisitors
                     continue;
                 }
 
+                if (binding.Expression.NodeType == ExpressionType.Parameter)
+                {
+                    var map = ParameterMapper.GetMappedExpression(binding.Expression.As<ParameterExpression>());
+                    if (map == null)
+                    {
+                        continue;
+                    }
+
+                    var query = map.As<QueryExpression>();
+                    if (query == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var item in query.GenerateTableColumns())
+                    {
+                        Query.AddProjection(item);
+                        Owner.AddProjection(item, Query);
+                    }
+
+                    continue;
+                }
+
                 Query.AddProjection(binding.Expression);
-                Container.AddProjection(binding.Expression, Query);
+                Owner.AddProjection(binding.Expression, Query);
             }
 
             return memberInit;
@@ -47,8 +76,30 @@ namespace Zarf.Query.ExpressionVisitors
                     continue;
                 }
 
+                if (newExpression.Arguments[i].NodeType == ExpressionType.Parameter)
+                {
+                    var map = ParameterMapper.GetMappedExpression(newExpression.Arguments[i].As<ParameterExpression>());
+                    if (map == null)
+                    {
+                        continue;
+                    }
+
+                    var query = map.As<QueryExpression>();
+                    if (query == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var item in query.GenerateTableColumns())
+                    {
+                        Query.AddProjection(item);
+                        Owner.AddProjection(item, Query);
+                    }
+                    continue;
+                }
+
                 Query.AddProjection(newExpression.Arguments[i]);
-                Container.AddProjection(newExpression.Arguments[i], Query);
+                Owner.AddProjection(newExpression.Arguments[i], Query);
             }
 
             return newExpression;

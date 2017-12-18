@@ -233,11 +233,6 @@ namespace Zarf.SqlServer.Builders
             BuildLimit(query);
             BuildProjections(query);
 
-            foreach (var item in query.Projections)
-            {
-                Visit(item);
-            }
-
             Append(" FROM ");
 
             BuildSubQuery(query);
@@ -435,18 +430,18 @@ namespace Zarf.SqlServer.Builders
 
         protected virtual void BuildProjections(QueryExpression query)
         {
-            if (query.Columns == null)
+            if (query.Projections == null || query.Projections.Count == 0)
             {
                 Append('*');
             }
             else
             {
-                foreach (var item in query.Columns)
+                foreach (var item in query.Projections)
                 {
-                    if (item.Expression.Is<AggregateExpression>())
+                    if (item.Is<AggregateExpression>())
                     {
                         Console.WriteLine("Aggreate");
-                        var aggrate = item.Expression.As<AggregateExpression>();
+                        var aggrate = item.As<AggregateExpression>();
                         if (aggrate.Query != query)
                         {
                             Append(aggrate.Query.Alias.Escape(), ".", aggrate.Alias.Escape(), ",");
@@ -454,7 +449,7 @@ namespace Zarf.SqlServer.Builders
                         }
                     }
 
-                    BuildExpression(item.Expression);
+                    BuildExpression(item);
                     Append(',');
                 }
                 Builder.Length--;

@@ -21,49 +21,48 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
             if (queryModel != null)
             {
-                var n = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
-                var y = Context.MemberBindingMapper.GetMapedExpression(n);
-                if (y.NodeType != ExpressionType.Extension)
+                var property = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
+                var propertyExpression = Context.MemberBindingMapper.GetMapedExpression(property);
+                if (propertyExpression.NodeType != ExpressionType.Extension)
                 {
-                    y = GetCompiledExpression(y);
+                    propertyExpression = GetCompiledExpression(propertyExpression);
                 }
 
-                if (y.Is<AliasExpression>())
+                if (propertyExpression.Is<AliasExpression>())
                 {
-                    var nn = y.As<AliasExpression>();
-                    var q = Context.Container.GetContainer(nn);
+                    var refrence = propertyExpression.As<AliasExpression>();
+                    var refQuery = Context.ProjectionOwner.GetQuery(refrence);
+                    if (refQuery.Container != null && refQuery.Container.SubQuery == refQuery)
+                    {
+                        refQuery = refQuery.Container;
+                    }
 
-                    return new ColumnExpression(q, new Column(nn.Alias), nn.Type);
+                    return new ColumnExpression(refQuery, new Column(refrence.Alias), refrence.Type);
                 }
 
-                return y;
+                if (propertyExpression.Is<QueryExpression>())
+                {
+                    var refQuery = propertyExpression.As<QueryExpression>();
+                    if (refQuery.Container != null && refQuery.Container.SubQuery == refQuery)
+                    {
+                        return refQuery.Container;
+                    }
+                }
+
+                return propertyExpression;
             }
 
-            var objExp = Context.MemberAccessMapper.GetMappedExpression(mem.Member);
-            if (objExp.Is<QueryExpression>())
+            var typeOfProperty = mem.Member.GetPropertyType();
+            if (typeof(IInternalQuery).IsAssignableFrom(typeOfProperty))
             {
-                return objExp;   //new {item.User.Id,} item.User
+                return new QueryExpression(typeOfProperty, Context.ColumnCaching, Context.Alias.GetNewTable());
             }
 
-            var typeOfMember = mem.Member.GetPropertyType();
-            if (typeof(IInternalQuery).IsAssignableFrom(typeOfMember))
-            {
-                return new QueryExpression(typeOfMember, Context.ColumnCaching, Context.Alias.GetNewTable());
-            }
-
-            if (objExp.Is<ColumnExpression>())
-            {
-                objExp = objExp.As<ColumnExpression>().Query;
-            }
-            else
-            {
-                objExp = GetCompiledExpression(mem.Expression);
-            }
-
-            var query = objExp.As<QueryExpression>();
+            var obj = GetCompiledExpression(mem.Expression);
+            var query = obj.As<QueryExpression>();
             if (query == null)
             {
-                return EvalMemberValue(mem.Member, objExp, out var value) ? value : mem;
+                return EvalMemberValue(mem.Member, obj, out var value) ? value : mem;
             }
 
             var col = Context.ColumnCaching.GetColumn(new QueryColumnCacheKey(query, mem.Member));
@@ -72,21 +71,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return new ColumnExpression(query, mem.Member);
             }
 
-            while (query.Container != null)
-            {
-                var cachedCol = Context.ColumnCaching
-                    .GetColumn(new QueryColumnCacheKey(query.Container, mem.Member))
-                    ?.Clone();
-
-                if (cachedCol != null)
-                {
-                    return cachedCol;
-                }
-
-                query = query.Container;
-            }
-
-            return new ColumnExpression(query, new Column(col.Column?.Name ?? col.Alias), col.Type);
+            return new ColumnRefrenceExpression(col, query, mem);
         }
 
         /// <summary>

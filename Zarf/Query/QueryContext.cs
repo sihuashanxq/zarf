@@ -58,7 +58,7 @@ namespace Zarf.Query
 
         public MemberBindingMapper MemberBindingMapper { get; }
 
-        public ProjectionContainerMapper Container { get; }
+        public ProjectionOwnerMapper ProjectionOwner { get; }
 
         public QueryModelMapper QueryModelMapper { get; }
 
@@ -83,7 +83,7 @@ namespace Zarf.Query
             DbContextParts = dbContextParts;
             ColumnCaching = new QueryColumnCaching();
             MemberBindingMapper = new MemberBindingMapper();
-            Container = new ProjectionContainerMapper();
+            ProjectionOwner = new ProjectionOwnerMapper();
             QueryModelMapper = new QueryModelMapper();
         }
     }

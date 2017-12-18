@@ -30,23 +30,23 @@ namespace Zarf.Query
 
         MemberBindingMapper MemberBindingMapper { get; }
 
-        ProjectionContainerMapper Container { get; }
+        ProjectionOwnerMapper ProjectionOwner { get; }
 
         QueryModelMapper QueryModelMapper { get; }
     }
 
-    public class ProjectionContainerMapper
+    public class ProjectionOwnerMapper
     {
-        protected Dictionary<Expression, QueryExpression> Containers = new Dictionary<Expression, QueryExpression>();
+        protected Dictionary<Expression, QueryExpression> Queries = new Dictionary<Expression, QueryExpression>();
 
         public void AddProjection(Expression projection, QueryExpression container)
         {
-            Containers[projection] = container;
+            Queries[projection] = container;
         }
 
-        public QueryExpression GetContainer(Expression projection)
+        public QueryExpression GetQuery(Expression projection)
         {
-            return Containers.TryGetValue(projection, out var container)
+            return Queries.TryGetValue(projection, out var container)
                 ? container
                 : default(QueryExpression);
         }

@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var methodBody = methodCall.Method.GetGenericMethodDefinition();
             if (query.Sets.Count != 0 || query.Projections.Count != 0)
             {
-                query = query.PushDownSubQuery(query.Alias);
+                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
             if (methodBody == ReflectionUtil.JoinSelect)
@@ -51,7 +51,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             var model = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            new NewProjectionExpressionVisitor(query, Context.Container).Visit(model);
+            new NewProjectionExpressionVisitor(query, Context.ProjectionOwner, Context.LambdaParameterMapper).Visit(model);
 
             var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
 

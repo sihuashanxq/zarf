@@ -26,6 +26,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetQueryExpression(methodCall.Arguments[0]);
+            if (query.QueryModel != null)
+            {
+                Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
+            }
+
             MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
             HandleQueryCondtion(query, methodCall.Arguments[1]);
 
@@ -50,8 +55,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         private void HandleQueryCondtion(QueryExpression query, Expression condtion)
         {
-            condtion = GetCompiledExpression(condtion);
-            condtion = HandleCondtion(condtion);
+            //condtion = GetCompiledExpression(condtion);
+            condtion = new RelationExpressionVisitor(Context).Visit(condtion);
             query.CombineCondtion(condtion);
         }
     }

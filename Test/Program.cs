@@ -32,6 +32,7 @@ namespace Zarf
                 //BasicTest(db);
                 var x = db.Users.Select(item => new { Id = item.Id + 1, X = item })
                     .Select(item => new { Y = item.X.Id, Id = item.Id })
+                    .Where(item => item.Y > 1)
                     .Select(item => new { Id = item.Y, Name = item.Id }).ToList();
 
                 Console.ReadKey();

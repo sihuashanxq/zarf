@@ -20,7 +20,6 @@ namespace Zarf.Query.ExpressionTranslators
         {
             Context = queryContext;
             Compiler = queryCompiper;
-            RelationVisitor = new RelationExpressionVisitor();
         }
 
         public abstract Expression Translate(TExpression query);

@@ -15,7 +15,7 @@ namespace Zarf.Query.Expressions
 
         public Table Table { get; set; }
 
-        public string Alias { get; }
+        public string Alias { get; set; }
 
         public override Type Type => typeof(object);
 
@@ -73,9 +73,36 @@ namespace Zarf.Query.Expressions
             Alias = alias;
         }
 
+        public void Clone()
+        {
+
+        }
+
         public QueryExpression PushDownSubQuery(string alias)
         {
-            var query = new QueryExpression(Type, ColumnCaching, Alias)
+            //var subQuery = new QueryExpression(Type, ColumnCaching, Alias)
+            //{
+            //    Table = Table,
+            //    SubQuery = SubQuery
+            //};
+
+            //subQuery.Sets.AddRange(Sets);
+            //subQuery.Orders.AddRange(Orders);
+            //subQuery.Groups.AddRange(Groups);
+            //subQuery.Projections.AddRange(Projections);
+            //subQuery.Joins.AddRange(Joins);
+            //subQuery.Limit = Limit;
+            //subQuery.Offset = Offset;
+            //subQuery.IsDistinct = IsDistinct;
+            //subQuery.Where = Where;
+            //subQuery.Container = this;
+
+            //Where = null;
+            //Projections.Clear();
+            //Alias = alias;
+            //SubQuery = subQuery;
+            //return this;
+            var query = new QueryExpression(Type, ColumnCaching, alias)
             {
                 SubQuery = this,
                 Table = null,
@@ -195,12 +222,7 @@ namespace Zarf.Query.Expressions
 
         public IEnumerable<Expression> GenerateTableColumns()
         {
-            if (Columns.Count != 0)
-            {
-                return Columns.Select(item => item.Expression);
-            }
-
-            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(Type);
+            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(TypeOfExpression);
             var cols = new List<Expression>();
 
             foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
