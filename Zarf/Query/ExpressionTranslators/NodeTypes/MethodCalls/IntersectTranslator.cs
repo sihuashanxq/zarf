@@ -30,10 +30,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             Utils.CheckNull(query, "Query Expression");
             Utils.CheckNull(setsQuery, "Intersect Query Expression");
 
-            if (setsQuery.Columns.Count == 0)
-            {
-                setsQuery.AddColumns(GetColumns(setsQuery));
-            }
+            //if (setsQuery.Columns.Count == 0)
+            //{
+            //    //setsQuery.AddColumns(GetColumns(setsQuery));
+            //}
 
             query.Sets.Add(new IntersectExpression(setsQuery));
             return query;

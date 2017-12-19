@@ -452,6 +452,7 @@ namespace Zarf.SqlServer.Builders
                     BuildExpression(item);
                     Append(',');
                 }
+
                 Builder.Length--;
             }
         }
@@ -701,10 +702,10 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
-            if (exists.Query.Columns.Count == 0)
-            {
-                exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
-            }
+            //if (exists.Query.Columns.Count == 0)
+            //{
+            //    exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
+            //}
 
             Append(" EXISTS (");
             BuildExpression(exists.Query);

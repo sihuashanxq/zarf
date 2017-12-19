@@ -46,17 +46,17 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var condtion = Compiler.Compile(lambda);
 
             innerQuery.AddJoin(new JoinExpression(previousQuery, condtion));
-            innerQuery.AddColumns(Context.ProjectionScanner.Scan(innerQuery));
+            //innerQuery.AddColumns(Context.ProjectionScanner.Scan(innerQuery));
 
-            Context.PropertyNavigationContext.AddPropertyNavigation(
-                propertyPath.Member,
-                new PropertyNavigation(
-                     propertyPath.Member,
-                     innerQuery,
-                     Context.ProjectionScanner.Scan(relation).Select(item => item.Expression).ToList(),
-                     relation
-                )
-            );
+            //Context.PropertyNavigationContext.AddPropertyNavigation(
+            //    propertyPath.Member,
+            //    new PropertyNavigation(
+            //         propertyPath.Member,
+            //         innerQuery,
+            //         Context.ProjectionScanner.Scan(relation).Select(item => item.Expression).ToList(),
+            //         relation
+            //    )
+            //);
 
             return rootQuery;
         }

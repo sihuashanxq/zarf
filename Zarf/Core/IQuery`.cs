@@ -68,8 +68,6 @@ namespace Zarf
 
         IJoinQuery<TEntity, TInner> Join<TInner>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner);
 
-        IQuery<TEntity> DefaultIfEmpty();
-
         IQuery<TEntity> Distinct();
 
         IQuery<TEntity> Except(IQuery<TEntity> source2);

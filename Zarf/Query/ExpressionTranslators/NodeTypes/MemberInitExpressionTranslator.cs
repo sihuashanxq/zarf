@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -21,15 +22,17 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
             foreach (var binding in memInit.Bindings.OfType<MemberAssignment>())
             {
-                var bindExpression = Compiler.Compile(binding.Expression);
-                var memberInfoType = binding.Member.GetPropertyType();
-
-                if (typeof(IEnumerable).IsAssignableFrom(memberInfoType) && memberInfoType != typeof(string))
+                var bindExpression = GetCompiledExpression(binding.Expression);
+                if (bindExpression.Is<QueryExpression>())
                 {
-                    throw new NotImplementedException("not supported!");
+                    bindExpression = binding.Expression;
+                }
+                else
+                {
+                    bindExpression = new AliasExpression(Context.Alias.GetNewColumn(), bindExpression, binding.Expression);
                 }
 
-                Context.MemberAccessMapper.Map(binding.Member, bindExpression);
+                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, binding.Member), bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 

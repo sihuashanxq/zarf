@@ -25,69 +25,95 @@ namespace Zarf.Query.Expressions
 
             public HashCodeExpressionVisitor(Expression expression)
             {
+                HashCode = 0;
                 Visit(expression);
             }
 
             protected override Expression VisitUnary(UnaryExpression unary)
             {
-                HashCode += (HashCode * 37) ^ (unary.Method?.GetHashCode() ?? 0);
-                Visit(unary.Operand);
-                return unary;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ (unary.Method?.GetHashCode() ?? 0);
+                    Visit(unary.Operand);
+                    return unary;
+                }
             }
 
             protected override Expression VisitConstant(ConstantExpression constant)
             {
-                HashCode += (HashCode * 37) ^ (constant.Value?.GetHashCode() ?? 0);
-                return constant;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ (constant.Value?.GetHashCode() ?? 0);
+                    return constant;
+                }
             }
 
             protected override Expression VisitParameter(ParameterExpression parameter)
             {
-                HashCode += (HashCode * 37) ^ (parameter?.Name.GetHashCode() ?? 0);
-                return parameter;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ (parameter?.Name.GetHashCode() ?? 0);
+                    return parameter;
+                }
             }
 
             protected override Expression VisitTypeBinary(TypeBinaryExpression typeBinary)
             {
-                HashCode += (HashCode * 37) ^ typeBinary.TypeOperand.GetHashCode();
-                Visit(typeBinary.Expression);
-                return typeBinary;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ typeBinary.TypeOperand.GetHashCode();
+                    Visit(typeBinary.Expression);
+                    return typeBinary;
+                }
             }
 
             protected override Expression VisitMember(MemberExpression mem)
             {
-                HashCode += (HashCode * 37) ^ mem.Member.GetHashCode();
-                Visit(mem.Expression);
-                return mem;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ mem.Member.GetHashCode();
+                    Visit(mem.Expression);
+                    return mem;
+                }
             }
 
             protected override Expression VisitMethodCall(MethodCallExpression methodCall)
             {
-                HashCode += (HashCode * 37) ^ methodCall.Method.GetHashCode();
-                Visit(methodCall.Arguments);
-                Visit(methodCall.Object);
-                return methodCall;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ methodCall.Method.GetHashCode();
+                    Visit(methodCall.Arguments);
+                    Visit(methodCall.Object);
+                    return methodCall;
+                }
             }
 
             protected virtual Expression VisitLambda(LambdaExpression lambda)
             {
-                HashCode += (HashCode * 37) ^ lambda.ReturnType.GetHashCode();
-
-                foreach (var item in lambda.Parameters)
+                unchecked
                 {
-                    Visit(item);
-                }
+                    HashCode += (HashCode * 37) ^ lambda.ReturnType.GetHashCode();
 
-                Visit(lambda.Body);
-                return lambda;
+                    foreach (var item in lambda.Parameters)
+                    {
+                        Visit(item);
+                    }
+
+                    Visit(lambda.Body);
+                    return lambda;
+                }
             }
 
             protected override Expression VisitNew(NewExpression newExpression)
             {
-                HashCode += (HashCode * 37) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
-                VisitMembers(newExpression.Members);
-                Visit(newExpression.Arguments);
-                return newExpression;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
+
+                    VisitMembers(newExpression.Members);
+                    Visit(newExpression.Arguments);
+                    return newExpression;
+                }
             }
 
             protected override Expression VisitNewArray(NewArrayExpression newArray)
@@ -105,41 +131,47 @@ namespace Zarf.Query.Expressions
 
             protected override Expression VisitMemberInit(MemberInitExpression memberInit)
             {
-                Visit(memberInit.NewExpression);
-
-                foreach (var binding in memberInit.Bindings)
+                unchecked
                 {
-                    HashCode += (HashCode * 37) ^ binding.Member.GetHashCode();
-                    HashCode += (HashCode * 37) ^ binding.BindingType.GetHashCode();
+                    Visit(memberInit.NewExpression);
 
-                    if (binding.BindingType == MemberBindingType.ListBinding)
+                    foreach (var binding in memberInit.Bindings)
                     {
-                        foreach (var item in (binding as MemberListBinding).Initializers)
+                        HashCode += (HashCode * 37) ^ binding.Member.GetHashCode();
+                        HashCode += (HashCode * 37) ^ binding.BindingType.GetHashCode();
+
+                        if (binding.BindingType == MemberBindingType.ListBinding)
                         {
-                            HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
-                            Visit(item.Arguments);
+                            foreach (var item in (binding as MemberListBinding).Initializers)
+                            {
+                                HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
+                                Visit(item.Arguments);
+                            }
+                        }
+                        else if (binding.BindingType == MemberBindingType.Assignment)
+                        {
+                            Visit((binding as MemberAssignment).Expression);
                         }
                     }
-                    else if (binding.BindingType == MemberBindingType.Assignment)
-                    {
-                        Visit((binding as MemberAssignment).Expression);
-                    }
-                }
 
-                return memberInit;
+                    return memberInit;
+                }
             }
 
             protected override Expression VisitListInit(ListInitExpression listInit)
             {
-                Visit(listInit.NewExpression);
-
-                foreach (var item in listInit.Initializers)
+                unchecked
                 {
-                    HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
-                    Visit(item.Arguments);
-                }
+                    Visit(listInit.NewExpression);
 
-                return listInit;
+                    foreach (var item in listInit.Initializers)
+                    {
+                        HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
+                        Visit(item.Arguments);
+                    }
+
+                    return listInit;
+                }
             }
 
             protected override Expression VisitConditional(ConditionalExpression condtional)
@@ -152,42 +184,57 @@ namespace Zarf.Query.Expressions
 
             protected override Expression VisitExtension(Expression extension)
             {
-                HashCode += (HashCode * 37) ^ extension.GetHashCode();
-                return extension;
+                unchecked
+                {
+                    HashCode += (HashCode * 37) ^ extension.GetHashCode();
+                    return extension;
+                }
+            }
+
+            protected override Expression VisitBinary(BinaryExpression binary)
+            {
+                Visit(binary.Left);
+                Visit(binary.Right);
+                return binary;
             }
 
             public override Expression Visit(Expression node)
             {
-                if (node != null)
+                unchecked
                 {
-                    HashCode += (HashCode * 37) ^ node.NodeType.GetHashCode();
-                    HashCode += (HashCode * 37) ^ (node.Type?.GetHashCode() ?? 0);
-
                     if (node.NodeType != ExpressionType.Lambda)
                     {
-                        return base.Visit(node);
+                        base.Visit(node);
+                    }
+                    else
+                    {
+                        VisitLambda(node as LambdaExpression);
                     }
 
-                    return VisitLambda(node as LambdaExpression);
-                }
+                    HashCode += (HashCode * 37) ^ node.NodeType.GetHashCode();
+                    HashCode += (HashCode * 37) ^ node.Type.GetHashCode();
 
-                return node;
+                    return node;
+                }
             }
 
             protected virtual IEnumerable<MemberInfo> VisitMembers(IEnumerable<MemberInfo> members)
             {
-                if (members == null)
+                unchecked
                 {
+                    if (members == null)
+                    {
+                        return members;
+                    }
+
+                    foreach (var item in members)
+                    {
+
+                        HashCode += (HashCode * 37) ^ item.GetHashCode();
+                    }
+
                     return members;
                 }
-
-                foreach (var item in members)
-                {
-
-                    HashCode += (HashCode * 37) ^ item.GetHashCode();
-                }
-
-                return members;
             }
         }
     }

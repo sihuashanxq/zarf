@@ -7,11 +7,9 @@ namespace Zarf.Query
         IQueryContext CreateContext(IDbContextParts dbContextParts);
 
         IQueryContext CreateContext(
-            IMemberAccessMapper sourceMappingProvider = null,
             IQueryColumnOrdinalMapper mappingProvider = null,
             IPropertyNavigationContext navigationContext = null,
             ILambdaParameterMapper sourceProvider = null,
-            IProjectionScanner scanner = null,
             IAliasGenerator generator = null,
             IMemberValueCache memValue = null,
             IDbContextParts dbContextParts = null);

@@ -42,11 +42,6 @@ namespace Zarf.Query.ExpressionTranslators
             return GetCompiledExpression<Expression>(exp);
         }
 
-        protected List<ColumnDescriptor> GetColumns(Expression exp)
-        {
-            return Context.ProjectionScanner.Scan(exp);
-        }
-
         protected List<ParameterExpression> GetParameteres(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();

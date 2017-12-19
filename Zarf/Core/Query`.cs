@@ -241,11 +241,6 @@ namespace Zarf
             return foreignKey;
         }
 
-        public IQuery<TEntity> DefaultIfEmpty()
-        {
-            return new Query<TEntity>(InternalQuery.DefaultIfEmpty() as IInternalQuery<TEntity>);
-        }
-
         public IQuery<TEntity> Distinct()
         {
             return new Query<TEntity>(InternalQuery.Distinct() as IInternalQuery<TEntity>);

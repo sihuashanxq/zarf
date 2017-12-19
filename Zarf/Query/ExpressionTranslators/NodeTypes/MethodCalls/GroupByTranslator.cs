@@ -30,15 +30,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-            query.Groups.Add(
-                new GroupExpression(
-                    GetColumns(
-                        GetCompiledExpression(
-                            methodCall.Arguments[1]
-                        )
-                    ).Select(item => item.Expression).OfType<ColumnExpression>()
-                )
-            );
+            //query.Groups.Add(
+            //    new GroupExpression(
+            //        GetColumns(
+            //            GetCompiledExpression(
+            //                methodCall.Arguments[1]
+            //            )
+            //        ).Select(item => item.Expression).OfType<ColumnExpression>()
+            //    )
+            //);
 
             return query;
         }

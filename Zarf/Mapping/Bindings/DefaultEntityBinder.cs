@@ -154,8 +154,17 @@ namespace Zarf.Mapping.Bindings
                 {
                     throw new Exception("Class Refrence A Navigation Property Must Have A Default Constructor!");
                 }
-                var argument = Visit(newExp.Arguments[i]);
-                var member = newExp.Members[i];
+
+                var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
+                for (var x = 0; x < RootQuery.Projections.Count; i++)
+                {
+                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[i], argument))
+                    {
+                        var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
+                        argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
+                        break;
+                    }
+                }
                 arguments.Add(argument);
             }
 
@@ -197,52 +206,9 @@ namespace Zarf.Mapping.Bindings
 
         protected void InitializeQueryColumns(QueryExpression query)
         {
-            if (query.Columns.Count == 0)
+            foreach (var item in query.Projections)
             {
-                foreach (var item in query.GenerateTableColumns())
-                {
-                    query.AddColumns(new[]
-                    {
-                        new ColumnDescriptor()
-                        {
-                            Member = item.As<ColumnExpression>()?.Member,
-                            Expression = item,
-                            Ordinal = query.Columns.Count
-                        }
-                    });
-                }
-            }
 
-            foreach (var item in query.Columns)
-            {
-                var col = item;
-                if (item.Expression.Is<AggregateExpression>())
-                {
-                    var column = item.Expression.As<AggregateExpression>().KeySelector.As<ColumnExpression>();
-                    if (column == null)
-                    {
-                        col = new ColumnDescriptor()
-                        {
-                            Expression = item.Expression.As<AggregateExpression>().KeySelector,
-                            Member = null,
-                            Ordinal = item.Ordinal
-                        };
-                    }
-                    else
-                    {
-                        col = new ColumnDescriptor()
-                        {
-                            Expression = column ?? item.Expression,
-                            Member = column?.Member,
-                            Ordinal = item.Ordinal
-                        };
-                    }
-                }
-
-                if (!Context.ProjectionMappingProvider.IsMapped(col.Expression))
-                {
-                    Context.ProjectionMappingProvider.Map(col);
-                }
             }
         }
 
@@ -256,7 +222,7 @@ namespace Zarf.Mapping.Bindings
             var eType = query.Type.GetCollectionElementType();
             if (ReflectionUtil.SimpleTypes.Contains(eType))
             {
-                return Visit(query.Columns.FirstOrDefault().Expression);
+                //return Visit(query.Columns.FirstOrDefault().Expression);
             }
 
             var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
@@ -404,29 +370,29 @@ namespace Zarf.Mapping.Bindings
 
         public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
         {
-            foreach (var item in RootQuery.Columns)
-            {
-                var col = item.Expression.As<ColumnExpression>();
-                var aggrate = item.Expression.As<AggregateExpression>();
-                if (aggrate != null)
-                {
-                    col = aggrate.KeySelector.As<ColumnExpression>();
-                }
+            //foreach (var item in RootQuery.Columns)
+            //{
+            //    var col = item.Expression.As<ColumnExpression>();
+            //    var aggrate = item.Expression.As<AggregateExpression>();
+            //    if (aggrate != null)
+            //    {
+            //        col = aggrate.KeySelector.As<ColumnExpression>();
+            //    }
 
-                if (col != null && col.Member == member)
-                {
-                    var q = col.Query;
-                    while (q != null)
-                    {
-                        if (q != container)
-                        {
-                            q = q.Container;
-                        }
+            //    if (col != null && col.Member == member)
+            //    {
+            //        var q = col.Query;
+            //        while (q != null)
+            //        {
+            //            if (q != container)
+            //            {
+            //                q = q.Container;
+            //            }
 
-                        return col;
-                    }
-                }
-            }
+            //            return col;
+            //        }
+            //    }
+            //}
 
             return null;
         }

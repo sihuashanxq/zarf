@@ -1,81 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
-using Zarf.Mapping;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class ProjectionExpressionVisitor : ExpressionVisitor, IProjectionScanner
+    /// <summary>
+    /// 根据子查询生成Column
+    /// </summary>
+    public class ProjectionExpressionVisitor : ExpressionVisitorBase
     {
-        private List<ColumnDescriptor> _columns;
-        
-        public List<ColumnDescriptor> Scan(Expression node)
+        public QueryExpression Query { get; }
+
+        public ProjectionOwnerMapper Owner { get; }
+
+        public ILambdaParameterMapper ParameterMapper { get; }
+
+        public ProjectionExpressionVisitor(QueryExpression query, ProjectionOwnerMapper owner, ILambdaParameterMapper parameterMapper)
         {
-            lock (this)
-            {
-                _columns = new List<ColumnDescriptor>();
-                Visit(node);
-                return _columns.ToList();
-            }
-        }
-
-        public List<ColumnDescriptor> Scan(Func<Expression, Expression> preHandle, Expression node)
-        {
-            return Scan(preHandle(node));
-        }
-
-        protected override Expression VisitExtension(Expression node)
-        {
-            var col = node.As<ColumnExpression>();
-            if (col != null)
-            {
-                AddProjection(col.Member, node);
-                return node;
-            }
-
-            var query = node.As<QueryExpression>();
-            if (query != null)
-            {
-                if (query.Columns.Count == 0)
-                {
-                    foreach (var item in query.GenerateTableColumns())
-                    {
-                        AddProjection(item.As<ColumnExpression>()?.Member, item);
-                    }
-                }
-                else
-                {
-                    foreach (var item in query.Columns.Select(item => item.Expression))
-                    {
-                        if (item.Is<ColumnExpression>())
-                        {
-                            col = item.As<ColumnExpression>();
-                            AddProjection(col.Member, col);
-                        }
-                        else if (item.Is<AggregateExpression>())
-                        {
-                            var key = item.As<AggregateExpression>().KeySelector;
-                            if (key.Is<ColumnExpression>())
-                            {
-                                col = key.As<ColumnExpression>().Clone();
-                                col.Query = query;
-                                AddProjection(col.Member, col);
-                            }
-                            else
-                            {
-                                AddProjection(null, key);
-                            }
-                        }
-                    }
-                }
-                return node;
-            }
-
-            return node;
+            Query = query;
+            Owner = owner;
+            ParameterMapper = parameterMapper;
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
@@ -84,62 +29,73 @@ namespace Zarf.Query.ExpressionVisitors
 
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
-                AddProjection(binding.Member, binding.Expression);
+                if (binding.Expression.Is<QueryExpression>())
+                {
+                    continue;
+                }
+
+                if (binding.Expression.NodeType == ExpressionType.Parameter)
+                {
+                    Visit(binding.Expression.As<ParameterExpression>());
+                    continue;
+                }
+
+                Query.AddProjection(binding.Expression);
+                Owner.AddProjection(binding.Expression, Query);
             }
 
             return memberInit;
         }
 
-        protected override Expression VisitNew(NewExpression newExp)
+        protected override Expression VisitNew(NewExpression newExpression)
         {
-            if (newExp.Arguments == null || newExp.Arguments.Count == 0)
+            for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                return newExp;
-            }
-
-            for (var i = 0; i < newExp.Arguments.Count; i++)
-            {
-                if (ReflectionUtil.SimpleTypes.Contains(newExp.Members[i].GetPropertyType()))
+                if (newExpression.Arguments[i].Is<QueryExpression>())
                 {
-                    AddProjection(newExp.Members[i], newExp.Arguments[i]);
                     continue;
                 }
 
-                if (newExp.Arguments[i].Is<QueryExpression>())
+                if (newExpression.Arguments[i].NodeType == ExpressionType.Parameter)
                 {
-                    Visit(newExp.Arguments[i]);
+                    Visit(newExpression.Arguments[i].As<ParameterExpression>());
+                    continue;
                 }
+
+                Query.AddProjection(newExpression.Arguments[i]);
+                Owner.AddProjection(newExpression.Arguments[i], Query);
             }
 
-            return newExp;
+            return newExpression;
         }
 
-        private void AddProjection(MemberInfo member, Expression node)
+        protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            if (node.NodeType != ExpressionType.Extension && node.NodeType != ExpressionType.Constant)
+            var map = ParameterMapper.GetMappedExpression(parameter);
+            if (map == null)
             {
-                Visit(node);
-                return;
+                return parameter;
             }
 
-            var query = node.As<QueryExpression>();
-            if (query != null)
+            var query = map.As<QueryExpression>();
+            if (query == null)
             {
-                Visit(query);
-                return;
+                return parameter;
             }
 
-            var col = node.As<ColumnExpression>();
-            if (col != null)
+            foreach (var item in query.GenQueryProjections())
             {
-                col.Member = member ?? col.Member;
-                _columns.Add(new ColumnDescriptor()
-                {
-                    Member = member,
-                    Expression = node,
-                    Ordinal = _columns.Count
-                });
+                Query.AddProjection(item);
+                Owner.AddProjection(item, Query);
             }
+
+            return parameter;
+        }
+
+        protected override Expression VisitLambda(LambdaExpression lambda)
+        {
+            Visit(lambda.Body);
+            return lambda;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         private QueryExpression GetQueryExpression(Expression exp)
         {
             var query = GetCompiledExpression<QueryExpression>(exp);
-            if (query.Where != null && (query.Columns.Count != 0 || query.Sets.Count != 0))
+            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
             {
                 return query.PushDownSubQuery(Context.Alias.GetNewTable());
             }

@@ -35,19 +35,19 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             //UNION 默认比较 Concat 不比较
             if (methodCall.Method.Name == "Union")
             {
-                if (query.Columns.Count == 0)
-                {
-                    query.AddColumns(GetColumns(query));
-                }
+                //if (query.Columns.Count == 0)
+                //{
+                //    //query.AddColumns(GetColumns(query));
+                //}
 
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
                 query.IsDistinct = true;
             }
 
-            if (setsQuery.Columns.Count == 0)
-            {
-                setsQuery.AddColumns(GetColumns(setsQuery));
-            }
+            //if (setsQuery.Columns.Count == 0)
+            //{
+            //    //setsQuery.AddColumns(GetColumns(setsQuery));
+            //}
 
             return query;
         }

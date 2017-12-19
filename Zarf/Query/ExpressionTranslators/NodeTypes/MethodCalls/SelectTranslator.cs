@@ -51,7 +51,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             }
 
             var model = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            new NewProjectionExpressionVisitor(query, Context.ProjectionOwner, Context.LambdaParameterMapper).Visit(model);
+            new ProjectionExpressionVisitor(query, Context.ProjectionOwner, Context.LambdaParameterMapper).Visit(model);
 
             var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
 

@@ -10,11 +10,7 @@ namespace Zarf.Query
 {
     public interface IQueryContext
     {
-        IMemberAccessMapper MemberAccessMapper { get; }
-
         ILambdaParameterMapper LambdaParameterMapper { get; }
-
-        IProjectionScanner ProjectionScanner { get; }
 
         IPropertyNavigationContext PropertyNavigationContext { get; }
 

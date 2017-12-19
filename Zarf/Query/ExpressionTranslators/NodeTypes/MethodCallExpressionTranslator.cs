@@ -19,7 +19,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         {
             Register(AggregateTranslator.SupprotedMethods, new AggregateTranslator(queryContext, queryCompiper));
             Register(SelectTranslator.SupprotedMethods, new SelectTranslator(queryContext, queryCompiper));
-            Register(DefaultIfEmptyTranslator.SupprotedMethods, new DefaultIfEmptyTranslator(queryContext, queryCompiper));
             Register(DistinctTranslator.SupprotedMethods, new DistinctTranslator(queryContext, queryCompiper));
             Register(ExceptTranslator.SupprotedMethods, new ExceptTranslator(queryContext, queryCompiper));
             Register(FirstTranslator.SupprotedMethods, new FirstTranslator(queryContext, queryCompiper));
