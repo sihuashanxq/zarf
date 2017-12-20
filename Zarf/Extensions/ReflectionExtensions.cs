@@ -42,7 +42,7 @@ namespace Zarf.Extensions
             }
         }
 
-        public static Type GetCollectionElementType(this Type typeInfo)
+        public static Type GetModelElementType(this Type typeInfo)
         {
             if (IsCollection(typeInfo))
             {
@@ -60,12 +60,7 @@ namespace Zarf.Extensions
 
         public static bool IsCollection(this Type type)
         {
-            if (type.IsPrimtiveType())
-            {
-                return false;
-            }
-
-            return typeof(IEnumerable).IsAssignableFrom(type);
+            return !IsPrimtiveType(type) && typeof(IEnumerable).IsAssignableFrom(type);
         }
 
         public static bool IsPrimtiveType(this Type type)

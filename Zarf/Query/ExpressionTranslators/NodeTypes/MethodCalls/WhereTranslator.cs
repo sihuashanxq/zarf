@@ -31,13 +31,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
             }
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-            HandleQueryCondtion(query, methodCall.Arguments[1]);
-
             if (methodCall.Method.Name == "SingleOrDefault")
             {
                 query.DefaultIfEmpty = true;
             }
+
+            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+            HandleQueryCondtion(query, methodCall.Arguments[1]);
 
             return query;
         }
@@ -45,17 +45,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         private QueryExpression GetQueryExpression(Expression exp)
         {
             var query = GetCompiledExpression<QueryExpression>(exp);
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
-            {
-                return query.PushDownSubQuery(Context.Alias.GetNewTable());
-            }
-
             return query;
         }
 
         private void HandleQueryCondtion(QueryExpression query, Expression condtion)
         {
-            //condtion = GetCompiledExpression(condtion);
             condtion = new RelationExpressionVisitor(Context).Visit(condtion);
             query.CombineCondtion(condtion);
         }

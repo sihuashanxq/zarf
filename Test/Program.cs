@@ -31,10 +31,10 @@ namespace Zarf
                 //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
                 //BasicTest(db);
                 var x = db.Users.Select(item => new { Id = item.Id + 1, X = item })
-                    .Select(item => new { Y = item.X.Id, Id = item.Id })
+                    .Select(item => new { Y = item.X.Id, Id = item.Id, Name = item.X.Name })
                     .Where(item => item.Y > 1)
-                    .Select(item => new { Id = item.Y, Name = item.Id })
-                   .All(item => item.Id > 1000);
+                    .Select(item => new { Id = item.Y, Name = item.Id, A = item.Name })
+                   .ToList();
 
                 Console.ReadKey();
             }

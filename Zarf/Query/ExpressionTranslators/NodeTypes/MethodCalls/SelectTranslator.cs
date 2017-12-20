@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -30,33 +31,31 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var methodBody = methodCall.Method.GetGenericMethodDefinition();
-            if (query.Sets.Count != 0 || query.Projections.Count != 0)
+            var modelExpression = methodCall.Arguments[1];
+            var modelElementType = methodCall.Method.ReturnType.GetModelElementType();
+            var queryModel = new QueryEntityModel(modelExpression, modelElementType);
+
+            if (query.QueryModel != null)
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+                Context.QueryModelMapper.MapQueryModel(
+                    modelExpression.GetParameters().FirstOrDefault(),
+                    query.QueryModel);
             }
 
-            if (methodBody == ReflectionUtil.JoinSelect)
-            {
-                RegisterJoinSelectQueries(query, methodCall.Arguments[1]);
-            }
-            else
-            {
-                if (query.QueryModel != null)
-                {
-                    Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
-                }
+            Context.QueryModelMapper.MapQueryModel(query, queryModel);
+            Context.ParameterQueryMapper.Map(modelExpression.GetParameters().FirstOrDefault(), query);
 
-                MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-            }
-
-            var model = GetCompiledExpression(methodCall.Arguments[1]).UnWrap();
-            new ProjectionExpressionVisitor(query, Context.ProjectionOwner, Context.LambdaParameterMapper).Visit(model);
+            CreateProjectionExpressionVisitor(query).Visit(modelExpression);
 
             var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
 
-            query.QueryModel = new QueryEntityModel(methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body, methodCall.Method.ReturnType.GetCollectionElementType());
+            query.QueryModel = queryModel;
             return query;
+        }
+
+        protected ProjectionExpressionVisitor CreateProjectionExpressionVisitor(QueryExpression query)
+        {
+            return new ProjectionExpressionVisitor(query, Context);
         }
 
         protected virtual void RegisterJoinSelectQueries(QueryExpression query, Expression selector)

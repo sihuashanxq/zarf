@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -9,233 +11,259 @@ namespace Zarf.Query.Expressions
     /// </summary>
     public class ExpressionEqualityComparer : IEqualityComparer<Expression>
     {
+        public int GetHashCode(Expression obj)
+        {
+            if (obj == null)
+            {
+                return 0;
+            }
+
+            unchecked
+            {
+                var hashCode = (int)obj.NodeType;
+
+                hashCode += (hashCode * 37) ^ obj.Type.GetHashCode();
+
+                switch (obj.NodeType)
+                {
+                    case ExpressionType.Negate:
+                    case ExpressionType.NegateChecked:
+                    case ExpressionType.Not:
+                    case ExpressionType.Convert:
+                    case ExpressionType.ConvertChecked:
+                    case ExpressionType.ArrayLength:
+                    case ExpressionType.Quote:
+                    case ExpressionType.TypeAs:
+                    case ExpressionType.UnaryPlus:
+                        {
+                            var unaryExpression = (UnaryExpression)obj;
+
+                            if (unaryExpression.Method != null)
+                            {
+                                hashCode += hashCode * 37 ^ unaryExpression.Method.GetHashCode();
+                            }
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(unaryExpression.Operand);
+
+                            break;
+                        }
+                    case ExpressionType.Add:
+                    case ExpressionType.AddChecked:
+                    case ExpressionType.Subtract:
+                    case ExpressionType.SubtractChecked:
+                    case ExpressionType.Multiply:
+                    case ExpressionType.MultiplyChecked:
+                    case ExpressionType.Divide:
+                    case ExpressionType.Modulo:
+                    case ExpressionType.And:
+                    case ExpressionType.AndAlso:
+                    case ExpressionType.Or:
+                    case ExpressionType.OrElse:
+                    case ExpressionType.LessThan:
+                    case ExpressionType.LessThanOrEqual:
+                    case ExpressionType.GreaterThan:
+                    case ExpressionType.GreaterThanOrEqual:
+                    case ExpressionType.Equal:
+                    case ExpressionType.NotEqual:
+                    case ExpressionType.Coalesce:
+                    case ExpressionType.ArrayIndex:
+                    case ExpressionType.RightShift:
+                    case ExpressionType.LeftShift:
+                    case ExpressionType.ExclusiveOr:
+                    case ExpressionType.Power:
+                        {
+                            var binaryExpression = (BinaryExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(binaryExpression.Left);
+                            hashCode += (hashCode * 37) ^ GetHashCode(binaryExpression.Right);
+
+                            break;
+                        }
+                    case ExpressionType.TypeIs:
+                        {
+                            var typeBinaryExpression = (TypeBinaryExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(typeBinaryExpression.Expression);
+                            hashCode += (hashCode * 37) ^ typeBinaryExpression.TypeOperand.GetHashCode();
+
+                            break;
+                        }
+                    case ExpressionType.Constant:
+                        {
+                            var constantExpression = (ConstantExpression)obj;
+                            if (constantExpression.Value != null)
+                            {
+                                hashCode += (hashCode * 37) ^ constantExpression.Value.GetHashCode();
+                            }
+
+                            break;
+                        }
+                    case ExpressionType.Parameter:
+                        {
+                            var parameterExpression = (ParameterExpression)obj;
+
+                            hashCode += hashCode * 37;
+                            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                            if (parameterExpression.Name != null)
+                            {
+                                hashCode ^= parameterExpression.Name.GetHashCode();
+                            }
+
+                            break;
+                        }
+                    case ExpressionType.MemberAccess:
+                        {
+                            var memberExpression = (MemberExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ memberExpression.Member.GetHashCode();
+                            hashCode += (hashCode * 37) ^ GetHashCode(memberExpression.Expression);
+
+                            break;
+                        }
+                    case ExpressionType.Call:
+                        {
+                            var methodCallExpression = (MethodCallExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ methodCallExpression.Method.GetHashCode();
+                            hashCode += (hashCode * 37) ^ GetHashCode(methodCallExpression.Object);
+                            hashCode += (hashCode * 37) ^ GetHashCode(methodCallExpression.Arguments);
+
+                            break;
+                        }
+                    case ExpressionType.Lambda:
+                        {
+                            var lambdaExpression = (LambdaExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ lambdaExpression.ReturnType.GetHashCode();
+                            hashCode += (hashCode * 37) ^ GetHashCode(lambdaExpression.Body);
+                            hashCode += (hashCode * 37) ^ GetHashCode(lambdaExpression.Parameters);
+
+                            break;
+                        }
+                    case ExpressionType.New:
+                        {
+                            var newExpression = (NewExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
+
+                            if (newExpression.Members != null)
+                            {
+                                for (var i = 0; i < newExpression.Members.Count; i++)
+                                {
+                                    hashCode += (hashCode * 37) ^ newExpression.Members[i].GetHashCode();
+                                }
+                            }
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(newExpression.Arguments);
+
+                            break;
+                        }
+                    case ExpressionType.NewArrayInit:
+                    case ExpressionType.NewArrayBounds:
+                        {
+                            var newArrayExpression = (NewArrayExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(newArrayExpression.Expressions);
+
+                            break;
+                        }
+                    case ExpressionType.Invoke:
+                        {
+                            var invocationExpression = (InvocationExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(invocationExpression.Expression);
+                            hashCode += (hashCode * 37) ^ GetHashCode(invocationExpression.Arguments);
+
+                            break;
+                        }
+                    case ExpressionType.MemberInit:
+                        {
+                            var memberInitExpression = (MemberInitExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(memberInitExpression.NewExpression);
+
+                            for (var i = 0; i < memberInitExpression.Bindings.Count; i++)
+                            {
+                                var memberBinding = memberInitExpression.Bindings[i];
+
+                                hashCode += (hashCode * 37) ^ memberBinding.Member.GetHashCode();
+                                hashCode += (hashCode * 37) ^ (int)memberBinding.BindingType;
+
+                                switch (memberBinding.BindingType)
+                                {
+                                    case MemberBindingType.Assignment:
+                                        var memberAssignment = (MemberAssignment)memberBinding;
+                                        hashCode += (hashCode * 37) ^ GetHashCode(memberAssignment.Expression);
+                                        break;
+                                    case MemberBindingType.ListBinding:
+                                        var memberListBinding = (MemberListBinding)memberBinding;
+                                        for (var j = 0; j < memberListBinding.Initializers.Count; j++)
+                                        {
+                                            hashCode += (hashCode * 37) ^ GetHashCode(memberListBinding.Initializers[j].Arguments);
+                                        }
+                                        break;
+                                    default:
+                                        throw new NotImplementedException();
+                                }
+                            }
+
+                            break;
+                        }
+                    case ExpressionType.ListInit:
+                        {
+                            var listInitExpression = (ListInitExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(listInitExpression.NewExpression);
+
+                            for (var i = 0; i < listInitExpression.Initializers.Count; i++)
+                            {
+                                hashCode += (hashCode * 37) ^ GetHashCode(listInitExpression.Initializers[i].Arguments);
+                            }
+
+                            break;
+                        }
+                    case ExpressionType.Conditional:
+                        {
+                            var conditionalExpression = (ConditionalExpression)obj;
+
+                            hashCode += (hashCode * 37) ^ GetHashCode(conditionalExpression.Test);
+                            hashCode += (hashCode * 37) ^ GetHashCode(conditionalExpression.IfTrue);
+                            hashCode += (hashCode * 37) ^ GetHashCode(conditionalExpression.IfFalse);
+
+                            break;
+                        }
+                    case ExpressionType.Default:
+                        {
+                            hashCode += (hashCode * 37) ^ obj.Type.GetHashCode();
+                            break;
+                        }
+                    case ExpressionType.Extension:
+                        {
+                            hashCode += (hashCode * 37) ^ obj.GetHashCode();
+                            break;
+                        }
+                }
+
+                return hashCode;
+            }
+        }
+
+        private int GetHashCode<T>(IList<T> expressions)
+            where T : Expression
+        {
+            var hashCode = 0;
+
+            for (var i = 0; i < expressions.Count; i++)
+            {
+                hashCode += (hashCode * 37) ^ GetHashCode(expressions[i]);
+            }
+
+            return hashCode;
+        }
+
         public bool Equals(Expression x, Expression y)
         {
             return GetHashCode(x) == GetHashCode(y);
-        }
-
-        public int GetHashCode(Expression expression)
-        {
-            return new HashCodeExpressionVisitor(expression).HashCode;
-        }
-
-        private class HashCodeExpressionVisitor : ExpressionVisitor
-        {
-            public int HashCode { get; protected set; }
-
-            public HashCodeExpressionVisitor(Expression expression)
-            {
-                HashCode = 0;
-                Visit(expression);
-            }
-
-            protected override Expression VisitUnary(UnaryExpression unary)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ (unary.Method?.GetHashCode() ?? 0);
-                    Visit(unary.Operand);
-                    return unary;
-                }
-            }
-
-            protected override Expression VisitConstant(ConstantExpression constant)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ (constant.Value?.GetHashCode() ?? 0);
-                    return constant;
-                }
-            }
-
-            protected override Expression VisitParameter(ParameterExpression parameter)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ (parameter?.Name.GetHashCode() ?? 0);
-                    return parameter;
-                }
-            }
-
-            protected override Expression VisitTypeBinary(TypeBinaryExpression typeBinary)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ typeBinary.TypeOperand.GetHashCode();
-                    Visit(typeBinary.Expression);
-                    return typeBinary;
-                }
-            }
-
-            protected override Expression VisitMember(MemberExpression mem)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ mem.Member.GetHashCode();
-                    Visit(mem.Expression);
-                    return mem;
-                }
-            }
-
-            protected override Expression VisitMethodCall(MethodCallExpression methodCall)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ methodCall.Method.GetHashCode();
-                    Visit(methodCall.Arguments);
-                    Visit(methodCall.Object);
-                    return methodCall;
-                }
-            }
-
-            protected virtual Expression VisitLambda(LambdaExpression lambda)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ lambda.ReturnType.GetHashCode();
-
-                    foreach (var item in lambda.Parameters)
-                    {
-                        Visit(item);
-                    }
-
-                    Visit(lambda.Body);
-                    return lambda;
-                }
-            }
-
-            protected override Expression VisitNew(NewExpression newExpression)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
-
-                    VisitMembers(newExpression.Members);
-                    Visit(newExpression.Arguments);
-                    return newExpression;
-                }
-            }
-
-            protected override Expression VisitNewArray(NewArrayExpression newArray)
-            {
-                Visit(newArray.Expressions);
-                return newArray;
-            }
-
-            protected override Expression VisitInvocation(InvocationExpression invoke)
-            {
-                Visit(invoke.Expression);
-                Visit(invoke.Arguments);
-                return invoke;
-            }
-
-            protected override Expression VisitMemberInit(MemberInitExpression memberInit)
-            {
-                unchecked
-                {
-                    Visit(memberInit.NewExpression);
-
-                    foreach (var binding in memberInit.Bindings)
-                    {
-                        HashCode += (HashCode * 37) ^ binding.Member.GetHashCode();
-                        HashCode += (HashCode * 37) ^ binding.BindingType.GetHashCode();
-
-                        if (binding.BindingType == MemberBindingType.ListBinding)
-                        {
-                            foreach (var item in (binding as MemberListBinding).Initializers)
-                            {
-                                HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
-                                Visit(item.Arguments);
-                            }
-                        }
-                        else if (binding.BindingType == MemberBindingType.Assignment)
-                        {
-                            Visit((binding as MemberAssignment).Expression);
-                        }
-                    }
-
-                    return memberInit;
-                }
-            }
-
-            protected override Expression VisitListInit(ListInitExpression listInit)
-            {
-                unchecked
-                {
-                    Visit(listInit.NewExpression);
-
-                    foreach (var item in listInit.Initializers)
-                    {
-                        HashCode += (HashCode * 37) ^ (item.AddMethod?.GetHashCode() ?? 0);
-                        Visit(item.Arguments);
-                    }
-
-                    return listInit;
-                }
-            }
-
-            protected override Expression VisitConditional(ConditionalExpression condtional)
-            {
-                Visit(condtional.IfTrue);
-                Visit(condtional.IfFalse);
-                Visit(condtional.Test);
-                return condtional;
-            }
-
-            protected override Expression VisitExtension(Expression extension)
-            {
-                unchecked
-                {
-                    HashCode += (HashCode * 37) ^ extension.GetHashCode();
-                    return extension;
-                }
-            }
-
-            protected override Expression VisitBinary(BinaryExpression binary)
-            {
-                Visit(binary.Left);
-                Visit(binary.Right);
-                return binary;
-            }
-
-            public override Expression Visit(Expression node)
-            {
-                unchecked
-                {
-                    if (node.NodeType != ExpressionType.Lambda)
-                    {
-                        base.Visit(node);
-                    }
-                    else
-                    {
-                        VisitLambda(node as LambdaExpression);
-                    }
-
-                    HashCode += (HashCode * 37) ^ node.NodeType.GetHashCode();
-                    HashCode += (HashCode * 37) ^ node.Type.GetHashCode();
-
-                    return node;
-                }
-            }
-
-            protected virtual IEnumerable<MemberInfo> VisitMembers(IEnumerable<MemberInfo> members)
-            {
-                unchecked
-                {
-                    if (members == null)
-                    {
-                        return members;
-                    }
-
-                    foreach (var item in members)
-                    {
-
-                        HashCode += (HashCode * 37) ^ item.GetHashCode();
-                    }
-
-                    return members;
-                }
-            }
         }
     }
 }

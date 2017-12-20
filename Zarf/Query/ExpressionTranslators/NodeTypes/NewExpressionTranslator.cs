@@ -31,7 +31,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
                 else
                 {
-                    argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
+                    var query = Context.ProjectionOwner.GetQuery(argument);
+                    if (Context.QueryModelMapper.GetQueryModel(query)?.Model != newExpression)
+                    {
+                        argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
+                    }
                 }
 
                 Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);

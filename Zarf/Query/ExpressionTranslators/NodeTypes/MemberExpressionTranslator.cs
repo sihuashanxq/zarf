@@ -37,6 +37,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                         refQuery = refQuery.Container;
                     }
 
+                    if (refQuery.QueryModel == queryModel)
+                    {
+                        return propertyExpression;
+                    }
+
                     return new ColumnExpression(refQuery, new Column(refrence.Alias), refrence.Type);
                 }
 

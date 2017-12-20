@@ -10,7 +10,7 @@ namespace Zarf.Query
 {
     public interface IQueryContext
     {
-        ILambdaParameterMapper LambdaParameterMapper { get; }
+        ILambdaParameterMapper ParameterQueryMapper { get; }
 
         IPropertyNavigationContext PropertyNavigationContext { get; }
 
@@ -59,9 +59,16 @@ namespace Zarf.Query
 
         public Expression GetMapedExpression(MemberExpression mem)
         {
-            return MemberBindings.TryGetValue(mem, out var mappedExpression)
+            foreach (var item in MemberBindings)
+            {
+                var x = new ExpressionEqualityComparer().GetHashCode(item.Key);
+                var y = new ExpressionEqualityComparer().GetHashCode(mem);
+            }
+
+            var b = MemberBindings.TryGetValue(mem, out var mappedExpression)
                 ? mappedExpression
                 : default(Expression);
+            return b;
         }
 
         public void Map(MemberExpression mem, Expression mapped)
@@ -81,7 +88,7 @@ namespace Zarf.Query
 
         public QueryEntityModel GetQueryModel(Expression exp)
         {
-            return QueryModeles.TryGetValue(exp, out var model)
+            return exp != null && QueryModeles.TryGetValue(exp, out var model)
                 ? model
                 : default(QueryEntityModel);
         }

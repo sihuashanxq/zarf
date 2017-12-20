@@ -42,7 +42,7 @@ namespace Zarf.Query
 
         public IPropertyNavigationContext PropertyNavigationContext { get; }
 
-        public ILambdaParameterMapper LambdaParameterMapper { get; }
+        public ILambdaParameterMapper ParameterQueryMapper { get; }
 
         public IAliasGenerator Alias { get; }
 
@@ -69,7 +69,7 @@ namespace Zarf.Query
         {
             ProjectionMappingProvider = projectionMappingProvider;
             PropertyNavigationContext = navigationContext;
-            LambdaParameterMapper = sourceProvider;
+            ParameterQueryMapper = sourceProvider;
             Alias = aliasGenerator;
             MemberValueCache = memValueCache;
             DbContextParts = dbContextParts;

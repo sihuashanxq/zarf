@@ -8,19 +8,14 @@ namespace Zarf.Query.ExpressionVisitors
     /// <summary>
     /// 根据子查询生成Column
     /// </summary>
-    public class ProjectionExpressionVisitor : ExpressionVisitorBase
+    public class ProjectionExpressionVisitor : QueryCompiler
     {
         public QueryExpression Query { get; }
 
-        public ProjectionOwnerMapper Owner { get; }
-
-        public ILambdaParameterMapper ParameterMapper { get; }
-
-        public ProjectionExpressionVisitor(QueryExpression query, ProjectionOwnerMapper owner, ILambdaParameterMapper parameterMapper)
+        public ProjectionExpressionVisitor(QueryExpression query, IQueryContext queryContext)
+            : base(queryContext)
         {
             Query = query;
-            Owner = owner;
-            ParameterMapper = parameterMapper;
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
@@ -36,12 +31,12 @@ namespace Zarf.Query.ExpressionVisitors
 
                 if (binding.Expression.NodeType == ExpressionType.Parameter)
                 {
-                    Visit(binding.Expression.As<ParameterExpression>());
+                    VisitParameter(binding.Expression.As<ParameterExpression>());
                     continue;
                 }
 
                 Query.AddProjection(binding.Expression);
-                Owner.AddProjection(binding.Expression, Query);
+                Context.ProjectionOwner.AddProjection(binding.Expression, Query);
             }
 
             return memberInit;
@@ -58,12 +53,12 @@ namespace Zarf.Query.ExpressionVisitors
 
                 if (newExpression.Arguments[i].NodeType == ExpressionType.Parameter)
                 {
-                    Visit(newExpression.Arguments[i].As<ParameterExpression>());
+                    VisitParameter(newExpression.Arguments[i].As<ParameterExpression>());
                     continue;
                 }
 
                 Query.AddProjection(newExpression.Arguments[i]);
-                Owner.AddProjection(newExpression.Arguments[i], Query);
+                Context.ProjectionOwner.AddProjection(newExpression.Arguments[i], Query);
             }
 
             return newExpression;
@@ -71,7 +66,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var map = ParameterMapper.GetMappedExpression(parameter);
+            var map = Context.ParameterQueryMapper.GetMappedExpression(parameter);
             if (map == null)
             {
                 return parameter;
@@ -86,16 +81,25 @@ namespace Zarf.Query.ExpressionVisitors
             foreach (var item in query.GenQueryProjections())
             {
                 Query.AddProjection(item);
-                Owner.AddProjection(item, Query);
+                Context.ProjectionOwner.AddProjection(item, Query);
             }
 
             return parameter;
         }
 
-        protected override Expression VisitLambda(LambdaExpression lambda)
+        public override Expression Visit(Expression node)
         {
-            Visit(lambda.Body);
-            return lambda;
+            if (node.NodeType == ExpressionType.New)
+            {
+                return VisitNew(base.Visit(node).As<NewExpression>());
+            }
+
+            if (node.NodeType == ExpressionType.MemberInit)
+            {
+                return VisitMemberInit(base.Visit(node).As<MemberInitExpression>());
+            }
+
+            return base.Visit(node);
         }
     }
 }

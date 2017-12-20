@@ -156,12 +156,12 @@ namespace Zarf.Mapping.Bindings
                 }
 
                 var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
-                for (var x = 0; x < RootQuery.Projections.Count; i++)
+                for (var x = 0; x < RootQuery.Projections.Count; x++)
                 {
-                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[i], argument))
+                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
                     {
                         var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
-                        argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
+                        argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
                         break;
                     }
                 }
@@ -219,7 +219,7 @@ namespace Zarf.Mapping.Bindings
                 return null;
             }
 
-            var eType = query.Type.GetCollectionElementType();
+            var eType = ReflectionExtensions.GetModelElementType(query.Type);
             if (ReflectionUtil.SimpleTypes.Contains(eType))
             {
                 //return Visit(query.Columns.FirstOrDefault().Expression);
@@ -272,7 +272,7 @@ namespace Zarf.Mapping.Bindings
         public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression eObject)
         {
             var memNavigation = NavigationContext.GetNavigation(memberInfo);
-            var memEleType = memberInfo.GetPropertyType().GetCollectionElementType();
+            var memEleType = ReflectionExtensions.GetModelElementType(memberInfo.GetPropertyType());
             var memValueType = typeof(EntityPropertyEnumerable<>).MakeGenericType(memEleType);
 
             var makeNewMemberValue = Expression.Convert(

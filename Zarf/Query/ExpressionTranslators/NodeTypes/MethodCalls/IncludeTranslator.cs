@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 throw new ArgumentException("item=>item.Property");
             }
 
-            var propertyEleType = propertyPath.Member.GetPropertyType().GetCollectionElementType();
+            var propertyEleType = ReflectionExtensions.GetModelElementType(propertyPath.Member.GetPropertyType());
             var innerQuery = new QueryExpression(propertyEleType, Context.ColumnCaching, Context.Alias.GetNewTable());
 
             //关联关系

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using Zarf.Extensions;
 
 namespace Zarf.Entities
 {
@@ -11,7 +12,7 @@ namespace Zarf.Entities
 
         public QueryEntityModel(Expression model, Type elementType)
         {
-            Model = model;
+            Model = model.UnWrap().As<LambdaExpression>().Body;
             ModelElementType = elementType;
         }
     }

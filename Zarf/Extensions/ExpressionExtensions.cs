@@ -19,6 +19,11 @@ namespace Zarf.Extensions
             return expression;
         }
 
+        public static IEnumerable<ParameterExpression> GetParameters(this Expression expression)
+        {
+            return expression.UnWrap().As<LambdaExpression>()?.Parameters;
+        }
+
         public static bool IsNullValueConstant(this Expression node)
         {
             if (node.Is<ConstantExpression>())
