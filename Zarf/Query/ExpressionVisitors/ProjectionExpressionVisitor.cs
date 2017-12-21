@@ -66,7 +66,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var map = Context.ParameterQueryMapper.GetMappedExpression(parameter);
+            var map = Context.QueryMapper.GetMappedQuery(parameter);
             if (map == null)
             {
                 return parameter;

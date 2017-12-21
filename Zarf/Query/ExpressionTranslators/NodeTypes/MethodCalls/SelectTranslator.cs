@@ -33,27 +33,23 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var modelExpression = methodCall.Arguments[1];
             var modelElementType = methodCall.Method.ReturnType.GetModelElementType();
-            var queryModel = new QueryEntityModel(modelExpression, modelElementType);
 
-            if (query.QueryModel != null)
-            {
-                Context.QueryModelMapper.MapQueryModel(
-                    modelExpression.GetParameters().FirstOrDefault(),
-                    query.QueryModel);
-            }
+            query.QueryModel = new QueryEntityModel(modelExpression, modelElementType, query.QueryModel);
 
-            Context.QueryModelMapper.MapQueryModel(query, queryModel);
-            Context.ParameterQueryMapper.Map(modelExpression.GetParameters().FirstOrDefault(), query);
+            Context.QueryModelMapper.MapQueryModel(
+                modelExpression.GetParameters().FirstOrDefault(),
+                query.QueryModel);
 
-            CreateProjectionExpressionVisitor(query).Visit(modelExpression);
+            Context.QueryMapper.MapQuery(
+                modelExpression.GetParameters().FirstOrDefault(),
+                query);
 
-            var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
+            CreateProjectionVisitor(query).Visit(modelExpression);
 
-            query.QueryModel = queryModel;
             return query;
         }
 
-        protected ProjectionExpressionVisitor CreateProjectionExpressionVisitor(QueryExpression query)
+        protected ProjectionExpressionVisitor CreateProjectionVisitor(QueryExpression query)
         {
             return new ProjectionExpressionVisitor(query, Context);
         }

@@ -17,7 +17,7 @@ namespace Zarf.Query
             return new QueryContext(
                     new QueryColumnOrdinalMapper(),
                     new PropertyNavigationContext(),
-                    new LambdaParameterMapper(),
+                    new QueryMapper(),
                     new AliasGenerator(),
                     new MemberValueCache(),
                     dbContextParts
@@ -27,7 +27,7 @@ namespace Zarf.Query
         public IQueryContext CreateContext(
             IQueryColumnOrdinalMapper mappingProvider = null,
             IPropertyNavigationContext navigationContext = null,
-            ILambdaParameterMapper sourceProvider = null,
+            IQueryMapper sourceProvider = null,
             IAliasGenerator aliasGenerator = null,
             IMemberValueCache memValue = null,
             IDbContextParts dbcontextParts = null
@@ -36,7 +36,7 @@ namespace Zarf.Query
             return new QueryContext(
                 mappingProvider ?? new QueryColumnOrdinalMapper(),
                 navigationContext ?? new PropertyNavigationContext(),
-                sourceProvider ?? new LambdaParameterMapper(),
+                sourceProvider ?? new QueryMapper(),
                 aliasGenerator ?? new AliasGenerator(),
                 memValue ?? new MemberValueCache(),
                 dbcontextParts

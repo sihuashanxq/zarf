@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -29,7 +28,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
                 else
                 {
-                    bindExpression = new AliasExpression(Context.Alias.GetNewColumn(), bindExpression, binding.Expression);
+                    var query = Context.ProjectionOwner.GetQuery(bindExpression);
+                    if (query == null || !query.QueryModel.ContainsModel(memInit))
+                    {
+                        bindExpression = new AliasExpression(Context.Alias.GetNewColumn(), bindExpression, binding.Expression);
+                    }
                 }
 
                 Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, binding.Member), bindExpression);

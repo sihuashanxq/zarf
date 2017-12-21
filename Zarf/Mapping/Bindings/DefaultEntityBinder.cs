@@ -156,9 +156,10 @@ namespace Zarf.Mapping.Bindings
                 }
 
                 var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
-                for (var x = 0; x < RootQuery.Projections.Count; x++)
+                var q = RootQuery.Projections.Count == 0 ? RootQuery.SubQuery:RootQuery;
+                for (var x = 0; x < q.Projections.Count; x++)
                 {
-                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                    if (new ExpressionEqualityComparer().Equals(q.Projections[x], argument))
                     {
                         var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
                         argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));

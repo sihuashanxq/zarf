@@ -19,9 +19,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         public override Expression Translate(MemberExpression mem)
         {
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
-            if (queryModel != null)
+            var modelExpression = queryModel?.GetModelExpression(mem.Member.DeclaringType);
+
+            if (modelExpression != null)
             {
-                var property = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
+                var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
                 var propertyExpression = Context.MemberBindingMapper.GetMapedExpression(property);
                 if (propertyExpression.NodeType != ExpressionType.Extension)
                 {
@@ -32,12 +34,12 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 {
                     var refrence = propertyExpression.As<AliasExpression>();
                     var refQuery = Context.ProjectionOwner.GetQuery(refrence);
-                    if (refQuery.Container != null && refQuery.Container.SubQuery == refQuery)
+                    if (refQuery.Container?.SubQuery == refQuery)
                     {
                         refQuery = refQuery.Container;
                     }
 
-                    if (refQuery.QueryModel == queryModel)
+                    if (refQuery.QueryModel.ContainsModel(queryModel.Model))
                     {
                         return propertyExpression;
                     }

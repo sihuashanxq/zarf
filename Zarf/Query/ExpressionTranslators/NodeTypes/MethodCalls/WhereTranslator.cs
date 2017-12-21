@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Mapping;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 
@@ -25,33 +24,24 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetQueryExpression(methodCall.Arguments[0]);
-            if (query.QueryModel != null)
-            {
-                Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
-            }
+            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var predicate = methodCall.Arguments[1];
+            var parameter = predicate.GetParameters().FirstOrDefault();
 
-            if (methodCall.Method.Name == "SingleOrDefault")
-            {
-                query.DefaultIfEmpty = true;
-            }
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-            HandleQueryCondtion(query, methodCall.Arguments[1]);
+            predicate = CreateCondtionVisitor(query).Visit(predicate);
+
+            query.DefaultIfEmpty = methodCall.Method.Name == "SingleOrDefault";
+            query.CombineCondtion(predicate);
 
             return query;
         }
 
-        private QueryExpression GetQueryExpression(Expression exp)
+        protected ExpressionVisitor CreateCondtionVisitor(QueryExpression query)
         {
-            var query = GetCompiledExpression<QueryExpression>(exp);
-            return query;
-        }
-
-        private void HandleQueryCondtion(QueryExpression query, Expression condtion)
-        {
-            condtion = new RelationExpressionVisitor(Context).Visit(condtion);
-            query.CombineCondtion(condtion);
+            return new RelationExpressionVisitor(Context);
         }
     }
 }

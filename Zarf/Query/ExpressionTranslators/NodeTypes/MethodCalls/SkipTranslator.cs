@@ -27,19 +27,19 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var offset = methodCall.Arguments[1].As<ConstantExpression>().Value;
-            //if (query.Columns.Count == 0)
-            //{
-            //    //query.AddColumns(GetColumns(query));
-            //}
+            var offset = (int)methodCall.Arguments[1].As<ConstantExpression>().Value;
+            var skip = new SkipExpression(offset, query.Orders.ToList());
 
-            query.Offset = new SkipExpression(Convert.ToInt32(offset), query.Orders.ToList());
-            //query.AddColumns(new[] { new ColumnDescriptor() { Expression = query.Offset } });
+            query.AddProjection(skip);
             query = query.PushDownSubQuery(Context.Alias.GetNewTable());
 
-            var column = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
-            var predicate = Expression.Lambda(Expression.MakeBinary(ExpressionType.GreaterThan, column, Expression.Constant(offset)));
-            query.CombineCondtion(predicate);
+            var skipColumn = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
+            var skipCondtion = Expression.MakeBinary(
+                ExpressionType.GreaterThan, 
+                skipColumn, 
+                Expression.Constant(offset));
+
+            query.CombineCondtion(Expression.Lambda(skipCondtion));
 
             return query;
         }

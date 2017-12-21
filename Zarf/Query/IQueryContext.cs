@@ -10,7 +10,7 @@ namespace Zarf.Query
 {
     public interface IQueryContext
     {
-        ILambdaParameterMapper ParameterQueryMapper { get; }
+        IQueryMapper QueryMapper { get; }
 
         IPropertyNavigationContext PropertyNavigationContext { get; }
 
@@ -83,6 +83,11 @@ namespace Zarf.Query
 
         public void MapQueryModel(Expression exp, QueryEntityModel queryModel)
         {
+            if (queryModel == null)
+            {
+                return;
+            }
+
             QueryModeles[exp] = queryModel;
         }
 

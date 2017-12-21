@@ -32,7 +32,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 else
                 {
                     var query = Context.ProjectionOwner.GetQuery(argument);
-                    if (Context.QueryModelMapper.GetQueryModel(query)?.Model != newExpression)
+                    if (query == null || !query.QueryModel.ContainsModel(newExpression))
                     {
                         argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
                     }

@@ -77,28 +77,6 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression PushDownSubQuery(string alias)
         {
-            //var subQuery = new QueryExpression(Type, ColumnCaching, Alias)
-            //{
-            //    Table = Table,
-            //    SubQuery = SubQuery
-            //};
-
-            //subQuery.Sets.AddRange(Sets);
-            //subQuery.Orders.AddRange(Orders);
-            //subQuery.Groups.AddRange(Groups);
-            //subQuery.Projections.AddRange(Projections);
-            //subQuery.Joins.AddRange(Joins);
-            //subQuery.Limit = Limit;
-            //subQuery.Offset = Offset;
-            //subQuery.IsDistinct = IsDistinct;
-            //subQuery.Where = Where;
-            //subQuery.Container = this;
-
-            //Where = null;
-            //Projections.Clear();
-            //Alias = alias;
-            //SubQuery = subQuery;
-            //return this;
             var query = new QueryExpression(Type, ColumnCaching, alias)
             {
                 SubQuery = this,
