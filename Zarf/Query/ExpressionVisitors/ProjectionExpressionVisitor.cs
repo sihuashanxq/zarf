@@ -16,6 +16,7 @@ namespace Zarf.Query.ExpressionVisitors
             : base(queryContext)
         {
             Query = query;
+            Query.Projections.Clear();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
@@ -66,13 +67,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var map = Context.QueryMapper.GetMappedQuery(parameter);
-            if (map == null)
-            {
-                return parameter;
-            }
-
-            var query = map.As<QueryExpression>();
+            var query = Context.QueryMapper.GetMappedQuery(parameter);
             if (query == null)
             {
                 return parameter;
@@ -89,17 +84,19 @@ namespace Zarf.Query.ExpressionVisitors
 
         public override Expression Visit(Expression node)
         {
+            node = base.Visit(node);
+
             if (node.NodeType == ExpressionType.New)
             {
-                return VisitNew(base.Visit(node).As<NewExpression>());
+                return VisitNew(node.As<NewExpression>());
             }
 
             if (node.NodeType == ExpressionType.MemberInit)
             {
-                return VisitMemberInit(base.Visit(node).As<MemberInitExpression>());
+                return VisitMemberInit(node.As<MemberInitExpression>());
             }
 
-            return base.Visit(node);
+            return node;
         }
     }
 }

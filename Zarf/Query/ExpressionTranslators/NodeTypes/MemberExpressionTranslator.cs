@@ -34,9 +34,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 {
                     var refrence = propertyExpression.As<AliasExpression>();
                     var refQuery = Context.ProjectionOwner.GetQuery(refrence);
-                    if (refQuery.Container?.SubQuery == refQuery)
+                    if (refQuery.Outer?.SubQuery == refQuery)
                     {
-                        refQuery = refQuery.Container;
+                        refQuery = refQuery.Outer;
                     }
 
                     if (refQuery.QueryModel.ContainsModel(queryModel.Model))
@@ -50,9 +50,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 if (propertyExpression.Is<QueryExpression>())
                 {
                     var refQuery = propertyExpression.As<QueryExpression>();
-                    if (refQuery.Container != null && refQuery.Container.SubQuery == refQuery)
+                    if (refQuery.Outer != null && refQuery.Outer.SubQuery == refQuery)
                     {
-                        return refQuery.Container;
+                        return refQuery.Outer;
                     }
                 }
 
@@ -72,13 +72,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return EvalMemberValue(mem.Member, obj, out var value) ? value : mem;
             }
 
-            var col = Context.ColumnCaching.GetColumn(new QueryColumnCacheKey(query, mem.Member));
-            if (col == null)
-            {
-                return new ColumnExpression(query, mem.Member);
-            }
-
-            return new ColumnRefrenceExpression(col, query, mem);
+            return new ColumnExpression(query, mem.Member);
         }
 
         /// <summary>

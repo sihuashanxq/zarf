@@ -33,15 +33,7 @@ namespace Zarf.Query.ExpressionVisitors
                 return node;
             }
 
-            var queryTranslator = TranslatorProvider.GetTranslator(node);
-            if (queryTranslator != null)
-            {
-                node = queryTranslator.Translate(node);
-                return node;
-            }
-
-            node = base.Visit(node);
-            return node;
+            return TranslatorProvider.GetTranslator(node)?.Translate(node) ?? base.Visit(node);
         }
 
         public Expression Compile(Expression query)

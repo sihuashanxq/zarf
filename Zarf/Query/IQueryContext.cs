@@ -22,13 +22,15 @@ namespace Zarf.Query
 
         IDbContextParts DbContextParts { get; }
 
-        IQueryColumnCaching ColumnCaching { get; }
+        IExpressionMapper ColumnCaching { get; }
 
         MemberBindingMapper MemberBindingMapper { get; }
 
         ProjectionOwnerMapper ProjectionOwner { get; }
 
         QueryModelMapper QueryModelMapper { get; }
+
+        IExpressionMapper ExpressionMapper { get; }
     }
 
     public class ProjectionOwnerMapper
@@ -59,16 +61,9 @@ namespace Zarf.Query
 
         public Expression GetMapedExpression(MemberExpression mem)
         {
-            foreach (var item in MemberBindings)
-            {
-                var x = new ExpressionEqualityComparer().GetHashCode(item.Key);
-                var y = new ExpressionEqualityComparer().GetHashCode(mem);
-            }
-
-            var b = MemberBindings.TryGetValue(mem, out var mappedExpression)
+            return MemberBindings.TryGetValue(mem, out var mappedExpression)
                 ? mappedExpression
                 : default(Expression);
-            return b;
         }
 
         public void Map(MemberExpression mem, Expression mapped)

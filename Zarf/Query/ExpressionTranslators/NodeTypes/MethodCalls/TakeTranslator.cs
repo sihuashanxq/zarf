@@ -25,6 +25,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+
             query.Limit = Convert.ToInt32(methodCall.Arguments[1].As<ConstantExpression>().Value);
             return query;
         }

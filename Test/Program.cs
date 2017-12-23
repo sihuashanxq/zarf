@@ -22,7 +22,6 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                //var x = db.Users.Select(item => new { item.Id, item.Name }).All(item => item.Id > 0);
                 //BasicTest(db);
 
                 //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
@@ -31,17 +30,9 @@ namespace Zarf
                 //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
                 //BasicTest(db);
 
-                //SELECT Take Where
-                //? Skip
+                //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault
 
-                //PUSHDOWN 之后,如果使用子查询的列来生成顶层查询列,应该MAP两个列的关系,否则激活难搞
-
-                var x = db.Users.Select(item => new { Id = item.Id + 1, X = item })
-                    .Select(item => new { Y = item.X.Id, Id = item.Id, Name = item.X.Name })
-                    .Where(item => item.Y > 1)
-                    .Select(item => new { Id = item.Y, Name = item.Id, A = item.Name })
-                    .Skip(5)
-                    .Take(5)
+                var x = db.Users
                    .ToList();
 
                 Console.ReadKey();

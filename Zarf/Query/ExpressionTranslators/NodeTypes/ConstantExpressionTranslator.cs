@@ -25,7 +25,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 throw new NotImplementedException("using IDataQuery<T>");
             }
 
-            return new QueryExpression(typeOfEntity, Context.ColumnCaching, Context.Alias.GetNewTable());
+            var query = new QueryExpression(typeOfEntity, Context.ColumnCaching, Context.Alias.GetNewTable());
+            query.AddProjectionRange(query.GenQueryProjections());
+            return query;
         }
     }
 }

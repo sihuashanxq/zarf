@@ -11,7 +11,7 @@ namespace Zarf.Query.Expressions
 {
     public class QueryExpression : Expression
     {
-        protected Type TypeOfExpression { get; set; }
+        public Type TypeOfExpression { get; set; }
 
         public Table Table { get; set; }
 
@@ -43,11 +43,11 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression SubQuery { get; protected set; }
 
-        public QueryExpression Container { get; protected set; }
+        public QueryExpression Outer { get; protected set; }
 
         public QueryEntityModel QueryModel { get; set; }
 
-        public IQueryColumnCaching ColumnCaching { get; }
+        public IExpressionMapper ProjectionMapper { get; }
 
         protected HashSet<string> ColumnAliases { get; }
 
@@ -56,7 +56,7 @@ namespace Zarf.Query.Expressions
         /// </summary>
         public bool IsPartOfPredicate { get; internal set; }
 
-        public QueryExpression(Type typeOfEntity, IQueryColumnCaching columnCaching, string alias = "")
+        public QueryExpression(Type typeOfEntity, IExpressionMapper mapper, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
@@ -66,7 +66,7 @@ namespace Zarf.Query.Expressions
             ColumnAliases = new HashSet<string>();
             TypeOfExpression = typeOfEntity;
             Table = typeOfEntity.ToTable();
-            ColumnCaching = columnCaching;
+            ProjectionMapper = mapper;
             Alias = alias;
         }
 
@@ -77,7 +77,7 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression PushDownSubQuery(string alias)
         {
-            var query = new QueryExpression(Type, ColumnCaching, alias)
+            var query = new QueryExpression(Type, ProjectionMapper, alias)
             {
                 SubQuery = this,
                 Table = null,
@@ -86,14 +86,23 @@ namespace Zarf.Query.Expressions
             };
 
             DefaultIfEmpty = false;
-            Container = query;
+            Outer = query;
+            query.AddProjectionRange(query.GenQueryProjections());
             return query;
         }
 
         public void AddJoin(JoinExpression joinQuery)
         {
-            joinQuery.Query.Container = this;
+            joinQuery.Query.Outer = this;
             Joins.Add(joinQuery);
+        }
+
+        public void AddProjectionRange(IEnumerable<Expression> exps)
+        {
+            foreach (var item in exps)
+            {
+                AddProjection(item);
+            }
         }
 
         public void AddProjection(Expression exp)
@@ -153,18 +162,44 @@ namespace Zarf.Query.Expressions
 
         public IEnumerable<Expression> GenQueryProjections()
         {
-            var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(TypeOfExpression);
             var cols = new List<Expression>();
-
-            foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
+            if (SubQuery == null)
             {
-                var col = new ColumnExpression(this, memberDescriptor.Member, memberDescriptor.Name);
-                cols.Add(col);
+                var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(TypeOfExpression);
+
+                foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
+                {
+                    cols.Add(new ColumnExpression(this, memberDescriptor.Member, memberDescriptor.Name));
+                }
+
+                foreach (var item in Joins.Select(item => item.Query))
+                {
+                    cols.AddRange(item.GenQueryProjections());
+                }
+
+                return cols;
             }
 
-            foreach (var item in Joins.Select(item => item.Query))
+            foreach (var item in SubQuery.Projections)
             {
-                //TODO
+                ColumnExpression col = null;
+                if (item.Is<AliasExpression>())
+                {
+                    col = new ColumnExpression(this, new Column(item.As<AliasExpression>().Alias), item.Type);
+                }
+
+                else if (item.Is<ColumnExpression>())
+                {
+                    col = item.As<ColumnExpression>().Clone();
+                    col.Query = this;
+                }
+
+                if (col == null)
+                {
+                    continue;
+                }
+                ProjectionMapper.Map(item, col);
+                cols.Add(col);
             }
 
             return cols;

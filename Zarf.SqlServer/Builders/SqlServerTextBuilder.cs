@@ -222,7 +222,7 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitQuery(QueryExpression query)
         {
-            if (query.IsPartOfPredicate || query.Container != null)
+            if (query.IsPartOfPredicate || query.Outer != null)
             {
                 Append(" ( ");
             }
@@ -247,7 +247,7 @@ namespace Zarf.SqlServer.Builders
 
             BuildSets(query);
 
-            if (query.IsPartOfPredicate || query.Container != null)
+            if (query.IsPartOfPredicate || query.Outer != null)
             {
                 Append(" ) ");
             }
@@ -414,7 +414,7 @@ namespace Zarf.SqlServer.Builders
                 return;
             }
 
-            if (query.Container != null && (query.Orders.Count != 0 || query.Groups.Count != 0))
+            if (query.Outer != null && (query.Orders.Count != 0 || query.Groups.Count != 0))
             {
                 Append(" TOP (100) Percent ");
             }

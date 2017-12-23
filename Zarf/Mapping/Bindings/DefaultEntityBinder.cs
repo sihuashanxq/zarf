@@ -156,10 +156,15 @@ namespace Zarf.Mapping.Bindings
                 }
 
                 var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
-                var q = RootQuery.Projections.Count == 0 ? RootQuery.SubQuery:RootQuery;
-                for (var x = 0; x < q.Projections.Count; x++)
+                for (var x = 0; x < RootQuery.Projections.Count; x++)
                 {
-                    if (new ExpressionEqualityComparer().Equals(q.Projections[x], argument))
+                    var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                    if (mapped != null)
+                    {
+                        argument = mapped;
+                    }
+
+                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
                     {
                         var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
                         argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
@@ -220,7 +225,7 @@ namespace Zarf.Mapping.Bindings
                 return null;
             }
 
-            var eType = ReflectionExtensions.GetModelElementType(query.Type);
+            var eType = ReflectionExtensions.GetModelElementType(query.TypeOfExpression);
             if (ReflectionUtil.SimpleTypes.Contains(eType))
             {
                 //return Visit(query.Columns.FirstOrDefault().Expression);
@@ -371,30 +376,6 @@ namespace Zarf.Mapping.Bindings
 
         public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
         {
-            //foreach (var item in RootQuery.Columns)
-            //{
-            //    var col = item.Expression.As<ColumnExpression>();
-            //    var aggrate = item.Expression.As<AggregateExpression>();
-            //    if (aggrate != null)
-            //    {
-            //        col = aggrate.KeySelector.As<ColumnExpression>();
-            //    }
-
-            //    if (col != null && col.Member == member)
-            //    {
-            //        var q = col.Query;
-            //        while (q != null)
-            //        {
-            //            if (q != container)
-            //            {
-            //                q = q.Container;
-            //            }
-
-            //            return col;
-            //        }
-            //    }
-            //}
-
             return null;
         }
 

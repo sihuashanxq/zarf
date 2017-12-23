@@ -33,16 +33,14 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var modelExpression = methodCall.Arguments[1];
             var modelElementType = methodCall.Method.ReturnType.GetModelElementType();
+            var parameter = modelExpression.GetParameters().FirstOrDefault();
+
+            Utils.CheckNull(query, "query");
 
             query.QueryModel = new QueryEntityModel(modelExpression, modelElementType, query.QueryModel);
 
-            Context.QueryModelMapper.MapQueryModel(
-                modelExpression.GetParameters().FirstOrDefault(),
-                query.QueryModel);
-
-            Context.QueryMapper.MapQuery(
-                modelExpression.GetParameters().FirstOrDefault(),
-                query);
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
             CreateProjectionVisitor(query).Visit(modelExpression);
 

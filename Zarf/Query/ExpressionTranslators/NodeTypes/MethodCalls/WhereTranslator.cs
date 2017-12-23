@@ -28,12 +28,14 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var predicate = methodCall.Arguments[1];
             var parameter = predicate.GetParameters().FirstOrDefault();
 
+            Utils.CheckNull(query, "query");
+
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
             predicate = CreateCondtionVisitor(query).Visit(predicate);
 
-            query.DefaultIfEmpty = methodCall.Method.Name == "SingleOrDefault";
+            query.DefaultIfEmpty = methodCall.Method.Name.Contains("Default");
             query.CombineCondtion(predicate);
 
             return query;

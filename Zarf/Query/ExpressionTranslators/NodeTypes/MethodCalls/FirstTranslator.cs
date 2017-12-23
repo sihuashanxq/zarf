@@ -8,9 +8,9 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
-    public class FirstTranslator : Translator<MethodCallExpression>
+    public class FirstTranslator : WhereTranslator
     {
-        public static IEnumerable<MethodInfo> SupprotedMethods { get; }
+        public new static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
         static FirstTranslator()
         {
@@ -24,23 +24,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (methodCall.Arguments.Count == 2)
-            {
-                if (query.Sets.Count != 0)
-                {
-                    query = query.PushDownSubQuery(Context.Alias.GetNewTable());
-                    query.QueryModel = query.SubQuery.QueryModel;
-                }
+            var query = base.Translate(methodCall).As<QueryExpression>();
 
-                MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-                var where = GetCompiledExpression(methodCall.Arguments[1]);
-                where = HandleCondtion(where);
-                query.CombineCondtion(where);
-            }
+            Utils.CheckNull(query, "query");
 
-            query.DefaultIfEmpty = methodCall.Method.Name == "FirstOrDefault";
             query.Limit = 1;
+
             return query;
         }
     }
