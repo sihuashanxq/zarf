@@ -35,7 +35,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     }
                 }
 
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, binding.Member), bindExpression);
+                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(memInit, binding.Member), bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 

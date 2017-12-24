@@ -1,11 +1,9 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionTranslators.Methods;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -25,38 +23,41 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             {
                 var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
                 var propertyExpression = Context.MemberBindingMapper.GetMapedExpression(property);
-                if (propertyExpression.NodeType != ExpressionType.Extension)
+                if (propertyExpression != null)
                 {
-                    propertyExpression = GetCompiledExpression(propertyExpression);
-                }
-
-                if (propertyExpression.Is<AliasExpression>())
-                {
-                    var refrence = propertyExpression.As<AliasExpression>();
-                    var refQuery = Context.ProjectionOwner.GetQuery(refrence);
-                    if (refQuery.Outer?.SubQuery == refQuery)
+                    if (propertyExpression.NodeType != ExpressionType.Extension)
                     {
-                        refQuery = refQuery.Outer;
+                        propertyExpression = GetCompiledExpression(propertyExpression);
                     }
 
-                    if (refQuery.QueryModel.ContainsModel(queryModel.Model))
+                    if (propertyExpression.Is<AliasExpression>())
                     {
-                        return propertyExpression;
+                        var refrence = propertyExpression.As<AliasExpression>();
+                        var refQuery = Context.ProjectionOwner.GetQuery(refrence);
+                        if (refQuery.Outer?.SubQuery == refQuery)
+                        {
+                            refQuery = refQuery.Outer;
+                        }
+
+                        if (refQuery.QueryModel.ContainsModel(queryModel.Model))
+                        {
+                            return propertyExpression;
+                        }
+
+                        return new ColumnExpression(refQuery, new Column(refrence.Alias), refrence.Type);
                     }
 
-                    return new ColumnExpression(refQuery, new Column(refrence.Alias), refrence.Type);
-                }
-
-                if (propertyExpression.Is<QueryExpression>())
-                {
-                    var refQuery = propertyExpression.As<QueryExpression>();
-                    if (refQuery.Outer != null && refQuery.Outer.SubQuery == refQuery)
+                    if (propertyExpression.Is<QueryExpression>())
                     {
-                        return refQuery.Outer;
+                        var refQuery = propertyExpression.As<QueryExpression>();
+                        if (refQuery.Outer != null && refQuery.Outer.SubQuery == refQuery)
+                        {
+                            return refQuery.Outer;
+                        }
                     }
-                }
 
-                return propertyExpression;
+                    return propertyExpression;
+                }
             }
 
             var typeOfProperty = mem.Member.GetPropertyType();

@@ -8,12 +8,15 @@ using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
     public class JoinTranslator : Translator<MethodCallExpression>
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
+
+        public List<QueryExpression> Queries { get; }
 
         static JoinTranslator()
         {
@@ -22,13 +25,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public JoinTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-
+            Queries = new List<QueryExpression>();
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var queries = new List<QueryExpression>() { query };
             var joins = methodCall.Arguments[1].As<ConstantExpression>()?.Value as List<JoinQuery>;
             if (joins == null)
             {
@@ -40,15 +42,25 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
+            Queries.Add(query);
+
             foreach (var item in joins)
             {
-                queries.Add(GetJoinQuery(item.InternalDbQuery));
+                var joinQuery = GetJoinQuery(item.InternalDbQuery);
+
                 for (var i = 0; i < item.Predicate.Parameters.Count; i++)
                 {
-                    MapParameterWithQuery(item.Predicate.Parameters[i], queries[i]);
+                    Context.QueryMapper.MapQuery(item.Predicate.Parameters[i], Queries[i]);
+
+                    if (Queries[i].QueryModel != null)
+                    {
+                        Context.QueryModelMapper.MapQueryModel(item.Predicate.Parameters[i], Queries[i].QueryModel);
+                    }
                 }
 
-                query.AddJoin(new JoinExpression(queries.Last(), GetCompiledExpression(item.Predicate), item.JoinType));
+                var predicate = CreateCondtionVisitor(query).Visit(item.Predicate);
+                var join = new JoinExpression(Queries.Last(), predicate, item.JoinType);
+                query.AddJoin(join);
             }
 
             return query;
@@ -56,13 +68,22 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         private QueryExpression GetJoinQuery(IInternalQuery dbQuery)
         {
-            var query = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
-            if (query == null)
+            var expression = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
+            if (expression == null)
             {
                 throw new Exception("error join query!");
             }
 
-            return GetCompiledExpression<QueryExpression>(query);
+            var joinQuery = GetCompiledExpression<QueryExpression>(expression);
+
+            Queries.Add(joinQuery);
+
+            return joinQuery;
+        }
+
+        protected ExpressionVisitor CreateCondtionVisitor(QueryExpression query)
+        {
+            return new RelationExpressionVisitor(Context);
         }
     }
 }

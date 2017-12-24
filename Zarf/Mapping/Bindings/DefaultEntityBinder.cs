@@ -91,7 +91,27 @@ namespace Zarf.Mapping.Bindings
             var memberExpressions = new List<MemberExpressionPair>();
             foreach (var memBinding in memInit.Bindings.OfType<MemberAssignment>())
             {
-                memberExpressions.Add(new MemberExpressionPair(memBinding.Member, memBinding.Expression));
+                var par = memBinding.Expression.As<MemberExpression>().Expression;
+                var model = Context.QueryModelMapper.GetQueryModel(par);
+                var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(model.Model, memBinding.Member));
+                for (var x = 0; x < RootQuery.Projections.Count; x++)
+                {
+                    var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                    if (mapped != null)
+                    {
+                        argument = mapped;
+                    }
+
+                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                    {
+                        var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
+                        argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
+                        break;
+                    }
+                }
+
+
+                memberExpressions.Add(new MemberExpressionPair(memBinding.Member, argument));
             }
 
             return BindMembers(eNewBlock, memberExpressions);
@@ -155,22 +175,34 @@ namespace Zarf.Mapping.Bindings
                     throw new Exception("Class Refrence A Navigation Property Must Have A Default Constructor!");
                 }
 
-                var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
-                for (var x = 0; x < RootQuery.Projections.Count; x++)
-                {
-                    var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
-                    if (mapped != null)
-                    {
-                        argument = mapped;
-                    }
+                Expression argument;
 
-                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                if (!newExp.Arguments[i].Type.IsPrimtiveType())
+                {
+                    argument = Visit(newExp.Arguments[i]);
+                }
+                else
+                {
+
+
+                    argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
+                    for (var x = 0; x < RootQuery.Projections.Count; x++)
                     {
-                        var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
-                        argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
-                        break;
+                        var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                        if (mapped != null)
+                        {
+                            argument = mapped;
+                        }
+
+                        if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                        {
+                            var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
+                            argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
+                            break;
+                        }
                     }
                 }
+
                 arguments.Add(argument);
             }
 
@@ -193,9 +225,8 @@ namespace Zarf.Mapping.Bindings
                 }
                 else
                 {
-                    var memberValue = Visit(memberExpression.Expression);
                     var memberAccess = Expression.MakeMemberAccess(eObject, memberExpression.Member);
-                    memBindings.Add(Expression.Assign(memberAccess, memberValue));
+                    memBindings.Add(Expression.Assign(memberAccess, memberExpression.Expression));
                 }
             }
 

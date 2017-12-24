@@ -38,7 +38,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     }
                 }
 
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
+                if (argument.Type.IsPrimtiveType())
+                {
+                    Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
+                }
+
                 arguments.Add(argument);
             }
 

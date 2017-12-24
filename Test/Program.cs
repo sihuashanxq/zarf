@@ -32,7 +32,8 @@ namespace Zarf
 
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault
 
-                var x = db.Users
+                var x = db.Users.Join(db.Query<Address>(), (A, b) => A.Id == b.Id)
+                    .Select((A, b) => new { A, b })
                    .ToList();
 
                 Console.ReadKey();

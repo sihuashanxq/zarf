@@ -11,11 +11,11 @@ namespace Zarf.Core
     {
         protected List<JoinQuery> Joins { get; set; }
 
-        public LambdaExpression Predicate { get; protected set; }
+        public LambdaExpression Predicate { get; set; }
 
-        public JoinType JoinType { get; protected set; }
+        public JoinType JoinType { get; set; }
 
-        public IInternalQuery InternalDbQuery { get; protected set; }
+        public IInternalQuery InternalDbQuery { get; set; }
 
         internal static JoinQuery CreateJoinQuery(LambdaExpression predicate, IInternalQuery dbQuery, JoinType joinType)
         {

@@ -6,17 +6,22 @@ namespace Zarf.Entities
 {
     public class QueryEntityModel
     {
-        public Expression Model { get; }
+        public Expression Model { get; set; }
 
-        public Type ModelElementType { get; }
+        public Type ModelElementType { get; set; }
 
-        public QueryEntityModel Previous { get; }
+        public QueryEntityModel Previous { get; set; }
 
         public QueryEntityModel(Expression model, Type elementType, QueryEntityModel previous = null)
         {
-            Model = model.UnWrap().As<LambdaExpression>().Body;
+            Model = model.UnWrap();
             ModelElementType = elementType;
             Previous = previous;
+
+            if (Model.NodeType == ExpressionType.Lambda)
+            {
+                Model = Model.As<LambdaExpression>().Body;
+            }
         }
 
         public bool ContainsModel(Expression modelExpresion)
