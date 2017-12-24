@@ -1,4 +1,6 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
+using Zarf.Extensions;
 using Zarf.Query.ExpressionTranslators;
 
 namespace Zarf.Query.ExpressionVisitors
@@ -36,7 +38,7 @@ namespace Zarf.Query.ExpressionVisitors
             return TranslatorProvider.GetTranslator(node)?.Translate(node) ?? base.Visit(node);
         }
 
-        public Expression Compile(Expression query)
+        public virtual Expression Compile(Expression query)
         {
             if (query == null)
             {

@@ -14,7 +14,7 @@ namespace Zarf.Query.ExpressionTranslators
 
         public IQueryCompiler Compiler { get; }
 
-        public RelationExpressionVisitor RelationVisitor { get; }
+        public RelationExpressionCompiler RelationVisitor { get; }
 
         public Translator(IQueryContext queryContext, IQueryCompiler queryCompiper)
         {

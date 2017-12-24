@@ -18,11 +18,41 @@ namespace Zarf.Query.ExpressionVisitors
 
         public override Expression Visit(Expression node)
         {
-            //var x = NewExpressionTranslator.Maped;
-            //if (NewExpressionTranslator.Maped.ContainsKey(node))
-            //{
-            //    return Expression.Constant(1);
-            //}
+            if (node.Is<QueryExpression>())
+            {
+                var query = node.As<QueryExpression>();
+                if (query == Query)
+                {
+                    return node;
+                }
+
+                //Map
+                foreach (var item in query.Projections)
+                {
+                    if (item.Is<AliasExpression>())
+                    {
+                        var alias = item.As<AliasExpression>();
+                        Query.AddProjection(new ColumnExpression(query, new Column(alias.Alias), alias.Type));
+                    }
+
+                    if (item.Is<ColumnExpression>())
+                    {
+                        //query==Query, join Equal
+                        var col = item.As<ColumnExpression>();
+                        var colName = col.Column?.Name ?? col.Alias;
+                        Query.AddProjection(new ColumnExpression(query, new Column(colName), col.Type));
+                    }
+
+                    if (item.Is<AggregateExpression>())
+                    {
+                        var agg = item.As<AggregateExpression>();
+                        Query.AddProjection(new ColumnExpression(query, new Column(agg.Alias), agg.Type));
+                    }
+                }
+
+                Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
+                return node;
+            }
 
             return base.Visit(node);
         }
@@ -37,50 +67,5 @@ namespace Zarf.Query.ExpressionVisitors
 
             return lambda;
         }
-
-        //        if (node.Is<QueryExpression>())
-        //            {
-        //                var query = node.As<QueryExpression>();
-        //                if (query == Root)
-        //                {
-        //                    return node;
-        //                }
-
-        //                if (query.Columns.Count == 0)
-        //                {
-        //                    foreach (var item in query.GenerateTableColumns())
-        //                    {
-        //                        var col = new ColumnDescriptor()
-        //                        {
-        //                            Member = item.As<ColumnExpression>()?.Member,
-        //                            Expression = item
-        //                        };
-
-        //    query.AddColumns(new[] { col
-        //});
-        //                    }
-        //                }
-
-        //                query.Limit = 1;
-        //                Root.AddJoin(new JoinExpression(query, null, JoinType.Cross));
-        //                return node;
-        //            }
-        //            else if (node.NodeType == ExpressionType.Extension)
-        //            {
-        //                return node;
-        //            }
-
-        //            return base.Visit(node);
-
-        //            if (node.Is<AllExpression>())
-        //            {
-
-        //            }
-
-        //            if (node.Is<AnyExpression>())
-        //            {
-
-        //            }
-
     }
 }

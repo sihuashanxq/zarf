@@ -18,7 +18,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         {
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
             var modelExpression = queryModel?.GetModelExpression(mem.Member.DeclaringType);
-
+            var x = mem.Member.DeclaringType;
             if (modelExpression != null)
             {
                 var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
@@ -32,19 +32,25 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
                     if (propertyExpression.Is<AliasExpression>())
                     {
-                        var refrence = propertyExpression.As<AliasExpression>();
-                        var refQuery = Context.ProjectionOwner.GetQuery(refrence);
-                        if (refQuery.Outer?.SubQuery == refQuery)
+                        var alias = propertyExpression.As<AliasExpression>();
+                        var owner = Context.ProjectionOwner.GetQuery(alias);
+
+                        if (owner.Outer?.SubQuery == owner)
                         {
-                            refQuery = refQuery.Outer;
+                            owner = owner.Outer;
                         }
 
-                        if (refQuery.QueryModel.ContainsModel(queryModel.Model))
+                        if (owner.QueryModel == queryModel)
+                        {
+                            return alias.Expression;
+                        }
+
+                        if (owner.QueryModel.ContainsModel(queryModel.Model))
                         {
                             return propertyExpression;
                         }
 
-                        return new ColumnExpression(refQuery, new Column(refrence.Alias), refrence.Type);
+                        return new ColumnExpression(owner, new Column(alias.Alias), alias.Type);
                     }
 
                     if (propertyExpression.Is<QueryExpression>())
@@ -70,48 +76,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var query = obj.As<QueryExpression>();
             if (query == null)
             {
-                return EvalMemberValue(mem.Member, obj, out var value) ? value : mem;
+                return Utils.EvalMemberValue(mem.Member, obj, out var value) ? value : mem;
             }
 
             return new ColumnExpression(query, mem.Member);
-        }
-
-        /// <summary>
-        /// 表达式求值  string.Empty 
-        /// </summary>
-        /// <param name="memberInfo">类成员 FieldInfo|Property</param>
-        /// <param name="objExp">所属实例</param>
-        /// <returns></returns>
-        private bool EvalMemberValue(MemberInfo memberInfo, Expression objExp, out Expression value)
-        {
-            object obj = null;
-            if (objExp != null && !objExp.Is<ConstantExpression>())
-            {
-                value = null;
-                return false;
-            }
-
-            if (objExp.Is<ConstantExpression>())
-            {
-                obj = objExp.Cast<ConstantExpression>().Value;
-            }
-
-            var field = memberInfo.As<FieldInfo>();
-            if (field != null)
-            {
-                value = Expression.Constant(field.GetValue(obj));
-                return true;
-            }
-
-            var property = memberInfo.As<PropertyInfo>();
-            if (property != null && property.CanRead)
-            {
-                value = Expression.Constant(property.GetValue(obj));
-                return true;
-            }
-
-            value = null;
-            return false;
         }
     }
 }

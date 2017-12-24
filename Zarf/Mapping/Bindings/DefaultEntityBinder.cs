@@ -85,6 +85,56 @@ namespace Zarf.Mapping.Bindings
             return Expression.Lambda(body, DataReader).Compile();
         }
 
+        protected override Expression VisitConstant(ConstantExpression constant)
+        {
+            for (var x = 0; x < RootQuery.Projections.Count; x++)
+            {
+                var y = RootQuery.Projections[x];
+
+                if (y.Is<AggregateExpression>())
+                {
+                    y = y.As<AggregateExpression>().KeySelector;
+                }
+
+                if (y.Is<AliasExpression>())
+                {
+                    y = y.As<AliasExpression>().Expression;
+                }
+
+                if (new ExpressionEqualityComparer().Equals(y, constant))
+                {
+                    var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(constant.Type);
+                    return Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
+                }
+            }
+
+            return constant;
+        }
+
+        protected override Expression VisitMember(MemberExpression member)
+        {
+            var argument = Context.MemberBindingMapper.GetMapedExpression(member);
+            for (var x = 0; x < RootQuery.Projections.Count; x++)
+            {
+                var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                if (mapped != null)
+                {
+                    argument = mapped;
+                }
+
+                var y = RootQuery.Projections[x];
+
+                if (new ExpressionEqualityComparer().Equals(y, argument))
+                {
+                    var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
+                    argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
+                    break;
+                }
+            }
+
+            return argument;
+        }
+
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
         {
             var eNewBlock = Visit(memInit.NewExpression) as BlockExpression;

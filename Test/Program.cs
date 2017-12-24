@@ -30,11 +30,20 @@ namespace Zarf
                 //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
                 //BasicTest(db);
 
-                //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault
+                //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
+                //Order
 
-                var x = db.Users.Join(db.Query<Address>(), (A, b) => A.Id == b.Id)
-                    .Select((A, b) => new { A, b })
-                   .ToList();
+                //var z = db.Users.ToList();
+                //var zz = z.Select(item => z.Sum(xx => item.Id)).ToList();
+
+                var x = db
+                    .Users
+                   .Select(item => db.Users.Sum(y => item.Id)).ToList();
+
+                //var x = db
+                //    .Users
+                //    .Select(item => new { item.Id, item.Name })
+                //    .Where(item => db.Users.Where(y => item.Id == 5).ToList() != null).ToList();
 
                 Console.ReadKey();
             }

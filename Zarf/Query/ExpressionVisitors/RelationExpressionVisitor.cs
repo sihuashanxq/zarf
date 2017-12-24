@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
-using Zarf.Entities;
+using System.Reflection;
+using Zarf.Core.Internals;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
@@ -8,54 +9,26 @@ namespace Zarf.Query.ExpressionVisitors
     /// <summary>
     /// 查询条件转换
     /// </summary>
-    public class RelationExpressionVisitor : QueryCompiler
+    public class RelationExpressionCompiler : QueryCompiler
     {
-        public RelationExpressionVisitor(IQueryContext context) : base(context)
+        public RelationExpressionCompiler(IQueryContext context) : base(context)
         {
 
         }
 
-        public override Expression Visit(Expression node)
+        public override Expression Compile(Expression query)
         {
-            if (node.NodeType == ExpressionType.MemberAccess)
+            if (query == null)
             {
-                return VisitMember(node.As<MemberExpression>());
+                return query;
             }
 
-            return base.Visit(node);
-            //if (node.Is<AllExpression>())
-            //{
-            //    return VisitAll(node.As<AllExpression>());
-            //}
+            if (query.NodeType == ExpressionType.MemberAccess)
+            {
+                return VisitMember(query.As<MemberExpression>());
+            }
 
-            //if (node.Is<AnyExpression>())
-            //{
-            //    return VisitAny(node.As<AnyExpression>());
-            //}
-
-            //if (node.Is<QueryExpression>())
-            //{
-            //    node.As<QueryExpression>().IsPartOfPredicate = true;
-            //}
-
-            //if (node.NodeType == ExpressionType.Extension)
-            //{
-            //    return node;
-            //}
-
-            //switch (node.NodeType)
-            //{
-            //    case ExpressionType.Equal:
-            //        return VisitNotEqual(node.As<BinaryExpression>());
-            //    case ExpressionType.NotEqual:
-            //        return VisitNotEqual(node.As<BinaryExpression>());
-            //    case ExpressionType.Or:
-            //        return VisitOr(node.As<BinaryExpression>());
-            //    case ExpressionType.And:
-            //        return VisitAnd(node.As<BinaryExpression>());
-            //}
-
-            //return base.Visit(node);
+            return base.Compile(query);
         }
 
         protected override Expression VisitMember(MemberExpression mem)
@@ -78,7 +51,58 @@ namespace Zarf.Query.ExpressionVisitors
                 return propertyExpression;
             }
 
-            return mem;
+            return base.Compile(mem);
+        }
+    }
+
+    public class RelationExpressionVisitor : ExpressionVisitorBase
+    {
+        protected override Expression VisitLambda(LambdaExpression lambda)
+        {
+            var lambdaBody = Visit(lambda.Body);
+            if (lambdaBody != lambda.Body)
+            {
+                return Expression.Lambda(lambdaBody, lambda.Parameters);
+            }
+
+            return lambda;
+        }
+
+        public override Expression Visit(Expression node)
+        {
+            if (node.Is<AllExpression>())
+            {
+                return VisitAll(node.As<AllExpression>());
+            }
+
+            if (node.Is<AnyExpression>())
+            {
+                return VisitAny(node.As<AnyExpression>());
+            }
+
+            if (node.Is<QueryExpression>())
+            {
+                node.As<QueryExpression>().IsPartOfPredicate = true;
+            }
+
+            if (node.NodeType == ExpressionType.Extension)
+            {
+                return node;
+            }
+
+            switch (node.NodeType)
+            {
+                case ExpressionType.Equal:
+                    return VisitEqual(node.As<BinaryExpression>());
+                case ExpressionType.NotEqual:
+                    return VisitNotEqual(node.As<BinaryExpression>());
+                case ExpressionType.Or:
+                    return VisitOr(node.As<BinaryExpression>());
+                case ExpressionType.And:
+                    return VisitAnd(node.As<BinaryExpression>());
+            }
+
+            return base.Visit(node);
         }
 
         protected virtual Expression VisitEqual(BinaryExpression binary)
@@ -99,7 +123,7 @@ namespace Zarf.Query.ExpressionVisitors
                 return Expression.Not(new ExistsExpression(query));
             }
 
-            if (!ReflectionUtil.SimpleTypes.Contains(binary.Left.Type))
+            if (!binary.Left.Type.IsPrimtiveType())
             {
                 throw new System.NotSupportedException($"not supported compared the value of {binary.Left.Type.Name}");
             }
@@ -187,17 +211,6 @@ namespace Zarf.Query.ExpressionVisitors
         {
             any.Query.Where = new WhereExperssion(Visit(any.Query.Where.Predicate));
             return new ExistsExpression(any.Query);
-        }
-
-        protected override Expression VisitLambda(LambdaExpression lambda)
-        {
-            var lambdaBody = Visit(lambda.Body);
-            if (lambdaBody != lambda.Body)
-            {
-                return Expression.Lambda(lambdaBody, lambda.Parameters);
-            }
-
-            return lambda;
         }
     }
 }

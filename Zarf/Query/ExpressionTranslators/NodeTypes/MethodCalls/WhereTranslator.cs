@@ -33,17 +33,20 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
-            predicate = CreateCondtionVisitor(query).Visit(predicate);
+            predicate = CreateRealtionCompiler(query).Compile(predicate);
+            predicate = new RelationExpressionVisitor().Visit(predicate);
 
             query.DefaultIfEmpty = methodCall.Method.Name.Contains("Default");
             query.CombineCondtion(predicate);
 
+            var s = Context.DbContextParts.CommandTextBuilder.Build(query);
+
             return query;
         }
 
-        protected ExpressionVisitor CreateCondtionVisitor(QueryExpression query)
+        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
         {
-            return new RelationExpressionVisitor(Context);
+            return new RelationExpressionCompiler(Context);
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
+using Zarf.Extensions;
 
 namespace Zarf
 {
@@ -48,5 +50,43 @@ namespace Zarf
             { ExpressionType.And, " & " },
             { ExpressionType.Or, " | " }
         };
+
+        /// <summary>
+        /// 属性string.Empty 
+        /// </summary>
+        /// <param name="memberInfo">类成员 FieldInfo|Property</param>
+        /// <param name="objExp">所属实例</param>
+        /// <returns></returns>
+        public static bool EvalMemberValue(MemberInfo memberInfo, Expression objExp, out Expression value)
+        {
+            object obj = null;
+            if (objExp != null && !objExp.Is<ConstantExpression>())
+            {
+                value = null;
+                return false;
+            }
+
+            if (objExp.Is<ConstantExpression>())
+            {
+                obj = objExp.Cast<ConstantExpression>().Value;
+            }
+
+            var field = memberInfo.As<FieldInfo>();
+            if (field != null)
+            {
+                value = Expression.Constant(field.GetValue(obj));
+                return true;
+            }
+
+            var property = memberInfo.As<PropertyInfo>();
+            if (property != null && property.CanRead)
+            {
+                value = Expression.Constant(property.GetValue(obj));
+                return true;
+            }
+
+            value = null;
+            return false;
+        }
     }
 }

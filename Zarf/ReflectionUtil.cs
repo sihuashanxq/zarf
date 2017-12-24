@@ -149,11 +149,6 @@ namespace Zarf
             foreach (var item in querableCandidates.Concat(typeof(Enumerable).GetMethods().Where(item => item.Name == "ToList")))
             {
                 var condidation = item.IsGenericMethod ? item.MakeGenericMethod(giveType) : item;
-                if (condidation.ReturnType != givenMethod.ReturnType)
-                {
-                    continue;
-                }
-
                 var condParameters = condidation.GetParameters();
                 if (condParameters.Length != givenParameters.Length + 1)
                 {

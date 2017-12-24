@@ -58,7 +58,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                     }
                 }
 
-                var predicate = CreateCondtionVisitor(query).Visit(item.Predicate);
+                var predicate = CreateRealtionCompiler(query).Compile(item.Predicate);
                 var join = new JoinExpression(Queries.Last(), predicate, item.JoinType);
                 query.AddJoin(join);
             }
@@ -81,9 +81,9 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             return joinQuery;
         }
 
-        protected ExpressionVisitor CreateCondtionVisitor(QueryExpression query)
+        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
         {
-            return new RelationExpressionVisitor(Context);
+            return new RelationExpressionCompiler(Context);
         }
     }
 }

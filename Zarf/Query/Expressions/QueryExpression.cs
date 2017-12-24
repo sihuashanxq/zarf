@@ -70,11 +70,6 @@ namespace Zarf.Query.Expressions
             Alias = alias;
         }
 
-        public void Clone()
-        {
-
-        }
-
         public QueryExpression PushDownSubQuery(string alias)
         {
             var query = new QueryExpression(Type, ProjectionMapper, alias)
@@ -169,7 +164,7 @@ namespace Zarf.Query.Expressions
 
                 foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
                 {
-                    cols.Add(new ColumnExpression(this, memberDescriptor.Member, memberDescriptor.Name));
+                    cols.Add(new ColumnExpression(this, memberDescriptor.Member));
                 }
 
                 foreach (var item in Joins.Select(item => item.Query))
@@ -203,6 +198,19 @@ namespace Zarf.Query.Expressions
             }
 
             return cols;
+        }
+
+        public QueryExpression Clone()
+        {
+            var query = new QueryExpression(TypeOfExpression, ProjectionMapper, Alias);
+            query.AddProjectionRange(Projections);
+            query.Orders.AddRange(Orders);
+            query.Groups.AddRange(Groups);
+            query.Joins.AddRange(query.Joins);
+            query.Limit = Limit;
+            query.IsDistinct = IsDistinct;
+            query.SubQuery = SubQuery?.Clone();
+            return query;
         }
 
         public void ChangeTypeOfExpression(Type typeOfExpression)

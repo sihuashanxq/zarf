@@ -5,18 +5,25 @@
     /// </summary>
     public class AliasGenerator : IAliasGenerator
     {
-        private int _tableRefCount;
+        private int _tableCount;
 
-        private int _columnRefCount;
+        private int _columnCount;
+
+        private int _parameterCount;
 
         public string GetNewTable()
         {
-            return "T" + _tableRefCount++;
+            return "T" + _tableCount++;
         }
 
         public string GetNewColumn()
         {
-            return "C" + _columnRefCount++;
+            return "C" + _columnCount++;
+        }
+
+        public string GetNewParameter()
+        {
+            return "P" + _parameterCount++;
         }
 
         /// <summary>
@@ -24,7 +31,7 @@
         /// </summary>
         public void Reset()
         {
-            _columnRefCount = 0;
+            _columnCount = 0;
         }
     }
 }

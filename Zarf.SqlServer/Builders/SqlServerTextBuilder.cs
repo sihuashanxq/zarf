@@ -441,11 +441,15 @@ namespace Zarf.SqlServer.Builders
                     if (item.Is<AggregateExpression>())
                     {
                         Console.WriteLine("Aggreate");
-                        var aggrate = item.As<AggregateExpression>();
-                        if (aggrate.Query != query)
+                        using (BeginStopGenColumnAlias())
                         {
-                            Append(aggrate.Query.Alias.Escape(), ".", aggrate.Alias.Escape(), ",");
-                            continue;
+
+                            var aggrate = item.As<AggregateExpression>();
+                            if (aggrate.Query != query)
+                            {
+                                Append(aggrate.Query.Alias.Escape(), ".", aggrate.Alias.Escape(), ",");
+                                continue;
+                            }
                         }
                     }
 

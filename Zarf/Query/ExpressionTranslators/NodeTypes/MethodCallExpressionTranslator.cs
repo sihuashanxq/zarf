@@ -8,6 +8,7 @@ using Zarf.Mapping;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionTranslators.Methods;
 using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -35,6 +36,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             Register(IncludeTranslator.SupprotedMethods, new IncludeTranslator(queryContext, queryCompiper));
             Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator(queryContext, queryCompiper));
             Register(JoinSelectTranslator.SupprotedMethods, new JoinSelectTranslator(queryContext, queryCompiper));
+            Register(ToListTranslator.SupprotedMethods, new ToListTranslator(queryContext, queryCompiper));
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
@@ -73,12 +75,18 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        private Expression TranslateMethodCall(MethodCallExpression methodCall)
+        protected virtual Expression TranslateMethodCall(MethodCallExpression methodCall)
         {
-            var objExp = GetCompiledExpression(methodCall.Object);
-            if (objExp != null && typeof(IQuery).IsAssignableFrom(objExp.Type))
+            var obj = GetCompiledExpression(methodCall.Object);
+            if (typeof(IQuery).IsAssignableFrom(obj?.Type))
             {
-                return TranslateSubQuery(objExp.As<ConstantExpression>(), methodCall);
+                return CreateSubQuery(obj.As<ConstantExpression>(), methodCall);
+            }
+
+            if (obj?.NodeType == ExpressionType.Extension)
+            {
+                Console.WriteLine("MethodCall");
+                return obj;
             }
 
             var args = new List<Expression>();
@@ -92,13 +100,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var sqlFunction = methodCall.Method.GetCustomAttribute<SqlFunctionAttribute>();
             if (sqlFunction != null)
             {
-                return new SqlFunctionExpression(methodCall.Method, sqlFunction.Name, objExp, args);
+                return new SqlFunctionExpression(methodCall.Method, sqlFunction.Name, obj, args);
             }
 
-            if (objExp == null || objExp.NodeType == ExpressionType.Constant)
+            if (obj == null || obj.NodeType == ExpressionType.Constant)
             {
                 var parameters = new object[methodCall.Arguments.Count];
-                var instance = objExp.As<ConstantExpression>()?.Value;
+                var instance = obj.As<ConstantExpression>()?.Value;
                 var canEval = true;
                 for (var i = 0; i < args.Count; i++)
                 {
@@ -117,25 +125,75 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
             }
 
-            return Expression.Call(objExp, methodInfo, args);
+            return Expression.Call(obj, methodInfo, args);
         }
 
-        private Expression TranslateSubQuery(ConstantExpression iQueryConstant, MethodCallExpression methodCall)
+        protected Expression CreateSubQuery(ConstantExpression obj, MethodCallExpression methodCall)
         {
-            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType) && methodCall.Method.Name != "ToList")
+            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType))
             {
-                var body = Expression.Call(iQueryConstant, methodCall.Method, methodCall.Arguments);
-                var facotry = (Func<IQuery>)Expression.Lambda(body).Compile();
-                var v = facotry();
-                return Expression.Constant(v);
+                var createQueryBody = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
+                var parameters = new RefrencedOuterParameterExpressionVisitor(createQueryBody).OutParameters;
+                if (parameters.Count == 0)
+                {
+                    var createQuery = (Func<IQuery>)Expression.Lambda(createQueryBody, parameters).Compile();
+                    var linq = createQuery();
+                    return Expression.Constant(linq);
+                }
             }
 
-            var iQuery = iQueryConstant.As<ConstantExpression>()?.Value as IQuery;
-            var iInternalQuery = iQuery?.GetInternalQuery();
-            var args = new[] { iInternalQuery.GetExpression() }.Concat(methodCall.Arguments);
-            var queryMethod = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, iInternalQuery.GetTypeOfEntity());
-            var exp = Expression.Call(null, queryMethod, args.ToArray());
-            return GetCompiledExpression(exp);
+            var query = obj.As<ConstantExpression>()?.Value as IQuery;
+            var internalQuery = query?.GetInternalQuery();
+            var internalQueryExpression = new[] { internalQuery.GetExpression() };
+            var typeOfEntity = internalQuery.GetTypeOfEntity();
+
+            var arguments = internalQueryExpression.Concat(methodCall.Arguments);
+
+            var method = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, typeOfEntity);
+            var call = Expression.Call(null, method, arguments.ToArray());
+
+            return GetCompiledExpression(call);
+        }
+    }
+
+    public class SubQueryExpressionVisitor : ExpressionVisitorBase
+    {
+
+    }
+
+    public class RefrencedOuterParameterExpressionVisitor : ExpressionVisitors.ExpressionVisitorBase
+    {
+        protected List<ParameterExpression> Parameters { get; }
+
+        public List<ParameterExpression> OutParameters { get; }
+
+        public RefrencedOuterParameterExpressionVisitor(Expression expression)
+        {
+            Parameters = new List<ParameterExpression>();
+            OutParameters = new List<ParameterExpression>();
+            Visit(expression);
+        }
+
+        protected override Expression VisitLambda(LambdaExpression lambda)
+        {
+            Parameters.AddRange(lambda.Parameters);
+            var body = Visit(lambda.Body);
+            if (body != lambda.Body)
+            {
+                return Expression.Lambda(body, lambda.Parameters);
+            }
+
+            return lambda;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression parameter)
+        {
+            if (!Parameters.Contains(parameter))
+            {
+                OutParameters.Add(parameter);
+            }
+
+            return parameter;
         }
     }
 }

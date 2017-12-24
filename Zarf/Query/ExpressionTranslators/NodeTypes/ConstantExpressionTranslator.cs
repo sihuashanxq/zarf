@@ -8,7 +8,7 @@ using Zarf.Entities;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
-    class ConstantExpressionTranslator : Translator<ConstantExpression>
+    public class ConstantExpressionTranslator : Translator<ConstantExpression>
     {
         public ConstantExpressionTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
@@ -33,7 +33,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         protected virtual QueryExpression CreateQueryExpression(Type typeOfEntity)
         {
-            var parameter = Expression.Parameter(typeOfEntity);
+            var parameter = Expression.Parameter(typeOfEntity, Context.Alias.GetNewParameter());
             var query = new QueryExpression(typeOfEntity, Context.ColumnCaching, Context.Alias.GetNewTable());
             var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(parameter);
 

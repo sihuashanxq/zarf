@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -57,7 +56,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Context.QueryModelMapper.MapQueryModel(parameters[0], query.QueryModel);
 
-            CreateProjectionVisitor(query).Visit(modelExpression);
+            var m = CreateProjectionVisitor(query).Visit(modelExpression);
 
             return query;
         }

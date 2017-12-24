@@ -41,27 +41,23 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
-            CreateProjectionVisitor(query).Visit(modelExpression);
+            CreateProjection(query, modelExpression);
+
+            if (query.QueryModel.Model.Is<ConstantExpression>())
+            {
+                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
+            }
+
+            var s = Context.DbContextParts.CommandTextBuilder.Build(query);
 
             return query;
         }
 
-        protected ProjectionExpressionVisitor CreateProjectionVisitor(QueryExpression query)
+        protected void CreateProjection(QueryExpression query, Expression modelExpression)
         {
-            return new ProjectionExpressionVisitor(query, Context);
-        }
+            modelExpression = new ProjectionExpressionVisitor(query, Context).Visit(modelExpression);
 
-        protected virtual void RegisterJoinSelectQueries(QueryExpression query, Expression selector)
-        {
-            var parameters = GetParameteres(selector);
-            var i = 0;
-            while (i < parameters.Count)
-            {
-                if (i == 0)
-                    MapParameterWithQuery(parameters[i++], query);
-                else
-                    MapParameterWithQuery(parameters[i], query.Joins[i++ - 1].Query);
-            }
+            new ResultExpressionVisitor(query).Visit(modelExpression);
         }
     }
 }

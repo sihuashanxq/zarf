@@ -41,7 +41,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
 
-            var key = new RelationExpressionVisitor(Context).Visit(methodCall.Arguments[1].UnWrap()).UnWrap();
+            var key = new RelationExpressionCompiler(Context).Compile(methodCall.Arguments[1].UnWrap()).UnWrap();
             if (key.NodeType == ExpressionType.Lambda)
             {
                 query.CombineCondtion(Expression.Not(key.As<LambdaExpression>().Body));

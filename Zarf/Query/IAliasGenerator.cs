@@ -6,6 +6,8 @@
 
         string GetNewColumn();
 
+        string GetNewParameter();
+
         void Reset();
     }
 }
