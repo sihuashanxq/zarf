@@ -80,11 +80,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var obj = GetCompiledExpression(methodCall.Object);
             if (typeof(IQuery).IsAssignableFrom(obj?.Type))
             {
-                return CreateSubQuery(obj.As<ConstantExpression>(), methodCall);
+                obj = CreateSubQuery(obj.As<ConstantExpression>(), methodCall);
             }
 
             if (obj?.NodeType == ExpressionType.Extension)
             {
+                if (obj.Is<QueryExpression>())
+                {
+                    Context.QueryModelMapper.MapQueryModel(methodCall, obj.As<QueryExpression>().QueryModel);
+                }
+
                 Console.WriteLine("MethodCall");
                 return obj;
             }
@@ -133,7 +138,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             if (typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType))
             {
                 var createQueryBody = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
-                var parameters = new RefrencedOuterParameterExpressionVisitor(createQueryBody).OutParameters;
+                var parameters = new RefrencedOuterParameterExpressionVisitor(createQueryBody).Outers;
                 if (parameters.Count == 0)
                 {
                     var createQuery = (Func<IQuery>)Expression.Lambda(createQueryBody, parameters).Compile();
@@ -156,41 +161,32 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         }
     }
 
-    public class SubQueryExpressionVisitor : ExpressionVisitorBase
+    public class RefrencedOuterParameterExpressionVisitor : ExpressionVisitorBase
     {
+        private List<ParameterExpression> _inners;
 
-    }
+        private List<ParameterExpression> _outers;
 
-    public class RefrencedOuterParameterExpressionVisitor : ExpressionVisitors.ExpressionVisitorBase
-    {
-        protected List<ParameterExpression> Parameters { get; }
-
-        public List<ParameterExpression> OutParameters { get; }
+        public List<ParameterExpression> Outers => _outers;
 
         public RefrencedOuterParameterExpressionVisitor(Expression expression)
         {
-            Parameters = new List<ParameterExpression>();
-            OutParameters = new List<ParameterExpression>();
+            _inners = new List<ParameterExpression>();
+            _outers = new List<ParameterExpression>();
             Visit(expression);
         }
 
         protected override Expression VisitLambda(LambdaExpression lambda)
         {
-            Parameters.AddRange(lambda.Parameters);
-            var body = Visit(lambda.Body);
-            if (body != lambda.Body)
-            {
-                return Expression.Lambda(body, lambda.Parameters);
-            }
-
-            return lambda;
+            _inners.AddRange(lambda.Parameters);
+            return base.VisitLambda(lambda);
         }
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            if (!Parameters.Contains(parameter))
+            if (!_inners.Contains(parameter))
             {
-                OutParameters.Add(parameter);
+                _outers.Add(parameter);
             }
 
             return parameter;

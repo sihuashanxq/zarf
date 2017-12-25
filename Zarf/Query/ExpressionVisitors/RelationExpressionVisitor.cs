@@ -57,17 +57,6 @@ namespace Zarf.Query.ExpressionVisitors
 
     public class RelationExpressionVisitor : ExpressionVisitorBase
     {
-        protected override Expression VisitLambda(LambdaExpression lambda)
-        {
-            var lambdaBody = Visit(lambda.Body);
-            if (lambdaBody != lambda.Body)
-            {
-                return Expression.Lambda(lambdaBody, lambda.Parameters);
-            }
-
-            return lambda;
-        }
-
         public override Expression Visit(Expression node)
         {
             if (node.Is<AllExpression>())

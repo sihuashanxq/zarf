@@ -196,6 +196,14 @@ namespace Zarf.SqlServer.Builders
                     Append(" ON ");
                     BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
                 }
+                else
+                {
+                    if (join.Predicate != null)
+                    {
+                        Append(" WHERE ");
+                        BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
+                    }
+                }
             }
 
             if (join.Query.IsEmptyQuery())
@@ -438,21 +446,6 @@ namespace Zarf.SqlServer.Builders
             {
                 foreach (var item in query.Projections)
                 {
-                    if (item.Is<AggregateExpression>())
-                    {
-                        Console.WriteLine("Aggreate");
-                        using (BeginStopGenColumnAlias())
-                        {
-
-                            var aggrate = item.As<AggregateExpression>();
-                            if (aggrate.Query != query)
-                            {
-                                Append(aggrate.Query.Alias.Escape(), ".", aggrate.Alias.Escape(), ",");
-                                continue;
-                            }
-                        }
-                    }
-
                     BuildExpression(item);
                     Append(',');
                 }

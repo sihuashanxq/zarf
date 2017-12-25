@@ -68,7 +68,10 @@ namespace Zarf.Query
 
         public void Map(MemberExpression mem, Expression mapped)
         {
-            MemberBindings[mem] = mapped;
+            if (mem != null)
+            {
+                MemberBindings[mem] = mapped;
+            }
         }
     }
 

@@ -59,7 +59,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             query.Projections.Clear();
 
-            var selector = new AggreateExpressionVisitor(Context, query).Compile(modelExpression);
+            var selector = new AggreateExpressionVisitor(Context, query).Visit(modelExpression);
             if (selector.Is<QueryExpression>())
             {
                 throw new Exception("Cannot perform an aggregate function on an expression containing an aggregate or a subquery.");
@@ -72,95 +72,32 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
-                var s = Context.DbContextParts.CommandTextBuilder.Build(query);
-                return query;
-            }
+                Context.ExpressionMapper.Map(modelExpression, key);
 
-            if (selector.Is<ColumnExpression>())
+                return query.PushDownSubQuery(Context.Alias.GetNewTable());
+            }
+            else if (selector.Is<ColumnExpression>())
             {
                 var col = selector.As<ColumnExpression>();
                 var key = new AggregateExpression(methodCall.Method, col, query, Context.Alias.GetNewColumn());
 
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
-                var s = Context.DbContextParts.CommandTextBuilder.Build(query);
-                return query;
-            }
+                Context.ExpressionMapper.Map(modelExpression, key);
 
-            if (selector.NodeType != ExpressionType.Extension)
+                return query.PushDownSubQuery(Context.Alias.GetNewTable());
+            }
+            else if (selector.NodeType != ExpressionType.Extension)
             {
                 var key = new AggregateExpression(methodCall.Method, selector, query, Context.Alias.GetNewColumn());
 
                 query.AddProjection(key);
-
-                if (!selector.Is<ConstantExpression>())
-                {
-                    Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
-                }
-
-                var s = Context.DbContextParts.CommandTextBuilder.Build(query);
-
-                return query;
+                Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
+                Context.ExpressionMapper.Map(modelExpression, key);
+                return query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
             throw new NotImplementedException();
-        }
-    }
-
-    public class AggreateExpressionVisitor : QueryCompiler
-    {
-        public QueryExpression Query { get; }
-
-        public AggreateExpressionVisitor(IQueryContext context, QueryExpression query) : base(context)
-        {
-            Query = query;
-        }
-
-        public override Expression Compile(Expression exp)
-        {
-            if (exp.NodeType == ExpressionType.MemberAccess)
-            {
-                return VisitMember(exp.As<MemberExpression>());
-            }
-
-            return base.Compile(exp);
-        }
-
-        /// <summary>
-        /// 聚合引用其他表的列,拷贝引用表
-        /// </summary>
-        protected override Expression VisitMember(MemberExpression mem)
-        {
-            QueryExpression query = null;
-            var expression = base.Compile(mem);
-            var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
-
-            if (queryModel != null)
-            {
-                var modelExpression = queryModel.GetModelExpression(mem.Expression.Type.GetModelElementType());
-                var refrence = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, mem.Member));
-                if (refrence != null)
-                {
-                    query = Context.ProjectionOwner.GetQuery(refrence);
-                }
-            }
-
-            query = query ?? expression.As<ColumnExpression>()?.Query;
-
-            if (query == null || query == Query)
-            {
-                return expression;
-            }
-
-            var clonedQuery = query.Clone();
-
-            Query.AddProjection(expression);
-            Query.AddJoin(new JoinExpression(clonedQuery, null, JoinType.Cross));
-            Query.Groups.Add(new GroupExpression(new[] { expression.As<ColumnExpression>() }));
-
-            clonedQuery.Projections.Clear();
-
-            return expression;
         }
     }
 }

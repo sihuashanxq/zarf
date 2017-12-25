@@ -137,7 +137,7 @@ namespace Zarf.Query.Expressions
         public bool IsEmptyQuery()
         {
             var isEmpty = !IsDistinct && Where == null &&
-                Offset == null && SubQuery == null &&
+                Offset == null && (SubQuery?.IsEmptyQuery() ?? true) &&
                 Orders.Count == 0 && Groups.Count == 0 &&
                 Sets.Count == 0 && Limit == 0;
 
@@ -189,10 +189,16 @@ namespace Zarf.Query.Expressions
                     col.Query = this;
                 }
 
+                if (item.Is<AggregateExpression>())
+                {
+                    col = new ColumnExpression(this, new Column(item.As<AggregateExpression>().Alias), item.Type);
+                }
+
                 if (col == null)
                 {
                     continue;
                 }
+
                 ProjectionMapper.Map(item, col);
                 cols.Add(col);
             }
@@ -203,14 +209,32 @@ namespace Zarf.Query.Expressions
         public QueryExpression Clone()
         {
             var query = new QueryExpression(TypeOfExpression, ProjectionMapper, Alias);
-            query.AddProjectionRange(Projections);
             query.Orders.AddRange(Orders);
             query.Groups.AddRange(Groups);
             query.Joins.AddRange(query.Joins);
             query.Limit = Limit;
             query.IsDistinct = IsDistinct;
             query.SubQuery = SubQuery?.Clone();
+            query.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
             return query;
+        }
+
+        public bool ConstainsQuery(QueryExpression subQuery)
+        {
+            if (subQuery == this)
+            {
+                return true;
+            }
+
+            foreach (var item in Joins.Select(_ => _.Query))
+            {
+                if (item.ConstainsQuery(subQuery))
+                {
+                    return true;
+                }
+            }
+
+            return SubQuery?.ConstainsQuery(subQuery) ?? false;
         }
 
         public void ChangeTypeOfExpression(Type typeOfExpression)

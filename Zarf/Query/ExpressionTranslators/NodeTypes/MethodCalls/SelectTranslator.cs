@@ -57,7 +57,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         {
             modelExpression = new ProjectionExpressionVisitor(query, Context).Visit(modelExpression);
 
-            new ResultExpressionVisitor(query).Visit(modelExpression);
+            new ResultExpressionVisitor(Context, query).Visit(modelExpression);
         }
     }
 }

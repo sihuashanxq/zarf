@@ -23,6 +23,12 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected virtual Expression VisitLambda(LambdaExpression lambda)
         {
+            var lambdaBody = Visit(lambda.Body);
+            if (lambdaBody != lambda.Body)
+            {
+                return Expression.Lambda(lambdaBody, lambda.Parameters);
+            }
+
             return lambda;
         }
     }
