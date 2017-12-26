@@ -94,6 +94,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
                 Context.ExpressionMapper.Map(modelExpression, key);
+
                 return query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Reflection;
 using Zarf.Extensions;
 
 namespace Zarf.Entities
@@ -39,7 +40,7 @@ namespace Zarf.Entities
             return false;
         }
 
-        public Expression GetModelExpression(Type modelEleType)
+        public Expression GetModelExpression(Type modelEleType, MemberInfo memberInfo = null)
         {
             if (ModelElementType == modelEleType)
             {

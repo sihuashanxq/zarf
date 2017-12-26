@@ -27,7 +27,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 var argument = GetCompiledExpression(newExpression.Arguments[i]);
                 if (argument.Is<QueryExpression>())
                 {
-                    argument = newExpression.Arguments[i];
+                    arguments.Add(newExpression.Arguments[i]);
                 }
                 else
                 {
@@ -36,14 +36,11 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     {
                         argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
                     }
+
+                    arguments.Add(argument);
                 }
 
-                if (argument.Type.IsPrimtiveType())
-                {
-                    Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
-                }
-
-                arguments.Add(argument);
+                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
             }
 
             return newExpression.Update(arguments);

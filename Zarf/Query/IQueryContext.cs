@@ -22,7 +22,7 @@ namespace Zarf.Query
 
         IDbContextParts DbContextParts { get; }
 
-        IExpressionMapper ColumnCaching { get; }
+        IQueryProjectionMapper ColumnCaching { get; }
 
         MemberBindingMapper MemberBindingMapper { get; }
 
@@ -30,7 +30,7 @@ namespace Zarf.Query
 
         QueryModelMapper QueryModelMapper { get; }
 
-        IExpressionMapper ExpressionMapper { get; }
+        IQueryProjectionMapper ExpressionMapper { get; }
     }
 
     public class ProjectionOwnerMapper
@@ -61,6 +61,11 @@ namespace Zarf.Query
 
         public Expression GetMapedExpression(MemberExpression mem)
         {
+            if (mem == null)
+            {
+                return null;
+            }
+
             return MemberBindings.TryGetValue(mem, out var mappedExpression)
                 ? mappedExpression
                 : default(Expression);

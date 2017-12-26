@@ -38,10 +38,12 @@ namespace Zarf
 
                 var x = db
                     .Users
-                    .Select(item => db.Users.Sum(y => item.Id + item.Age)).ToList();
+                    .Select(item => db.Users.Sum(y => item.Id + y.Age) ).ToList();
 
-                //var z = db.Users.ToList();
-                //var c = z.Select(item => z.Sum(n => n.Id + n.Age)).ToList();
+
+                //var x = db
+                //    .Users
+                //    .Select(item => db.Users.Sum(y => item.Id + y.Age)).ToList();
 
                 //var x = db
                 //    .Users

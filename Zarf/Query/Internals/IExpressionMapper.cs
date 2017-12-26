@@ -1,11 +1,14 @@
 ﻿using System.Linq.Expressions;
+using System.Collections.Generic;
 
 namespace Zarf.Query.Internals
 {
-    public interface IExpressionMapper
+    public interface IQueryProjectionMapper
     {
-        void Map(Expression key, Expression value);
+        void Map(Expression projection, Expression mappedProjection);
 
-        Expression GetMappedExpression(Expression key);
+        Expression GetMappedProjection(Expression projection);
+
+        IEnumerable<KeyValuePair<Expression, Expression>> GetAllProjections();
     }
 }

@@ -50,7 +50,7 @@ namespace Zarf.Query
 
         public IDbContextParts DbContextParts { get; }
 
-        public IExpressionMapper ColumnCaching { get; }
+        public IQueryProjectionMapper ColumnCaching { get; }
 
         public MemberBindingMapper MemberBindingMapper { get; }
 
@@ -58,7 +58,7 @@ namespace Zarf.Query
 
         public QueryModelMapper QueryModelMapper { get; }
 
-        public IExpressionMapper ExpressionMapper { get; }
+        public IQueryProjectionMapper ExpressionMapper { get; }
 
         public QueryContext(
             IQueryColumnOrdinalMapper projectionMappingProvider,

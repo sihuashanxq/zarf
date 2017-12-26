@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Mapping;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors
@@ -45,8 +41,15 @@ namespace Zarf.Query.ExpressionVisitors
                     continue;
                 }
 
+                if (binding.Expression.NodeType != ExpressionType.Extension &&
+                    binding.Expression.NodeType != ExpressionType.Constant)
+                {
+                    continue;
+                }
+
                 Query.AddProjection(binding.Expression);
                 Context.ProjectionOwner.AddProjection(binding.Expression, Query);
+                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
             }
 
             return memberInit;
@@ -72,8 +75,15 @@ namespace Zarf.Query.ExpressionVisitors
                     continue;
                 }
 
+                if (newExpression.Arguments[i].NodeType != ExpressionType.Extension &&
+                    newExpression.Arguments[i].NodeType != ExpressionType.Constant)
+                {
+                    continue;
+                }
+
                 Query.AddProjection(newExpression.Arguments[i]);
                 Context.ProjectionOwner.AddProjection(newExpression.Arguments[i], Query);
+                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
             }
 
             return newExpression;
@@ -98,19 +108,19 @@ namespace Zarf.Query.ExpressionVisitors
 
         public override Expression Visit(Expression node)
         {
-            node = base.Visit(node);
+            var visitedNode = base.Visit(node);
 
-            if (node.NodeType == ExpressionType.New)
+            if (visitedNode.NodeType == ExpressionType.New)
             {
-                return VisitNew(node.As<NewExpression>());
+                return VisitNew(visitedNode.As<NewExpression>());
             }
 
-            if (node.NodeType == ExpressionType.MemberInit)
+            if (visitedNode.NodeType == ExpressionType.MemberInit)
             {
-                return VisitMemberInit(node.As<MemberInitExpression>());
+                return VisitMemberInit(visitedNode.As<MemberInitExpression>());
             }
 
-            return node;
+            return visitedNode;
         }
     }
 }

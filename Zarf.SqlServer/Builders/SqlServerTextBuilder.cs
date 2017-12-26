@@ -177,8 +177,6 @@ namespace Zarf.SqlServer.Builders
                     break;
             }
 
-            BuildSubQuery(join.Query);
-
             if (join.Query.IsEmptyQuery())
             {
                 BuildFromTable(join.Query);
@@ -196,19 +194,6 @@ namespace Zarf.SqlServer.Builders
                     Append(" ON ");
                     BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
                 }
-                else
-                {
-                    if (join.Predicate != null)
-                    {
-                        Append(" WHERE ");
-                        BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
-                    }
-                }
-            }
-
-            if (join.Query.IsEmptyQuery())
-            {
-                BuildJoins(join.Query);
             }
 
             return join;

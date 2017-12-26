@@ -26,7 +26,8 @@ namespace Zarf.Query.ExpressionVisitors
         {
             if (node.Is<QueryExpression>())
             {
-                return VisitQuery(node.As<QueryExpression>());
+                VisitQuery(node.As<QueryExpression>());
+                return node;
             }
 
             if (node.NodeType == ExpressionType.Extension)
@@ -35,6 +36,29 @@ namespace Zarf.Query.ExpressionVisitors
             }
 
             return base.Visit(node);
+        }
+
+        protected override Expression VisitNew(NewExpression newExpression)
+        {
+            for (var i = 0; i < newExpression.Arguments.Count; i++)
+            {
+                if (newExpression.Arguments[i].Is<QueryExpression>())
+                {
+                    VisitQuery(newExpression.Arguments[i].As<QueryExpression>());
+                    continue;
+                }
+
+                var modelExpression = Query.QueryModel.GetModelExpression(newExpression.Members[i].DeclaringType);
+                if (modelExpression == null) continue;
+                var query = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]));
+
+                if (query != null && query.Is<QueryExpression>())
+                {
+                    VisitQuery(query.As<QueryExpression>());
+                }
+            }
+
+            return newExpression;
         }
 
         protected virtual Expression VisitQuery(QueryExpression query)
@@ -46,9 +70,17 @@ namespace Zarf.Query.ExpressionVisitors
 
             Expression joinOn = null;
 
-            foreach (var item in query.Projections.OfType<AggregateExpression>())
+            foreach (var item in query.Projections)
             {
-                var refrencedColumns = new SubQueryAggregateColumnRefrenceExpressionVisitor(query, item).RefrencedColumns;
+                var mapped = query.ExpressionMapper.GetMappedProjection(item);
+                if (!mapped.Is<AggregateExpression>())
+                {
+                    continue;
+                }
+
+                var refrencedColumns = new SubQueryAggregateColumnRefrenceExpressionVisitor
+                    (query, mapped.As<AggregateExpression>()).RefrencedColumns;
+
                 foreach (var column in refrencedColumns)
                 {
                     ColumnExpression cloned = column.Clone();
@@ -65,7 +97,7 @@ namespace Zarf.Query.ExpressionVisitors
             }
 
             Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
-            Query.QueryModel.Model = SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model);
+            Query.QueryModel = new QueryEntityModel(SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model), Query.QueryModel.ModelElementType, Query.QueryModel);
             Query.AddProjectionRange(query.Projections);
             Query.CombineCondtion(joinOn);
 

@@ -47,32 +47,29 @@ namespace Zarf.Query.Expressions
 
         public QueryEntityModel QueryModel { get; set; }
 
-        public IExpressionMapper ProjectionMapper { get; }
-
-        protected HashSet<string> ColumnAliases { get; }
+        public IQueryProjectionMapper ExpressionMapper { get; }
 
         /// <summary>
         /// is part of a prediacte ,such as where (select top 1 1 id from [user])=1
         /// </summary>
         public bool IsPartOfPredicate { get; internal set; }
 
-        public QueryExpression(Type typeOfEntity, IExpressionMapper mapper, string alias = "")
+        public QueryExpression(Type typeOfEntity, IQueryProjectionMapper mapper, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
             Projections = new List<Expression>();
-            ColumnAliases = new HashSet<string>();
             TypeOfExpression = typeOfEntity;
             Table = typeOfEntity.ToTable();
-            ProjectionMapper = mapper;
+            ExpressionMapper = mapper;
             Alias = alias;
         }
 
         public QueryExpression PushDownSubQuery(string alias)
         {
-            var query = new QueryExpression(Type, ProjectionMapper, alias)
+            var query = new QueryExpression(Type, ExpressionMapper, alias)
             {
                 SubQuery = this,
                 Table = null,
@@ -198,8 +195,9 @@ namespace Zarf.Query.Expressions
                 {
                     continue;
                 }
-
-                ProjectionMapper.Map(item, col);
+                //²ð·Ö
+                ExpressionMapper.Map(item, col);
+                ExpressionMapper.Map(col, item);
                 cols.Add(col);
             }
 
@@ -208,7 +206,7 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression Clone()
         {
-            var query = new QueryExpression(TypeOfExpression, ProjectionMapper, Alias);
+            var query = new QueryExpression(TypeOfExpression, ExpressionMapper, Alias);
             query.Orders.AddRange(Orders);
             query.Groups.AddRange(Groups);
             query.Joins.AddRange(query.Joins);

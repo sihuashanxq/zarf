@@ -85,11 +85,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
             if (obj?.NodeType == ExpressionType.Extension)
             {
-                if (obj.Is<QueryExpression>())
-                {
-                    Context.QueryModelMapper.MapQueryModel(methodCall, obj.As<QueryExpression>().QueryModel);
-                }
-
                 Console.WriteLine("MethodCall");
                 return obj;
             }
@@ -157,7 +152,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var method = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, typeOfEntity);
             var call = Expression.Call(null, method, arguments.ToArray());
 
-            return GetCompiledExpression(call);
+            var exp = GetCompiledExpression(call);
+            if (exp.Is<QueryExpression>())
+            {
+                Context.QueryModelMapper.MapQueryModel(methodCall, exp.As<QueryExpression>().QueryModel);
+            }
+
+            return exp;
         }
     }
 

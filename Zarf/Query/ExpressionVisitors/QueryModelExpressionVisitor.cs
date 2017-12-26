@@ -19,7 +19,8 @@ namespace Zarf.Query.ExpressionVisitors
             }
 
             var queryModel = Context.QueryModelMapper.GetQueryModel(node);
-            if (queryModel != null)
+            if (queryModel != null &&
+                queryModel.Model.Type == node.Type)
             {
                 return queryModel.Model;
             }

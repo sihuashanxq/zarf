@@ -1,10 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.Internals
 {
-    public class ExpressionMapper : IExpressionMapper
+    public class ExpressionMapper : IQueryProjectionMapper
     {
         protected ConcurrentDictionary<Expression, Expression> Maps { get; }
 
@@ -13,14 +14,19 @@ namespace Zarf.Query.Internals
             Maps = new ConcurrentDictionary<Expression, Expression>(new ExpressionEqualityComparer());
         }
 
-        public void Map(Expression key, Expression value)
+        public void Map(Expression projection, Expression mappedProjection)
         {
-            Maps.AddOrUpdate(key, value, (k, v) => value);
+            Maps.AddOrUpdate(projection, mappedProjection, (k, v) => mappedProjection);
         }
 
-        public Expression GetMappedExpression(Expression key)
+        public Expression GetMappedProjection(Expression projection)
         {
-            return Maps.TryGetValue(key, out var v) ? v : default(Expression);
+            return Maps.TryGetValue(projection, out var v) ? v : default(Expression);
+        }
+
+        public IEnumerable<KeyValuePair<Expression, Expression>> GetAllProjections()
+        {
+            return Maps.ToArray();
         }
     }
 }

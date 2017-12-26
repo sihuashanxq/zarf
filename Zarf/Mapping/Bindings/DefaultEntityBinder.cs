@@ -113,28 +113,30 @@ namespace Zarf.Mapping.Bindings
 
         public override Expression Visit(Expression expression)
         {
-            var agg = Context.ExpressionMapper.GetMappedExpression(expression);
+            var agg = RootQuery.ExpressionMapper.GetMappedProjection(expression);
+            if (agg != null)
+            {
+                var n = RootQuery.ExpressionMapper.GetMappedProjection(agg);
+                if (n != null)
+                {
+                    agg = n;
+                }
+            }
+
             if (agg == null)
             {
                 return base.Visit(expression);
             }
+
             for (var x = 0; x < RootQuery.Projections.Count; x++)
             {
                 var y = RootQuery.Projections[x];
-                var mapped = Context.ExpressionMapper.GetMappedExpression(agg);
-                if (mapped != null)
+
+                if (new ExpressionEqualityComparer().Equals(y, agg))
                 {
-                    agg = mapped;
+                    var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(agg.Type);
+                    return Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
                 }
-
-                var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(agg.Type);
-                return Expression.Call(null, valueSetter, DataReader, Expression.Constant(0));
-
-                //if (new ExpressionEqualityComparer().Equals(y, agg))
-                //{
-                //    var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(agg.Type);
-                //    return Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
-                //}
             }
 
             return base.Visit(expression);
@@ -160,7 +162,7 @@ namespace Zarf.Mapping.Bindings
 
             for (var x = 0; x < RootQuery.Projections.Count; x++)
             {
-                var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
                 if (mapped != null)
                 {
                     argument = mapped;
@@ -190,7 +192,7 @@ namespace Zarf.Mapping.Bindings
                 var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(model.Model, memBinding.Member));
                 for (var x = 0; x < RootQuery.Projections.Count; x++)
                 {
-                    var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                    var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
                     if (mapped != null)
                     {
                         argument = mapped;
@@ -277,12 +279,20 @@ namespace Zarf.Mapping.Bindings
                 }
                 else
                 {
+                    var modelExpression = RootQuery.QueryModel.GetModelExpression(newExp.Members[i].DeclaringType);
+                    argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
 
+                    if (argument == null)
+                    {
+                        modelExpression = RootQuery.QueryModel.Previous.Model;
+                        argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
+                        if (argument == null || argument.Is<QueryExpression>())
+                            argument = Visit(newExp.Arguments[i]);
+                    }
 
-                    argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(this.RootQuery.QueryModel.Model, newExp.Members[i]));
                     for (var x = 0; x < RootQuery.Projections.Count; x++)
                     {
-                        var mapped = RootQuery.ProjectionMapper.GetMappedExpression(argument);
+                        var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
                         if (mapped != null)
                         {
                             argument = mapped;

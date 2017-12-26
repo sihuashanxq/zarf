@@ -28,19 +28,20 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 throw new NotImplementedException("using IDataQuery<T>");
             }
 
-            return CreateQueryExpression(typeOfEntity);
+            return CreateQueryExpression(typeOfEntity,constant);
         }
 
-        protected virtual QueryExpression CreateQueryExpression(Type typeOfEntity)
+        protected virtual QueryExpression CreateQueryExpression(Type typeOfEntity, Expression constant)
         {
             var parameter = Expression.Parameter(typeOfEntity, Context.Alias.GetNewParameter());
-            var query = new QueryExpression(typeOfEntity, Context.ColumnCaching, Context.Alias.GetNewTable());
+            var query = new QueryExpression(typeOfEntity, Context.ExpressionMapper, Context.Alias.GetNewTable());
             var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(parameter);
 
             query.QueryModel = new QueryEntityModel(modelExpression, typeOfEntity);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+            Context.QueryModelMapper.MapQueryModel(constant, query.QueryModel);
 
             CreateProjectionVisitor(query).Visit(modelExpression);
 
