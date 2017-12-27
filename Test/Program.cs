@@ -38,7 +38,7 @@ namespace Zarf
 
                 var x = db
                     .Users
-                    .Select(item => db.Users.Sum(y => item.Id + y.Age) ).ToList();
+                    .Select(item => new { item.Id, A = db.Users.ToList() }).ToList();
 
 
                 //var x = db
@@ -51,6 +51,22 @@ namespace Zarf
                 //    .Where(item => db.Users.Where(y => item.Id == 5).ToList() != null).ToList();
 
                 Console.ReadKey();
+            }
+        }
+
+        public static IEnumerable<TResult> GroupJoinImpl<TOuter, TInner, TKey, TResult>(
+                IEnumerable<TOuter> outer,
+                IEnumerable<TInner> inner,
+                Func<TOuter, TKey> outerKeySelector,
+                Func<TInner, TKey> innerKeySelector,
+                Func<TOuter, IEnumerable<TInner>, TResult> resultSelector,
+                IEqualityComparer<TKey> comparer)
+        {
+            var lookup = inner.ToLookup(innerKeySelector, comparer);
+            foreach (var outerElement in outer)
+            {
+                var key = outerKeySelector(outerElement);
+                yield return resultSelector(outerElement, lookup[key]);
             }
         }
 

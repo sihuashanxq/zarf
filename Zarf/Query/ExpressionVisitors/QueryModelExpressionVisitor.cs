@@ -1,4 +1,9 @@
 ﻿using System.Linq.Expressions;
+using Zarf.Extensions;
+using System.Collections;
+using System.Linq;
+using System.Collections.Generic;
+using System;
 
 namespace Zarf.Query.ExpressionVisitors
 {
@@ -23,6 +28,13 @@ namespace Zarf.Query.ExpressionVisitors
                 queryModel.Model.Type == node.Type)
             {
                 return queryModel.Model;
+            }
+
+            if (queryModel != null && queryModel.Model.Type == node.Type.GetModelElementType())
+            {
+                var x = Expression.ElementInit(typeof(List<>).MakeGenericType(queryModel.Model.Type).GetMethod("Add"), queryModel.Model);
+                var con = typeof(List<>).MakeGenericType(queryModel.Model.Type).GetConstructor(new Type[0]);
+                return Expression.ListInit(Expression.New(con), x);
             }
 
             return base.Visit(node);

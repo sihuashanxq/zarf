@@ -142,6 +142,17 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
             }
 
+            if (methodCall.Method.Name == "ToList")
+            {
+                var x = GetCompiledExpression(methodCall.Object);
+                if (x.NodeType == ExpressionType.Call)
+                {
+                    x = x.As<MethodCallExpression>().Object;
+                }
+
+                obj = x.As<ConstantExpression>();
+            }
+
             var query = obj.As<ConstantExpression>()?.Value as IQuery;
             var internalQuery = query?.GetInternalQuery();
             var internalQueryExpression = new[] { internalQuery.GetExpression() };

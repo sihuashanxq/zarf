@@ -111,6 +111,20 @@ namespace Zarf.Mapping.Bindings
             return constant;
         }
 
+        protected override Expression VisitListInit(ListInitExpression list)
+        {
+            var inits = new List<ElementInit>();
+
+            foreach (var item in list.Initializers)
+            {
+                var a = Visit(item.Arguments[0]);
+                var e = Expression.ElementInit(item.AddMethod, a);
+                inits.Add(e);
+            }
+
+            return Expression.ListInit(list.NewExpression, inits);
+        }
+
         public override Expression Visit(Expression expression)
         {
             var agg = RootQuery.ExpressionMapper.GetMappedProjection(expression);
@@ -150,7 +164,8 @@ namespace Zarf.Mapping.Bindings
                 var queryModel = Context.QueryModelMapper.GetQueryModel(member.Expression);
                 if (queryModel == null)
                 {
-                    throw new Exception();
+                    queryModel = Context.QueryModelMapper.GetQueryModel(member);
+                    var y = Visit(member.Expression);
                 }
 
                 var modelExpression = queryModel.GetModelExpression(member.Member.DeclaringType);
