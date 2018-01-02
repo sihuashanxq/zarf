@@ -288,15 +288,32 @@ namespace Zarf.Mapping.Bindings
 
                 Expression argument;
 
+                var modelExpression = RootQuery.QueryModel.GetModelExpression(newExp.Members[i].DeclaringType);
+                argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
+
                 if (!newExp.Arguments[i].Type.IsPrimtiveType())
                 {
-                    argument = Visit(newExp.Arguments[i]);
+                    if (argument.Is<QueryExpression>())
+                    {
+                        var a = typeof(EntityEnumerable<>).MakeGenericType(newExp.Arguments[i].Type.GetModelElementType())
+                            .GetConstructor(new[] { typeof(Expression), typeof(IDbContextParts), typeof(IQueryContext) });
+
+                        var listInit = Expression.New(a,
+                            Expression.Constant(argument),
+                            Expression.Constant(Context.DbContextParts),
+                            Expression.Constant(Context));
+
+                        var toList = typeof(Enumerable).GetMethod("ToList")
+                            .MakeGenericMethod(newExp.Arguments[i].Type.GetModelElementType());
+
+                        var first = typeof(Enumerable).GetMethods().FirstOrDefault(item => item.Name == "FirstOrDefault")
+                            .MakeGenericMethod(newExp.Arguments[i].Type.GetModelElementType());
+
+                        argument = Expression.Call(null, first, Expression.Call(null, toList, listInit));
+                    }
                 }
                 else
                 {
-                    var modelExpression = RootQuery.QueryModel.GetModelExpression(newExp.Members[i].DeclaringType);
-                    argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
-
                     if (argument == null)
                     {
                         modelExpression = RootQuery.QueryModel.Previous.Model;

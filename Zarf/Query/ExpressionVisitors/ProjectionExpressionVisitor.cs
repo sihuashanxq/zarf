@@ -21,7 +21,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
         {
-            Visit(memberInit.NewExpression);
+            VisitNew(memberInit.NewExpression);
 
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {

@@ -25,6 +25,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            if (methodCall.Arguments.Count == 1)
+            {
+                return query;
+            }
+
             var predicate = methodCall.Arguments[1];
             var parameter = predicate.GetParameters().FirstOrDefault();
 

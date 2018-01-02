@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings;
+using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionTranslators;
 using Zarf.Query.ExpressionVisitors;
 
@@ -31,7 +32,17 @@ namespace Zarf.Query
         {
             queryContext = queryContext ?? QueryContextFacotry.Factory.CreateContext(dbContextParts: _dbContextParts);
 
-            var compiledQuery = new QueryCompiler(queryContext).Compile(query);
+            Expression compiledQuery = null;
+
+            if (query.Is<QueryExpression>())
+            {
+                compiledQuery = query;
+            }
+            else
+            {
+                compiledQuery = new QueryCompiler(queryContext).Compile(query);
+            }
+
             var entityActivator = new DefaultEntityBinder(queryContext).Bind<TEntity>(new BindingContext(compiledQuery));
             var dataReader = _dbContextParts
                 .EntityCommandFacotry

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
@@ -26,8 +25,11 @@ namespace Zarf.Query.ExpressionVisitors
         {
             if (node.Is<QueryExpression>())
             {
-                VisitQuery(node.As<QueryExpression>());
-                return node;
+                var query = node.As<QueryExpression>();
+                if (!Query.ConstainsQuery(query))
+                {
+                    CombineQuery(query);
+                }
             }
 
             if (node.NodeType == ExpressionType.Extension)
@@ -42,58 +44,55 @@ namespace Zarf.Query.ExpressionVisitors
         {
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                if (newExpression.Arguments[i].Is<QueryExpression>())
-                {
-                    VisitQuery(newExpression.Arguments[i].As<QueryExpression>());
-                    continue;
-                }
-
                 var modelExpression = Query.QueryModel.GetModelExpression(newExpression.Members[i].DeclaringType);
                 if (modelExpression == null) continue;
-                var query = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]));
 
-                if (query != null && query.Is<QueryExpression>())
+                var member = Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]);
+                var query = Context.MemberBindingMapper.GetMapedExpression(member).As<QueryExpression>();
+
+                if (query == null || Query.ConstainsQuery(query)) continue;
+
+                if (!CombineQuery(query))
                 {
-                    VisitQuery(query.As<QueryExpression>());
+                    Context.MemberBindingMapper.Map(member, query);
                 }
             }
 
             return newExpression;
         }
 
-        protected virtual Expression VisitQuery(QueryExpression query)
+        protected virtual bool CombineQuery(QueryExpression query)
         {
-            if (Query.ConstainsQuery(query))
-            {
-                return query;
-            }
-
-            Expression joinOn = null;
+            var joinOn = null as Expression;
+            var combined = false;
 
             foreach (var item in query.Projections)
             {
-                var mapped = query.ExpressionMapper.GetMappedProjection(item);
-                if (!mapped.Is<AggregateExpression>())
+                var mappedProjection = query.ExpressionMapper.GetMappedProjection(item).As<AggregateExpression>();
+                if (mappedProjection == null)
                 {
                     continue;
                 }
 
-                var refrencedColumns = new SubQueryAggregateColumnRefrenceExpressionVisitor
-                    (query, mapped.As<AggregateExpression>()).RefrencedColumns;
+                var subQueryAggreateVisitor = new SubQueryAggregateColumnRefrenceExpressionVisitor(query, mappedProjection);
 
-                foreach (var column in refrencedColumns)
+                foreach (var column in subQueryAggreateVisitor.RefrencedColumns)
                 {
-                    ColumnExpression cloned = column.Clone();
-                    cloned.Query = query;
+                    var col = column.Clone();
 
-                    if (joinOn == null)
-                    {
-                        joinOn = Expression.Equal(column, cloned);
-                        continue;
-                    }
+                    col.Query = query;
 
-                    joinOn = Expression.AndAlso(joinOn, Expression.Equal(column, cloned));
+                    joinOn = joinOn == null
+                        ? Expression.Equal(column, col)
+                        : Expression.AndAlso(joinOn, Expression.Equal(column, col));
                 }
+
+                combined = true;
+            }
+
+            if (!combined)
+            {
+                return false;
             }
 
             Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
@@ -101,7 +100,7 @@ namespace Zarf.Query.ExpressionVisitors
             Query.AddProjectionRange(query.Projections);
             Query.CombineCondtion(joinOn);
 
-            return query;
+            return true;
         }
     }
 

@@ -22,24 +22,21 @@ namespace Zarf
         {
             using (var db = new DbUserContext())
             {
-                //BasicTest(db);
-
-                //d.InnerJoin(db.Users, (u1, a1, u2) => u1.Id == u2.Id)
-                // .InnerJoin(db.Users, (u2, u3, u4, u5) => u2.Id == u3.Id)
-                // .InnerJoin(db.Users, (u2, u3, u4) => u2.Id == u3.Id);
-                //var x = db.Users.Select(item => db.Users.Select(a => db.Users.Count()).FirstOrDefault()).ToList();
-                //BasicTest(db);
-
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
 
-                //var z = db.Users.ToList();
-                //var zz = z.Select(item => z.Sum(xx => item.Id)).ToList();
+                /*
+                    Select 中包含的子查询
+                    1.引用的外层Parameter不能跨作用域
+                    2.外层的Parameter引用只能在最后一个表达式方法中
+                    3.外层的Parameter不能出现多个
+                */
 
-                var x = db
-                    .Users
-                    .Select(item => new { item.Id, A = db.Users.ToList() }).ToList();
-
+                var x = db.Users.Select(item => new
+                {
+                    item.Id,
+                    A = db.Users.Sum(i => i.Id + item.Id)
+                }).ToList();
 
                 //var x = db
                 //    .Users
@@ -51,22 +48,6 @@ namespace Zarf
                 //    .Where(item => db.Users.Where(y => item.Id == 5).ToList() != null).ToList();
 
                 Console.ReadKey();
-            }
-        }
-
-        public static IEnumerable<TResult> GroupJoinImpl<TOuter, TInner, TKey, TResult>(
-                IEnumerable<TOuter> outer,
-                IEnumerable<TInner> inner,
-                Func<TOuter, TKey> outerKeySelector,
-                Func<TInner, TKey> innerKeySelector,
-                Func<TOuter, IEnumerable<TInner>, TResult> resultSelector,
-                IEqualityComparer<TKey> comparer)
-        {
-            var lookup = inner.ToLookup(innerKeySelector, comparer);
-            foreach (var outerElement in outer)
-            {
-                var key = outerKeySelector(outerElement);
-                yield return resultSelector(outerElement, lookup[key]);
             }
         }
 
