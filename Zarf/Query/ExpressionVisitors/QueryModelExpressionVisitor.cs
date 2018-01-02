@@ -30,13 +30,6 @@ namespace Zarf.Query.ExpressionVisitors
                 return queryModel.Model;
             }
 
-            if (queryModel != null && queryModel.Model.Type == node.Type.GetModelElementType())
-            {
-                var x = Expression.ElementInit(typeof(List<>).MakeGenericType(queryModel.Model.Type).GetMethod("Add"), queryModel.Model);
-                var con = typeof(List<>).MakeGenericType(queryModel.Model.Type).GetConstructor(new Type[0]);
-                return Expression.ListInit(Expression.New(con), x);
-            }
-
             return base.Visit(node);
         }
     }

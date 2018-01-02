@@ -38,7 +38,7 @@ namespace Zarf.Mapping.Bindings
 
         public IQueryContext Context { get; }
 
-        protected QueryExpression RootQuery { get; set; }
+        protected QueryExpression Query { get; set; }
 
         protected static long VariablesCounter = 0;
 
@@ -53,43 +53,41 @@ namespace Zarf.Mapping.Bindings
 
         public Delegate Bind<TEntity>(IBindingContext context)
         {
-            var bindQuery = context.Query.As<QueryExpression>()?.QueryModel?.Model ?? context.Query;
-            if (bindQuery.Is<LambdaExpression>())
+            var model = context.Query.As<QueryExpression>()?.QueryModel?.Model ?? context.Query;
+            if (model.Is<LambdaExpression>())
             {
-                bindQuery = bindQuery.As<LambdaExpression>().Body;
+                model = model.As<LambdaExpression>().Body;
             }
 
             var query = context.Query;
             if (query.Is<AggregateExpression>())
             {
-                RootQuery = query.As<AggregateExpression>()
+                Query = query.As<AggregateExpression>()
                     ?.KeySelector?.As<ColumnExpression>()
                     ?.Query.As<QueryExpression>();
             }
             else if (query.Is<AllExpression>())
             {
-                RootQuery = query.As<AllExpression>().Query.As<QueryExpression>();
+                Query = query.As<AllExpression>().Query.As<QueryExpression>();
             }
             else if (query.Is<AnyExpression>())
             {
-                RootQuery = query.As<AnyExpression>().Query.As<QueryExpression>();
+                Query = query.As<AnyExpression>().Query.As<QueryExpression>();
             }
             else
             {
-                RootQuery = query.As<QueryExpression>();
+                Query = query.As<QueryExpression>();
             }
 
-            InitializeQueryColumns(RootQuery);
-
-            var body = Visit(bindQuery);
-            return Expression.Lambda(body, DataReader).Compile();
+            var modelCreation = Visit(model);
+            return Expression.Lambda(modelCreation, DataReader).Compile();
         }
 
         protected override Expression VisitConstant(ConstantExpression constant)
         {
-            for (var x = 0; x < RootQuery.Projections.Count; x++)
+            for (var x = 0; x < Query.Projections.Count; x++)
             {
-                var y = RootQuery.Projections[x];
+                var y = Query.Projections[x];
 
                 if (y.Is<AggregateExpression>())
                 {
@@ -111,26 +109,12 @@ namespace Zarf.Mapping.Bindings
             return constant;
         }
 
-        protected override Expression VisitListInit(ListInitExpression list)
-        {
-            var inits = new List<ElementInit>();
-
-            foreach (var item in list.Initializers)
-            {
-                var a = Visit(item.Arguments[0]);
-                var e = Expression.ElementInit(item.AddMethod, a);
-                inits.Add(e);
-            }
-
-            return Expression.ListInit(list.NewExpression, inits);
-        }
-
         public override Expression Visit(Expression expression)
         {
-            var agg = RootQuery.ExpressionMapper.GetMappedProjection(expression);
+            var agg = Query.ExpressionMapper.GetMappedProjection(expression);
             if (agg != null)
             {
-                var n = RootQuery.ExpressionMapper.GetMappedProjection(agg);
+                var n = Query.ExpressionMapper.GetMappedProjection(agg);
                 if (n != null)
                 {
                     agg = n;
@@ -142,9 +126,9 @@ namespace Zarf.Mapping.Bindings
                 return base.Visit(expression);
             }
 
-            for (var x = 0; x < RootQuery.Projections.Count; x++)
+            for (var x = 0; x < Query.Projections.Count; x++)
             {
-                var y = RootQuery.Projections[x];
+                var y = Query.Projections[x];
 
                 if (new ExpressionEqualityComparer().Equals(y, agg))
                 {
@@ -175,15 +159,15 @@ namespace Zarf.Mapping.Bindings
                 }
             }
 
-            for (var x = 0; x < RootQuery.Projections.Count; x++)
+            for (var x = 0; x < Query.Projections.Count; x++)
             {
-                var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
+                var mapped = Query.ExpressionMapper.GetMappedProjection(argument);
                 if (mapped != null)
                 {
                     argument = mapped;
                 }
 
-                var y = RootQuery.Projections[x];
+                var y = Query.Projections[x];
 
                 if (new ExpressionEqualityComparer().Equals(y, argument))
                 {
@@ -205,22 +189,21 @@ namespace Zarf.Mapping.Bindings
                 var par = memBinding.Expression.As<MemberExpression>().Expression;
                 var model = Context.QueryModelMapper.GetQueryModel(par);
                 var argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(model.Model, memBinding.Member));
-                for (var x = 0; x < RootQuery.Projections.Count; x++)
+                for (var x = 0; x < Query.Projections.Count; x++)
                 {
-                    var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
+                    var mapped = Query.ExpressionMapper.GetMappedProjection(argument);
                     if (mapped != null)
                     {
                         argument = mapped;
                     }
 
-                    if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                    if (new ExpressionEqualityComparer().Equals(Query.Projections[x], argument))
                     {
                         var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
                         argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
                         break;
                     }
                 }
-
 
                 memberExpressions.Add(new MemberExpressionPair(memBinding.Member, argument));
             }
@@ -230,11 +213,6 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitExtension(Expression node)
         {
-            if (node.Is<QueryExpression>())
-            {
-                return BindQueryExpression(node.As<QueryExpression>());
-            }
-
             var col = node;
             if (node.Is<AggregateExpression>())
             {
@@ -288,7 +266,7 @@ namespace Zarf.Mapping.Bindings
 
                 Expression argument;
 
-                var modelExpression = RootQuery.QueryModel.GetModelExpression(newExp.Members[i].DeclaringType);
+                var modelExpression = Query.QueryModel.GetModelExpression(newExp.Members[i].DeclaringType);
                 argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
 
                 if (!newExp.Arguments[i].Type.IsPrimtiveType())
@@ -316,21 +294,21 @@ namespace Zarf.Mapping.Bindings
                 {
                     if (argument == null)
                     {
-                        modelExpression = RootQuery.QueryModel.Previous.Model;
+                        modelExpression = Query.QueryModel.Previous.Model;
                         argument = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, newExp.Members[i]));
                         if (argument == null || argument.Is<QueryExpression>())
                             argument = Visit(newExp.Arguments[i]);
                     }
 
-                    for (var x = 0; x < RootQuery.Projections.Count; x++)
+                    for (var x = 0; x < Query.Projections.Count; x++)
                     {
-                        var mapped = RootQuery.ExpressionMapper.GetMappedProjection(argument);
+                        var mapped = Query.ExpressionMapper.GetMappedProjection(argument);
                         if (mapped != null)
                         {
                             argument = mapped;
                         }
 
-                        if (new ExpressionEqualityComparer().Equals(RootQuery.Projections[x], argument))
+                        if (new ExpressionEqualityComparer().Equals(Query.Projections[x], argument))
                         {
                             var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(argument.Type);
                             argument = Expression.Call(null, valueSetter, DataReader, Expression.Constant(x));
@@ -377,69 +355,9 @@ namespace Zarf.Mapping.Bindings
             return eNewBlock;
         }
 
-        protected void InitializeQueryColumns(QueryExpression query)
-        {
-            foreach (var item in query.Projections)
-            {
-
-            }
-        }
-
         protected Expression BindQueryExpression(QueryExpression query)
         {
-            if (query == null)
-            {
-                return null;
-            }
-
-            var eType = ReflectionExtensions.GetModelElementType(query.TypeOfExpression);
-            if (ReflectionUtil.SimpleTypes.Contains(eType))
-            {
-                //return Visit(query.Columns.FirstOrDefault().Expression);
-            }
-
-            var typeDescriptor = TypeDescriptorCacheFactory.Factory.Create(eType);
-            if (typeDescriptor.Constructor.GetParameters().Length == 0)
-            {
-                var memberExpressions = new List<MemberExpressionPair>();
-                var eNewBlock = CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type);
-
-                foreach (var item in typeDescriptor.MemberDescriptors)
-                {
-                    var mappedExpression = FindMemberRelatedExpression(query, item.Member);
-                    if (mappedExpression != null)
-                    {
-                        memberExpressions.Add(new MemberExpressionPair(item.Member, mappedExpression));
-                    }
-                }
-
-                foreach (var item in typeDescriptor.Type.GetProperties().Where(item => item.SetMethod != null))
-                {
-                    if (NavigationContext.IsPropertyNavigation(item))
-                    {
-                        memberExpressions.Add(new MemberExpressionPair(item, null));
-                    }
-                }
-
-                return BindMembers(eNewBlock, memberExpressions);
-            }
-            else
-            {
-                var activatingArgs = new List<Expression>();
-                foreach (var item in typeDescriptor.MemberDescriptors)
-                {
-                    if (!ReflectionUtil.SimpleTypes.Contains(item.MemberType))
-                    {
-                        query.ChangeTypeOfExpression(item.MemberType);
-                        activatingArgs.Add(BindQueryExpression(query));
-                        query.ChangeTypeOfExpression(eType);
-                    }
-                    else
-                        activatingArgs.Add(Visit(FindMemberRelatedExpression(query, item.Member)));
-                }
-
-                return CreateEntityNewExpressionBlock(typeDescriptor.Constructor, typeDescriptor.Type, activatingArgs);
-            }
+            return null;
         }
 
         public BlockExpression CreateIncludePropertyBinding(MemberInfo memberInfo, ParameterExpression eObject)
@@ -539,11 +457,6 @@ namespace Zarf.Mapping.Bindings
             propertyValues.Add(endOfBlock);
 
             return Expression.Block(propertyDeclares, propertyValues.ToArray());
-        }
-
-        public Expression FindMemberRelatedExpression(QueryExpression container, MemberInfo member)
-        {
-            return null;
         }
 
         public static object GetOrSetMemberValue(IMemberValueCache valueCache, MemberInfo member, object value)

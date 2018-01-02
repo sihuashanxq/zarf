@@ -8,12 +8,12 @@ namespace Zarf.Query.ExpressionVisitors
 {
     public class AggreateExpressionVisitor : QueryCompiler
     {
-        public QueryExpression Query { get; }
-
         /// <summary>
         /// 已被处理的查询
         /// </summary>
         protected List<QueryExpression> HandledQueries { get; }
+
+        public QueryExpression Query { get; }
 
         public AggreateExpressionVisitor(IQueryContext context, QueryExpression query) : base(context)
         {
@@ -61,14 +61,14 @@ namespace Zarf.Query.ExpressionVisitors
                 return expression;
             }
 
-            var cloned = query.Clone();
+            var cQuery = query.Clone();
 
             Query.AddProjection(expression);
             Query.Groups.Add(new GroupExpression(new[] { expression.As<ColumnExpression>() }));
 
             if (!HandledQueries.Contains(query))
             {
-                Query.AddJoin(new JoinExpression(cloned, null, JoinType.Cross));
+                Query.AddJoin(new JoinExpression(cQuery, null, JoinType.Cross));
                 HandledQueries.Add(query);
             }
 
