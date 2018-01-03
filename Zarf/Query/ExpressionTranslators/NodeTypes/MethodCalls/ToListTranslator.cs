@@ -31,7 +31,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return methodCall;
             }
 
-            return GetCompiledExpression(methodCall.Arguments[0]);
+            var compildNode = GetCompiledExpression(methodCall.Arguments[0]);
+            if (compildNode is QueryExpression query)
+            {
+                query.QueryModel.ModeType = methodCall.Method.ReturnType;
+            }
+
+            return compildNode;
         }
     }
 }

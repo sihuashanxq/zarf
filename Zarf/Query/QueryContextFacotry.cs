@@ -19,7 +19,7 @@ namespace Zarf.Query
                     new PropertyNavigationContext(),
                     new QueryMapper(),
                     new AliasGenerator(),
-                    new MemberValueCache(),
+                    new SubQueryValueCache(),
                     dbContextParts
                 );
         }
@@ -29,7 +29,7 @@ namespace Zarf.Query
             IPropertyNavigationContext navigationContext = null,
             IQueryMapper sourceProvider = null,
             IAliasGenerator aliasGenerator = null,
-            IMemberValueCache memValue = null,
+            ISubQueryValueCache memValue = null,
             IDbContextParts dbcontextParts = null
             )
         {
@@ -38,7 +38,7 @@ namespace Zarf.Query
                 navigationContext ?? new PropertyNavigationContext(),
                 sourceProvider ?? new QueryMapper(),
                 aliasGenerator ?? new AliasGenerator(),
-                memValue ?? new MemberValueCache(),
+                memValue ?? new SubQueryValueCache(),
                 dbcontextParts
             );
         }

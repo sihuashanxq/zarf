@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var modelElementType = methodCall.Method.ReturnType.GetModelElementType();
+            var modelType = methodCall.Method.ReturnType;
             var parameters = methodCall.Arguments[1].GetParameters().ToList();
 
             for (var i = 0; i < parameters.Count; i++)
@@ -52,7 +52,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(modelExpression, modelElementType, query.QueryModel);
+            query.QueryModel = new QueryEntityModel(query,modelExpression, modelType, query.QueryModel);
 
             Context.QueryModelMapper.MapQueryModel(parameters[0], query.QueryModel);
 

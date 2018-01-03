@@ -52,7 +52,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(modelExpression, methodCall.Method.ReturnType, query.QueryModel);
+            query.QueryModel = new QueryEntityModel(query,modelExpression, methodCall.Method.ReturnType, query.QueryModel);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);

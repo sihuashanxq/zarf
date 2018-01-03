@@ -2,21 +2,27 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Entities
 {
     public class QueryEntityModel
     {
+        public QueryExpression Query { get; set; }
+
+        public Type ModeType { get; set; }
+
         public Expression Model { get; set; }
 
-        public Type ModelElementType { get; set; }
+        public Type ModelElementType => ModeType.GetModelElementType();
 
         public QueryEntityModel Previous { get; set; }
 
-        public QueryEntityModel(Expression model, Type elementType, QueryEntityModel previous = null)
+        public QueryEntityModel(QueryExpression query, Expression model, Type modelType, QueryEntityModel previous = null)
         {
+            Query = query;
             Model = model.UnWrap();
-            ModelElementType = elementType;
+            ModeType = modelType;
             Previous = previous;
 
             if (Model.NodeType == ExpressionType.Lambda)
@@ -53,6 +59,16 @@ namespace Zarf.Entities
             }
 
             return null;
+        }
+
+        public QueryEntityModel FindQueryModel(Expression modelExpression)
+        {
+            if (Model == modelExpression)
+            {
+                return this;
+            }
+
+            return Previous?.FindQueryModel(modelExpression);
         }
     }
 }

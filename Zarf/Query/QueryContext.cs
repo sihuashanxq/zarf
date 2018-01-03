@@ -6,23 +6,24 @@ using Zarf.Query.Expressions;
 using Zarf.Core;
 using System.Linq.Expressions;
 using Zarf.Query.Internals;
+using Zarf.Entities;
 
 namespace Zarf.Query
 {
-    public interface IMemberValueCache
+    public interface ISubQueryValueCache
     {
-        void SetValue(MemberInfo mem, object value);
+        void SetValue(QueryEntityModel queryModel, object value);
 
-        object GetValue(MemberInfo mem);
+        object GetValue(QueryEntityModel queryModel);
     }
 
-    public class MemberValueCache : IMemberValueCache
+    public class SubQueryValueCache : ISubQueryValueCache
     {
-        private Dictionary<MemberInfo, object> _memValues = new Dictionary<MemberInfo, object>();
+        private Dictionary<QueryEntityModel, object> _memValues = new Dictionary<QueryEntityModel, object>();
 
-        public object GetValue(MemberInfo mem)
+        public object GetValue(QueryEntityModel queryModel)
         {
-            if (_memValues.TryGetValue(mem, out object value))
+            if (_memValues.TryGetValue(queryModel, out object value))
             {
                 return value;
             }
@@ -30,9 +31,9 @@ namespace Zarf.Query
             return null;
         }
 
-        public void SetValue(MemberInfo mem, object value)
+        public void SetValue(QueryEntityModel queryModel, object value)
         {
-            _memValues[mem] = value;
+            _memValues[queryModel] = value;
         }
     }
 
@@ -46,7 +47,7 @@ namespace Zarf.Query
 
         public IAliasGenerator Alias { get; }
 
-        public IMemberValueCache MemberValueCache { get; }
+        public ISubQueryValueCache MemberValueCache { get; }
 
         public IDbContextParts DbContextParts { get; }
 
@@ -65,7 +66,7 @@ namespace Zarf.Query
             IPropertyNavigationContext navigationContext,
             IQueryMapper sourceProvider,
             IAliasGenerator aliasGenerator,
-            IMemberValueCache memValueCache,
+            ISubQueryValueCache memValueCache,
             IDbContextParts dbContextParts
             )
         {

@@ -174,4 +174,28 @@ namespace Zarf
             throw new Exception($"can not find {givenMethod.Name}the mapped Queryable Method");
         }
     }
+
+    public static class QueryEnumerable
+    {
+        public static MethodInfo ToListMethod = typeof(QueryEnumerable).GetMethod(nameof(ToList));
+
+        public static MethodInfo FirstOrDefaultMethod = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault));
+
+        public static MethodInfo FirstOrDefault2Method = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault2));
+
+        public static List<TSource> ToList<TSource>(IEnumerable<TSource> source)
+        {
+            return source.ToList();
+        }
+
+        public static TSource FirstOrDefault<TSource>(IEnumerable<TSource> source)
+        {
+            return source.FirstOrDefault();
+        }
+
+        public static TSource FirstOrDefault2<TSource>(IEnumerable<TSource> source, Func<TSource, bool> predicate)
+        {
+            return source.FirstOrDefault(predicate);
+        }
+    }
 }

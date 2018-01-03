@@ -53,7 +53,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             query.Projections.Clear();
             query.Projections.Add(Utils.ExpressionOne);
-            query.QueryModel = new QueryEntityModel(methodCall.Arguments[1].UnWrap().As<LambdaExpression>().Body, typeof(bool));
+            query.QueryModel = new QueryEntityModel(query,methodCall.Arguments[1], typeof(bool));
             return new AllExpression(query);
         }
     }

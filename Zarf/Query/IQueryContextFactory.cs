@@ -11,7 +11,7 @@ namespace Zarf.Query
             IPropertyNavigationContext navigationContext = null,
             IQueryMapper sourceProvider = null,
             IAliasGenerator generator = null,
-            IMemberValueCache memValue = null,
+            ISubQueryValueCache memValue = null,
             IDbContextParts dbContextParts = null);
     }
 }

@@ -18,7 +18,7 @@ namespace Zarf.Query
 
         IAliasGenerator Alias { get; }
 
-        IMemberValueCache MemberValueCache { get; }
+        ISubQueryValueCache MemberValueCache { get; }
 
         IDbContextParts DbContextParts { get; }
 

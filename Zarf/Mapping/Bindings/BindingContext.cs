@@ -8,10 +8,6 @@ namespace Zarf.Mapping.Bindings
     {
         public Expression Query { get; }
 
-        public IQueryColumnOrdinalMapper MappingProvider { get; set; }
-
-        public EntityCreationHandleProvider CreationHandleProvider { get; set; }
-
         public BindingContext(Expression query)
         {
             Query = query;

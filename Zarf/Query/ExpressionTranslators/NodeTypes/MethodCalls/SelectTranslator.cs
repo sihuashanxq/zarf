@@ -30,13 +30,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var modelElementType = methodCall.Method.ReturnType.GetModelElementType();
+            var modelType = methodCall.Method.ReturnType;
             var parameter = methodCall.Arguments[1].GetParameters().FirstOrDefault();
             var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(methodCall.Arguments[1]);
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(modelExpression, modelElementType, query.QueryModel);
+            query.QueryModel = new QueryEntityModel(query,modelExpression, modelType, query.QueryModel);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);

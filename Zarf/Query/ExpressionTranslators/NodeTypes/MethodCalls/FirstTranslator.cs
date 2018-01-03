@@ -30,6 +30,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             query.Limit = 1;
 
+            query.QueryModel.ModeType = methodCall.Method.ReturnType;
+
             return query;
         }
     }
