@@ -38,41 +38,36 @@ namespace Zarf.Query.ExpressionVisitors
         {
             var expression = base.Visit(mem);
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
+            var query = queryModel.Query ?? expression.As<ColumnExpression>()?.Query;
 
-            QueryExpression query = null;
-
-            if (queryModel != null)
+            if (query != null && !Query.ConstainsQuery(query))
             {
-                var modelExpression = queryModel.GetModelExpression(mem.Expression.Type.GetModelElementType());
-                var refrence = Context.MemberBindingMapper.GetMapedExpression(Expression.MakeMemberAccess(modelExpression, mem.Member));
-                if (refrence != null)
+                var cQuery = query.Clone();
+
+                if (!HandledQueries.Contains(query))
                 {
-                    query = Context.ProjectionOwner.GetQuery(refrence);
+                    Query.AddJoin(new JoinExpression(cQuery, null, JoinType.Cross));
+                    HandledQueries.Add(query);
+                }
+
+                //聚合函数不能有别名
+                if (expression is ColumnExpression column)
+                {
+                    Query.AddProjection(column);
+                    Query.Groups.Add(new GroupExpression(new[] { column }));
+                    return column;
+                }
+
+                //聚合函数不能有别名
+                if (expression is AliasExpression alias)
+                {
+                    Query.AddProjection(alias.Expression);
+                    Query.Groups.Add(new GroupExpression(new[] { alias.Expression.As<ColumnExpression>() }));
+                    return alias.Expression;
                 }
             }
 
-            if (query == null)
-            {
-                query = expression.As<ColumnExpression>()?.Query;
-            }
-
-            if (query == null || Query.ConstainsQuery(query))
-            {
-                return expression;
-            }
-
-            var cQuery = query.Clone();
-
-            Query.AddProjection(expression);
-            Query.Groups.Add(new GroupExpression(new[] { expression.As<ColumnExpression>() }));
-
-            if (!HandledQueries.Contains(query))
-            {
-                Query.AddJoin(new JoinExpression(cQuery, null, JoinType.Cross));
-                HandledQueries.Add(query);
-            }
-
-            return expression;
+            return expression.As<AliasExpression>()?.Expression ?? expression;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         {
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
             var modelExpression = queryModel?.GetModelExpression(mem.Member.DeclaringType);
-            var x = mem.Member.DeclaringType;
+
             if (modelExpression != null)
             {
                 var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
@@ -39,10 +39,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                             owner = owner.Outer;
                         }
 
-                        if (owner.QueryModel == queryModel)
-                        {
-                            return alias.Expression;
-                        }
+                        //if (owner.QueryModel == queryModel)
+                        //{
+                        //    return alias.Expression;
+                        //}
 
                         if (owner.QueryModel.ContainsModel(queryModel.Model))
                         {

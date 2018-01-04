@@ -31,17 +31,10 @@ namespace Zarf
                     2.外层的Parameter引用只能在最后一个表达式方法中
                     3.外层的Parameter不能出现多个
                 */
-                var y = db.Users.Select(item =>
-                new
-                {
-                    item.Id,
-                    B = db.Users.ToList(),
-                    C = db.Users.Sum(nnn => nnn.Id + item.Age)
-                }).ToList();
 
-                //var x = db
-                //    .Users
-                //    .Select(item => db.Users.Sum(y => item.Id + y.Age)).ToList();
+                var x = db
+                    .Users
+                    .Select(item => db.Users.Sum(y => item.Id + y.Age)).ToList();
 
                 //var x = db
                 //    .Users

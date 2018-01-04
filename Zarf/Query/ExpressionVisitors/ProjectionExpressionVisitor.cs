@@ -120,6 +120,21 @@ namespace Zarf.Query.ExpressionVisitors
                 return VisitMemberInit(visitedNode.As<MemberInitExpression>());
             }
 
+            if (visitedNode is ColumnExpression)
+            {
+                Query.AddProjection(visitedNode);
+            }
+
+            if(visitedNode is AggregateExpression)
+            {
+                Query.AddProjection(visitedNode);
+            }
+
+            if(visitedNode is AliasExpression)
+            {
+                Query.AddProjection(visitedNode);
+            }
+
             return visitedNode;
         }
     }
