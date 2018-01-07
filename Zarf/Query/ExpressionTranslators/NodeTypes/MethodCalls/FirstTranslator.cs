@@ -28,9 +28,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Utils.CheckNull(query, "query");
 
-            query.Limit = 1;
+            if (query.QueryModel.RefrencedColumns.Count == 0)
+            {
+                //else 内存过滤
+                query.Limit = 1;
+            }
 
-            query.QueryModel.ModeType = methodCall.Method.ReturnType;
+            query.QueryModel.ModelType = methodCall.Method.ReturnType;
 
             return query;
         }

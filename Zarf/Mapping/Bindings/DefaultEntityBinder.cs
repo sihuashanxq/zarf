@@ -81,7 +81,9 @@ namespace Zarf.Mapping.Bindings
         {
             //子查询
             var queryModel = Context.QueryModelMapper.GetQueryModel(expression);
-            if (queryModel?.Model?.Type?.IsCollection() ?? false)
+            if (queryModel != null &&
+                queryModel != Query.QueryModel &&
+                queryModel.ModelType.IsCollection())
             {
                 return CreateSubQueryModel(queryModel);
             }
@@ -89,13 +91,18 @@ namespace Zarf.Mapping.Bindings
             var tryGetMaped = Query.ExpressionMapper.GetMappedProjection(expression);
             if (tryGetMaped != null)
             {
-                var mapped2 = Query.ExpressionMapper.GetMappedProjection(tryGetMaped);
-                if (mapped2 != null)
+                var bind = BindQueryProjection(tryGetMaped);
+                if (bind == null)
                 {
-                    tryGetMaped = mapped2;
+                    var mapped2 = Query.ExpressionMapper.GetMappedProjection(tryGetMaped);
+                    if (mapped2 != null)
+                    {
+                        tryGetMaped = mapped2;
+                    }
+
+                    bind = BindQueryProjection(tryGetMaped);
                 }
 
-                var bind = BindQueryProjection(tryGetMaped);
                 if (bind == null)
                 {
                     throw new Exception();
@@ -105,6 +112,16 @@ namespace Zarf.Mapping.Bindings
             }
 
             return base.Visit(expression);
+        }
+
+        protected override Expression VisitMethodCall(MethodCallExpression methodCall)
+        {
+            if (methodCall.Arguments.Count == 0)
+            {
+                return Visit(methodCall.Object);
+            }
+
+            return base.VisitMethodCall(methodCall);
         }
 
         protected override Expression VisitConstant(ConstantExpression constant)
@@ -199,10 +216,9 @@ namespace Zarf.Mapping.Bindings
         {
             while (queryModel != null)
             {
-                if (member.DeclaringType != queryModel.ModelElementType)
+                if (queryModel.Model.Type != member.DeclaringType)
                 {
-                    queryModel = queryModel?.Previous;
-                    continue;
+                    queryModel = queryModel.Previous;
                 }
 
                 var memberExpression = Expression.MakeMemberAccess(queryModel.Model, member);
@@ -247,7 +263,7 @@ namespace Zarf.Mapping.Bindings
         protected virtual Expression BindMember(Expression modelTemplate, MemberInfo member, Expression memberExpression)
         {
             var queryModel = Query.QueryModel.FindQueryModel(modelTemplate);
-            var binding = GetMemberBindingExpression(queryModel, member);
+            var binding = memberExpression.NodeType == ExpressionType.Extension ? memberExpression : GetMemberBindingExpression(queryModel, member);
 
             if (!memberExpression.Type.IsPrimtiveType())
             {
@@ -273,34 +289,82 @@ namespace Zarf.Mapping.Bindings
 
         protected virtual Expression CreateSubQueryModel(QueryEntityModel queryModel)
         {
-            var modelType = typeof(EntityPropertyEnumerable<>).MakeGenericType(queryModel.ModelElementType);
+            var modelElementType = queryModel.ModelElementType;
+            var modelType = typeof(EntityPropertyEnumerable<>).MakeGenericType(modelElementType);
             var modelEleNew = Expression.New(
                         modelType.GetConstructor(new Type[] { typeof(Expression), typeof(IQueryContext), typeof(IDbContextParts) }),
                         Expression.Constant(queryModel.Query),
                         Expression.Constant(Context),
                         Expression.Constant(Context.DbContextParts));
 
-            var model = Expression.Convert(Expression.Call(
+            Expression model = Expression.Convert(Expression.Call(
                     null,
                     GetOrSetMemberValueMethod,
                     Expression.Constant(Context.MemberValueCache),
                     Expression.Constant(queryModel),
                     modelEleNew),
-                    typeof(IEnumerable<>).MakeGenericType(queryModel.ModelElementType)
+                    typeof(IEnumerable<>).MakeGenericType(modelElementType)
                 );
 
-            if (queryModel.ModelElementType == queryModel.ModeType)
+            model = FilterSubQuery(queryModel, model);
+
+            model = Expression.Call(
+                null,
+                QueryEnumerable.ToListMethod.MakeGenericMethod(modelElementType),
+                model);
+
+            if (modelElementType == queryModel.ModelType)
             {
                 return Expression.Call(
                     null,
-                    QueryEnumerable.FirstOrDefaultMethod.MakeGenericMethod(queryModel.ModelElementType),
+                    QueryEnumerable.FirstOrDefaultMethod.MakeGenericMethod(modelElementType),
                     model);
             }
 
+            return model;
+        }
+
+        protected virtual Expression FilterSubQuery(QueryEntityModel subQueryModel, Expression subQueryObj)
+        {
+            if (subQueryModel.RefrencedColumns.Count == 0)
+            {
+                return subQueryObj;
+            }
+
+            var propertyModel = Expression.Parameter(subQueryModel.RefrencedColumns.FirstOrDefault().Member.DeclaringType);
+            var predicate = null as Expression;
+
+            foreach (var item in subQueryModel.RefrencedColumns)
+            {
+                if (!Query.ConstainsQuery(item.RefrencedColumn.Query))
+                {
+                    continue;
+                }
+
+                var projection = BindQueryProjection(item.RefrencedColumn);
+                if (projection == null)
+                {
+                    throw new Exception("error!");
+                }
+
+                var relation = Expression.Equal(projection, Expression.MakeMemberAccess(propertyModel, item.Member));
+                if (predicate == null)
+                {
+                    predicate = relation;
+                }
+                else
+                {
+                    predicate = Expression.AndAlso(relation, predicate);
+                }
+            }
+
+            var convert = typeof(Enumerable).GetMethod("OfType").MakeGenericMethod(propertyModel.Type);
+
             return Expression.Call(
                 null,
-                QueryEnumerable.ToListMethod.MakeGenericMethod(queryModel.ModelElementType),
-                model);
+                ReflectionUtil.SubQueryWhere.MakeGenericMethod(propertyModel.Type),
+                Expression.Call(null, convert, subQueryObj),
+                Expression.Lambda(predicate, propertyModel));
         }
 
         /// <summary>

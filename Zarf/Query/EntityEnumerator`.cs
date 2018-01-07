@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
 
 namespace Zarf.Query
 {
@@ -28,44 +27,6 @@ namespace Zarf.Query
         {
             ObjectActivator = activator;
             _dbDataReader = dataReader;
-
-            //while (MoveNext())
-            //{
-            //      有一个地方需要记录哪些Type 哪些Member需要根据什么进行分组
-            //}
-
-            //var typeOfEnitty = typeof(TEntity);
-            //var id = typeOfEnitty.GetProperty("Id");
-            //var a = typeOfEnitty.GetProperty("A");
-            //object lastIdV = null;
-            //IList lastAv = null;
-
-            //var list = new List<TEntity>();
-
-            //Dictionary<object, IList> ids = new Dictionary<object, IList>();
-
-            //foreach (var item in _cacheItems)
-            //{
-            //    var idV = id.GetValue(item);
-            //    var aV = a.GetValue(item) as IList;
-
-            //    if (ids.ContainsKey(idV))
-            //    {
-            //        lastAv = ids[idV];
-            //        foreach (var x in aV)
-            //        {
-            //            lastAv.Add(x);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        ids[idV] = aV;
-            //        list.Add(item);
-            //    }
-            //}
-
-            //_cacheItems = list;
-            //_currentIndex = 0;
         }
 
         public bool MoveNext()

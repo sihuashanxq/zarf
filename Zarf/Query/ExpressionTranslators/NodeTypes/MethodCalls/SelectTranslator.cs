@@ -19,7 +19,8 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SelectTranslator()
         {
-            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select")
+                .Concat(new[] { QueryQueryable.SelectMethod });
         }
 
         public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -36,7 +37,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(query,modelExpression, modelType, query.QueryModel);
+            query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);

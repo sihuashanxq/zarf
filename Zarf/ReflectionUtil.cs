@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
+using Zarf.Extensions;
 
 namespace Zarf
 {
@@ -124,16 +126,21 @@ namespace Zarf
             ThenInclude = typeof(QueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
-        public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> predicate)
+        public static IEnumerable<TEntity> Where<TEntity>(this IEnumerable<TEntity> entities, Func<TEntity, bool> predicate)
         {
-            foreach (var entity in entities)
-            {
-                if (predicate(oEntity, entity))
-                {
-                    yield return entity;
-                }
-            }
+            return Enumerable.Where(entities, predicate);
         }
+
+        //public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> predicate)
+        //{
+        //    foreach (var entity in entities)
+        //    {
+        //        if (predicate(oEntity, entity))
+        //        {
+        //            yield return entity;
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Get The  Method Of <see cref="Query{TEntity}"/> 
@@ -145,6 +152,16 @@ namespace Zarf
         {
             var querableCandidates = QueryableMethods.Where(item => item.Name == givenMethod.Name);
             var givenParameters = givenMethod.GetParameters();
+
+            if (givenMethod.Name == "Select")
+            {
+                return QueryQueryable.SelectMethod.MakeGenericMethod(giveType, givenMethod.ReturnType.GetModelElementType());
+            }
+
+            if (givenMethod.Name == "Where")
+            {
+                return QueryQueryable.WhereMethod.MakeGenericMethod(giveType);
+            }
 
             foreach (var item in querableCandidates.Concat(typeof(Enumerable).GetMethods().Where(item => item.Name == "ToList")))
             {
@@ -172,6 +189,23 @@ namespace Zarf
             }
 
             throw new Exception($"can not find {givenMethod.Name}the mapped Queryable Method");
+        }
+    }
+
+    public static class QueryQueryable
+    {
+        public static MethodInfo SelectMethod = typeof(QueryQueryable).GetMethod(nameof(Select));
+
+        public static MethodInfo WhereMethod = typeof(QueryQueryable).GetMethod(nameof(Where));
+
+        public static IQueryable<TResult> Select<TEntity, TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TResult>> selector)
+        {
+            return Queryable.Select(query, selector);
+        }
+
+        public static IQueryable<TEntity> Where<TEntity>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate)
+        {
+            return Queryable.Where(query, predicate);
         }
     }
 

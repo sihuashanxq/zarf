@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
@@ -6,25 +7,34 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Entities
 {
+    public class QueryEntityModelRefrenceOuterColumn
+    {
+        public MemberInfo Member { get; set; }
+
+        public ColumnExpression RefrencedColumn { get; set; }
+    }
+
     public class QueryEntityModel
     {
         public QueryExpression Query { get; set; }
 
-        public Type ModeType { get; set; }
+        public Type ModelType { get; set; }
 
         public Expression Model { get; set; }
 
-        public Type ModelElementType => ModeType.GetModelElementType();
+        public Type ModelElementType => ModelType.GetModelElementType();
 
         public QueryEntityModel Previous { get; set; }
+
+        public List<QueryEntityModelRefrenceOuterColumn> RefrencedColumns { get; }
 
         public QueryEntityModel(QueryExpression query, Expression model, Type modelType, QueryEntityModel previous = null)
         {
             Query = query;
             Model = model.UnWrap();
-            ModeType = modelType;
+            ModelType = modelType;
             Previous = previous;
-
+            RefrencedColumns = new List<QueryEntityModelRefrenceOuterColumn>();
             if (Model.NodeType == ExpressionType.Lambda)
             {
                 Model = Model.As<LambdaExpression>().Body;

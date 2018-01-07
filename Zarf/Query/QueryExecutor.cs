@@ -6,6 +6,8 @@ using Zarf.Mapping.Bindings;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionTranslators;
 using Zarf.Query.ExpressionVisitors;
+using System.Linq;
+using System.Collections;
 
 namespace Zarf.Query
 {
@@ -20,6 +22,7 @@ namespace Zarf.Query
 
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext queryContext = null)
         {
+            var x = typeof(TEntity);
             return ExuecteCore<IEnumerator<TEntity>, TEntity>(query, queryContext);
         }
 
@@ -49,7 +52,9 @@ namespace Zarf.Query
                 .Create(_dbContextParts.ConnectionString)
                 .ExecuteDataReader(_dbContextParts.CommandTextBuilder.Build(compiledQuery));
 
-            if (typeof(TResult) != typeof(TEntity))
+            return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();
+
+            if (typeof(TResult).IsCollection())
             {
                 return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();
             }

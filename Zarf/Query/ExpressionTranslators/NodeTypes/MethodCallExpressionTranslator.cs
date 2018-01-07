@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Collections;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
@@ -64,6 +65,12 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return translator;
             }
 
+            if (methodCall.Method.DeclaringType.GetGenericTypeDefinition().IsAssignableFrom(typeof(IQuery<>))
+                && methodCall.Method.Name == "ToList")
+            {
+                return _methodCallTranslators[ToListTranslator.SupprotedMethods.FirstOrDefault()];
+            }
+
             return null;
         }
 
@@ -81,6 +88,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             if (typeof(IQuery).IsAssignableFrom(obj?.Type))
             {
                 obj = CreateSubQuery(obj.As<ConstantExpression>(), methodCall);
+            }
+            else if (obj is QueryExpression query && methodCall.Method.Name == "Where")
+            {
+                return new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+            }
+
+            obj = GetCompiledExpression(obj);
+            if (obj.Is<QueryExpression>())
+            {
+                Context.QueryModelMapper.MapQueryModel(methodCall, obj.As<QueryExpression>().QueryModel);
             }
 
             if (obj?.NodeType == ExpressionType.Extension)
@@ -128,48 +145,26 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             return Expression.Call(obj, methodInfo, args);
         }
 
-        protected Expression CreateSubQuery(ConstantExpression obj, MethodCallExpression methodCall)
+        protected Expression CreateSubQuery(Expression obj, MethodCallExpression methodCall)
         {
-            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.ReturnType))
-            {
-                var createQueryBody = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
-                var parameters = new RefrencedOuterParameterExpressionVisitor(createQueryBody).Outers;
-                if (parameters.Count == 0)
-                {
-                    var createQuery = (Func<IQuery>)Expression.Lambda(createQueryBody, parameters).Compile();
-                    var linq = createQuery();
-                    return Expression.Constant(linq);
-                }
-            }
-
-            if (methodCall.Method.Name == "ToList")
-            {
-                var x = GetCompiledExpression(methodCall.Object);
-                if (x.NodeType == ExpressionType.Call)
-                {
-                    x = x.As<MethodCallExpression>().Object;
-                }
-
-                obj = x.As<ConstantExpression>();
-            }
-
             var query = obj.As<ConstantExpression>()?.Value as IQuery;
+
             var internalQuery = query?.GetInternalQuery();
             var internalQueryExpression = new[] { internalQuery.GetExpression() };
             var typeOfEntity = internalQuery.GetTypeOfEntity();
 
             var arguments = internalQueryExpression.Concat(methodCall.Arguments);
+            var argums = methodCall.Method.GetParameters();
 
             var method = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, typeOfEntity);
             var call = Expression.Call(null, method, arguments.ToArray());
 
-            var exp = GetCompiledExpression(call);
-            if (exp.Is<QueryExpression>())
-            {
-                Context.QueryModelMapper.MapQueryModel(methodCall, exp.As<QueryExpression>().QueryModel);
-            }
+            return call;
+        }
 
-            return exp;
+        public IEnumerable<Expression> UnWrap(IEnumerable<Expression> exps)
+        {
+            return exps.Select(item => item.UnWrap());
         }
     }
 

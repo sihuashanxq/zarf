@@ -16,7 +16,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         static ToListTranslator()
         {
-            SupprotedMethods = typeof(Enumerable).GetMethods().Where(item => item.Name == "ToList");
+            SupprotedMethods = typeof(IQuery<>).GetMethods().Where(item => item.Name == "ToList");
         }
 
         public ToListTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -26,15 +26,18 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            if (!typeof(IQueryable).IsAssignableFrom(methodCall.Arguments[0].Type))
+            var obj = methodCall.Object ?? methodCall.Arguments[0];
+
+            if (!typeof(IQueryable).IsAssignableFrom(obj.Type) &&
+                !typeof(IQuery).IsAssignableFrom(obj.Type))
             {
                 return methodCall;
             }
 
-            var compildNode = GetCompiledExpression(methodCall.Arguments[0]);
+            var compildNode = GetCompiledExpression(obj);
             if (compildNode is QueryExpression query)
             {
-                query.QueryModel.ModeType = methodCall.Method.ReturnType;
+                query.QueryModel.ModelType = methodCall.Method.ReturnType;
             }
 
             return compildNode;

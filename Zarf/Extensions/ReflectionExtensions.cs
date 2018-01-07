@@ -60,7 +60,11 @@ namespace Zarf.Extensions
 
         public static bool IsCollection(this Type type)
         {
-            return !IsPrimtiveType(type) && typeof(IEnumerable).IsAssignableFrom(type);
+            return !IsPrimtiveType(type) && (
+                typeof(IEnumerable).IsAssignableFrom(type) ||
+                typeof(IQuery).IsAssignableFrom(type) ||
+                typeof(IEnumerator).IsAssignableFrom(type)
+                );
         }
 
         public static bool IsPrimtiveType(this Type type)
