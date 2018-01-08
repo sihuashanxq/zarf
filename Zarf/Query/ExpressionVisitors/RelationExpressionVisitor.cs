@@ -7,56 +7,92 @@ using System.Reflection.Emit;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Collections.Concurrent;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class SubQueryModelTypeDescriptor
+    internal class SubQueryModelTypeDescriptor
     {
         public Dictionary<string, ColumnExpression> FieldMaps { get; set; }
 
         public Type SubModelType { get; set; }
     }
 
-    public static class SubQueryModelTypeGenerator
+    internal class SubQueryModelTypeCache
     {
+        public Type ModelType { get; set; }
+
+        public Dictionary<string, Type> Fields { get; set; }
+    }
+
+    internal static class SubQueryModelTypeGenerator
+    {
+        private static ConcurrentDictionary<string, SubQueryModelTypeCache> ModelTypeCaches { get; }
+
+        private static ModuleBuilder ModuleBuilder { get; }
+
+        static SubQueryModelTypeGenerator()
+        {
+            ModelTypeCaches = new ConcurrentDictionary<string, SubQueryModelTypeCache>();
+
+            ModuleBuilder = AssemblyBuilder
+                .DefineDynamicAssembly(new AssemblyName("__SubQueryExtension__"), AssemblyBuilderAccess.RunAndCollect)
+                .DefineDynamicModule("__SubQueryExtension__Module__");
+        }
+
         public static SubQueryModelTypeDescriptor GenRealtionType(Type modelType, List<ColumnExpression> relatedColumns)
         {
-            //var constructor = modelType.GetConstructors()[0];
-            var fieldMaps = new Dictionary<string, ColumnExpression>();
+            if (modelType.IsSealed)
+            {
+                throw new Exception("sealed type not supported filter in an subquery!");
+            }
 
-            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("__SubQueryExtension__"), AssemblyBuilderAccess.RunAndCollect);
+            var typeName = modelType.Name + relatedColumns
+                .Select(item => item.Type.GetHashCode())
+                .Concat(new[] { modelType.GetHashCode() })
+                .Aggregate((hashCode, t) => hashCode + (hashCode * 37 ^ t));
 
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule("__SubQueryExtension__Module__");
-            var typeBuilder = moduleBuilder.DefineType(
-                modelType.Name + relatedColumns.GetHashCode(),
-                TypeAttributes.Class,
-                modelType);
+            var typeCache = ModelTypeCaches.GetOrAdd(typeName, (key) =>
+            {
+                var fields = new Dictionary<string, Type>();
+                var typeBuilder = ModuleBuilder.DefineType(
+                    typeName,
+                    TypeAttributes.Class,
+                    modelType);
 
-            //var ctorBuilder = typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, constructor.GetParameters().Select(i => i.ParameterType).ToArray());
-            //var il = ctorBuilder.GetILGenerator();
-            //for (var i = 0; i < constructor.GetParameters().Length; i++)
-            //{
-            //    il.Emit(OpCodes.Ldarg, i);
-            //}
+                for (var i = 0; i < relatedColumns.Count; i++)
+                {
+                    fields["__RealtionId__" + i] = relatedColumns[i].Type;
+                    typeBuilder.DefineField("__RealtionId__" + i, relatedColumns[i].Type, FieldAttributes.Public | FieldAttributes.SpecialName);
+                }
 
-            //il.Emit(OpCodes.Call, constructor);
-            //il.Emit(OpCodes.Ret);
+                return new SubQueryModelTypeCache
+                {
+                    ModelType = typeBuilder.CreateType(),
+                    Fields = fields
+                };
+            });
+
+            var fieldsMap = new Dictionary<string, ColumnExpression>();
+            var fieldNames = new HashSet<string>();
 
             for (var i = 0; i < relatedColumns.Count; i++)
             {
-                var filedName = "__RealtionId__" + i;
-
-                fieldMaps[filedName] = relatedColumns[i];
-
-                typeBuilder.DefineField(filedName, relatedColumns[i].Type, FieldAttributes.Public | FieldAttributes.SpecialName);
+                foreach (var item in typeCache.Fields.Where(kv => !fieldNames.Contains(kv.Key)))
+                {
+                    if (relatedColumns[i].Type == item.Value)
+                    {
+                        fieldsMap[item.Key] = relatedColumns[i];
+                        fieldNames.Add(item.Key);
+                        break;
+                    }
+                }
             }
-
-            var subModelType = typeBuilder.CreateType();
 
             return new SubQueryModelTypeDescriptor()
             {
-                FieldMaps = fieldMaps,
-                SubModelType = subModelType
+                FieldMaps = fieldsMap,
+                SubModelType = typeCache.ModelType
             };
         }
     }

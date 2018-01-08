@@ -11,6 +11,13 @@ using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf
 {
+    public class WW
+    {
+        public int Id { get; set; }
+
+        public List<User> C { get; set; }
+    }
+
     class Program
     {
         static async Task<int> A(DbContext db)
@@ -31,14 +38,18 @@ namespace Zarf
                     2.外层的Parameter引用只能在最后一个表达式方法中
                     3.外层的Parameter不能出现多个
                 */
-                db
-                    .Users
-                    .Select(item => new
+                var y = db.Users.Select(item => new
+                {
+                    Id = item.Id,
+                    B = db.Users.Select(x => new WW
                     {
-                        Id = item.Id,
-                        B = db.Users
-                        .FirstOrDefault(n => n.Id == item.Id)
-                    }).Where(item => item.Id < 100).ToList();
+                        Id = x.Id,
+                        C = db.Users.Where(i => i.Id == item.Id).ToList()
+                    })
+                    .Where(n => n.Id == item.Id).ToList()
+
+                }).Where(item => item.Id < 100).ToList();
+
                 var st = new System.Diagnostics.Stopwatch();
                 Console.WriteLine(st.ElapsedMilliseconds);
                 //var x = db
