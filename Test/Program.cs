@@ -16,6 +16,8 @@ namespace Zarf
         public int Id { get; set; }
 
         public List<User> C { get; set; }
+
+        public User D { get; set; }
     }
 
     class Program
@@ -41,17 +43,18 @@ namespace Zarf
                 var y = db.Users.Select(item => new
                 {
                     Id = item.Id,
+
                     B = db.Users.Select(x => new WW
                     {
                         Id = x.Id,
+
+
                         C = db.Users.Where(i => i.Id == item.Id).ToList()
                     })
                     .Where(n => n.Id == item.Id).ToList()
+                })
+                .Where(item => item.Id < 100).ToList();
 
-                }).Where(item => item.Id < 100).ToList();
-
-                var st = new System.Diagnostics.Stopwatch();
-                Console.WriteLine(st.ElapsedMilliseconds);
                 //var x = db
                 //    .Users
                 //    .Select(item => new { item.Id, item.Name })

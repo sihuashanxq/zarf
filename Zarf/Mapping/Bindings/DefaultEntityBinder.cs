@@ -88,6 +88,13 @@ namespace Zarf.Mapping.Bindings
                 return CreateSubQueryModel(queryModel);
             }
 
+            if (queryModel != null &&
+                queryModel != Query.QueryModel &&
+                queryModel.RefrencedColumns.Count != 0)
+            {
+                return CreateSubQueryModel(queryModel);
+            }
+
             var tryGetMaped = Query.ExpressionMapper.GetMappedProjection(expression);
             if (tryGetMaped != null)
             {
@@ -197,12 +204,9 @@ namespace Zarf.Mapping.Bindings
             for (var i = 0; i < Query.Projections.Count; i++)
             {
                 var mappedProjection = Query.ExpressionMapper.GetMappedProjection(projection);
-                if (mappedProjection != null)
-                {
-                    projection = mappedProjection;
-                }
 
-                if (ExpressionEquality.Equals(Query.Projections[i], projection))
+                if (ExpressionEquality.Equals(Query.Projections[i], projection) ||
+                    ExpressionEquality.Equals(Query.Projections[i], mappedProjection))
                 {
                     var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(projection.Type);
                     return Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
@@ -274,13 +278,21 @@ namespace Zarf.Mapping.Bindings
                 return binding;
             }
 
+            if (binding == null)
+            {
+                var x = 1;
+            }
+
+            var y = binding;
+
             //此处是简单类型,应该是聚合,Select(item)
             binding = binding is QueryExpression
-                ? Visit(memberExpression)
-                : BindQueryProjection(binding);
+            ? Visit(memberExpression)
+            : BindQueryProjection(binding);
 
             if (binding == null)
             {
+                var x = 1;
                 throw new Exception("projection not found!");
             }
 
@@ -336,7 +348,7 @@ namespace Zarf.Mapping.Bindings
 
             foreach (var item in subQueryModel.RefrencedColumns)
             {
-                if (!Query.ConstainsQuery(item.RefrencedColumn.Query))
+                if (Query != item.RefrencedColumn.Query)
                 {
                     continue;
                 }
@@ -356,6 +368,11 @@ namespace Zarf.Mapping.Bindings
                 {
                     predicate = Expression.AndAlso(relation, predicate);
                 }
+            }
+
+            if (predicate == null)
+            {
+                return subQueryObj;
             }
 
             var convert = typeof(Enumerable).GetMethod("OfType").MakeGenericMethod(propertyModel.Type);

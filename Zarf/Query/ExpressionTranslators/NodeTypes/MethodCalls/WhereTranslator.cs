@@ -42,7 +42,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             predicate = CreateRealtionCompiler(query).Compile(predicate);
             predicate = new RelationExpressionVisitor().Visit(predicate);
 
-            new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
 
             query.DefaultIfEmpty = methodCall.Method.Name.Contains("Default");
             query.CombineCondtion(predicate);

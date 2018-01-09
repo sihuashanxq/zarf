@@ -133,10 +133,15 @@ namespace Zarf.Query.Expressions
         /// <returns></returns>
         public bool IsEmptyQuery()
         {
-            var isEmpty = !IsDistinct && Where == null &&
-                Offset == null && (SubQuery?.IsEmptyQuery() ?? true) &&
-                Orders.Count == 0 && Groups.Count == 0 &&
-                Sets.Count == 0 && Limit == 0;
+            var isEmpty =
+                !IsDistinct &&
+                Where == null &&
+                Offset == null &&
+                (SubQuery?.IsEmptyQuery() ?? true) &&
+                Orders.Count == 0 &&
+                Groups.Count == 0 &&
+                Sets.Count == 0 &&
+                Limit == 0;
 
             if (!isEmpty)
             {
@@ -213,6 +218,7 @@ namespace Zarf.Query.Expressions
             query.Limit = Limit;
             query.IsDistinct = IsDistinct;
             query.SubQuery = SubQuery?.Clone();
+            query.QueryModel = QueryModel;
             query.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
             return query;
         }

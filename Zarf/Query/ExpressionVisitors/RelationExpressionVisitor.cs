@@ -314,11 +314,11 @@ namespace Zarf.Query.ExpressionVisitors
             Query = query;
         }
 
-        public void ChangeQueryModel(Expression exp)
+        public Expression ChangeQueryModel(Expression exp)
         {
-            Visit(exp);
+            exp = Visit(exp);
 
-            if (RefrencedOuterColumns.Count == 0) return;
+            if (RefrencedOuterColumns.Count == 0) return exp;
 
             var modelTypeDescriptor = SubQueryModelTypeGenerator.GenRealtionType(Query.QueryModel.Model.Type, RefrencedOuterColumns);
             var modelNewType = modelTypeDescriptor.SubModelType;
@@ -346,8 +346,6 @@ namespace Zarf.Query.ExpressionVisitors
             foreach (var item in modelTypeDescriptor.FieldMaps)
             {
                 var field = modelNewType.GetField(item.Key);
-                //可能查询中没有值
-                item.Value.Query.AddProjection(item.Value);
                 bindings.Add(Expression.Bind(field, item.Value));
             }
 
@@ -373,6 +371,8 @@ namespace Zarf.Query.ExpressionVisitors
             }
 
             Context.QueryModelMapper.MapQueryModel(model, Query.QueryModel);
+
+            return exp;
         }
 
         protected virtual NewExpression CreateNewExpression(Type modelType, List<Expression> arguments)
@@ -404,9 +404,30 @@ namespace Zarf.Query.ExpressionVisitors
         {
             if (!Query.ConstainsQuery(column.Query) && !column.Query.ConstainsQuery(Query))
             {
-                RefrencedOuterColumns.Add(column);
-                Query.AddProjection(column);
+                var clonedColumn = column.Clone(Context.Alias.GetNewColumn());
+                var refrence = new ColumnExpression(column.Query, new Column(clonedColumn.Alias), column.Type);
+
+                column.Query.AddProjection(column);
                 Query.AddJoin(new JoinExpression(column.Query, null, JoinType.Cross));
+                Query.AddProjection(column);
+                RefrencedOuterColumns.Add(column);
+
+                //column.Query.AddProjection(clonedColumn);
+                //column.Query.ExpressionMapper.Map(refrence, clonedColumn);
+
+                //Query.AddJoin(new JoinExpression(clonedColumn.Query, null, JoinType.Cross));
+
+                //if (column.Query.IsEmptyQuery())
+                //{
+                //    Query.AddProjection(clonedColumn);
+                //    RefrencedOuterColumns.Add(clonedColumn);
+                //}
+                //else
+                //{
+                //    Query.AddProjection(refrence);
+                //    RefrencedOuterColumns.Add(refrence);
+                //    return refrence;
+                //}
             }
 
             return column;
@@ -414,13 +435,23 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected virtual Expression VisitAlias(AliasExpression alias)
         {
-            Visit(alias.Expression);
+            var expression = Visit(alias.Expression);
+            if (expression != alias.Expression)
+            {
+                return new AliasExpression(alias.Alias, expression, alias.Source);
+            }
+
             return alias;
         }
 
         protected virtual Expression VisitQuery(QueryExpression query)
         {
-            Visit(query.Where?.Predicate);
+            var predicate = Visit(query.Where?.Predicate);
+            if (predicate != query.Where?.Predicate)
+            {
+                query.Where = new WhereExperssion(predicate);
+            }
+
             return query;
         }
 

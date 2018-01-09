@@ -177,7 +177,7 @@ namespace Zarf.SqlServer.Builders
                     break;
             }
 
-            if (join.Query.IsEmptyQuery())
+            if (join.Query.IsEmptyQuery() && join.Query.Projections.Count != 0)
             {
                 BuildFromTable(join.Query);
             }
