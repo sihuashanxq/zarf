@@ -348,15 +348,10 @@ namespace Zarf.Mapping.Bindings
 
             foreach (var item in subQueryModel.RefrencedColumns)
             {
-                if (Query != item.RefrencedColumn.Query)
-                {
-                    continue;
-                }
-
                 var projection = BindQueryProjection(item.RefrencedColumn);
                 if (projection == null)
                 {
-                    throw new Exception("error!");
+                    continue;
                 }
 
                 var relation = Expression.Equal(projection, Expression.MakeMemberAccess(propertyModel, item.Member));

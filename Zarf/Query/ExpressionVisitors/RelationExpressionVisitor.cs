@@ -370,6 +370,8 @@ namespace Zarf.Query.ExpressionVisitors
                 });
             }
 
+            Query.Groups.Add(new GroupExpression(GetAllColumns(Query)));
+
             Context.QueryModelMapper.MapQueryModel(model, Query.QueryModel);
 
             return exp;
@@ -407,30 +409,49 @@ namespace Zarf.Query.ExpressionVisitors
                 var clonedColumn = column.Clone(Context.Alias.GetNewColumn());
                 var refrence = new ColumnExpression(column.Query, new Column(clonedColumn.Alias), column.Type);
 
-                column.Query.AddProjection(column);
+                column.Query.AddProjection(clonedColumn);
+                column.Query.ExpressionMapper.Map(refrence, clonedColumn);
+
                 Query.AddJoin(new JoinExpression(column.Query, null, JoinType.Cross));
-                Query.AddProjection(column);
-                RefrencedOuterColumns.Add(column);
 
-                //column.Query.AddProjection(clonedColumn);
-                //column.Query.ExpressionMapper.Map(refrence, clonedColumn);
-
-                //Query.AddJoin(new JoinExpression(clonedColumn.Query, null, JoinType.Cross));
-
-                //if (column.Query.IsEmptyQuery())
-                //{
-                //    Query.AddProjection(clonedColumn);
-                //    RefrencedOuterColumns.Add(clonedColumn);
-                //}
-                //else
-                //{
-                //    Query.AddProjection(refrence);
-                //    RefrencedOuterColumns.Add(refrence);
-                //    return refrence;
-                //}
+                if (column.Query.Joins.Count == 0 &&
+                    column.Query.Projections.Count == 0 &&
+                    column.Query.SubQuery == null)
+                {
+                    Query.AddProjection(clonedColumn);
+                    RefrencedOuterColumns.Add(clonedColumn);
+                }
+                else
+                {
+                    Query.AddProjection(refrence);
+                    RefrencedOuterColumns.Add(refrence);
+                    return refrence;
+                }
             }
 
             return column;
+        }
+
+        protected IEnumerable<ColumnExpression> GetAllColumns(QueryExpression query)
+        {
+            //Visit
+            foreach (var item in query.Projections)
+            {
+                if (item is AliasExpression alias && alias.Expression is ColumnExpression)
+                {
+                    yield return alias.Expression as ColumnExpression;
+                }
+
+                if (item is ColumnExpression column)
+                {
+                    yield return column;
+                }
+
+                if (item is AggregateExpression aggreate && aggreate.KeySelector is ColumnExpression)
+                {
+                    yield return aggreate.KeySelector as ColumnExpression;
+                }
+            }
         }
 
         protected virtual Expression VisitAlias(AliasExpression alias)

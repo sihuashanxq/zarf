@@ -22,7 +22,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         public AggregateTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
-
         }
 
         public override Expression Translate(MethodCallExpression methodCall)

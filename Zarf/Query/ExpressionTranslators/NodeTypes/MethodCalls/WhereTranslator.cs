@@ -31,23 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 return query;
             }
 
-            var predicate = methodCall.Arguments[1];
-            var parameter = predicate.GetParameters().FirstOrDefault();
-
-            Utils.CheckNull(query, "query");
-
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
-
-            predicate = CreateRealtionCompiler(query).Compile(predicate);
-            predicate = new RelationExpressionVisitor().Visit(predicate);
-
-            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
-
-            query.DefaultIfEmpty = methodCall.Method.Name.Contains("Default");
-            query.CombineCondtion(predicate);
-
-            return query;
+            return Translate(query, methodCall.Arguments[1]);
         }
 
         public virtual Expression Translate(QueryExpression query, Expression predicate)
@@ -62,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             predicate = CreateRealtionCompiler(query).Compile(predicate);
             predicate = new RelationExpressionVisitor().Visit(predicate);
 
-            new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
 
             query.DefaultIfEmpty = false;
             query.CombineCondtion(predicate);

@@ -25,6 +25,11 @@ namespace Zarf.Query.Expressions
             unchecked
             {
                 var hashCode = Offset.GetHashCode();
+                if (Orders?.Count == 0)
+                {
+                    return hashCode;
+                }
+
                 foreach (var order in Orders)
                 {
                     hashCode = (hashCode * 37) ^ order.GetHashCode();
