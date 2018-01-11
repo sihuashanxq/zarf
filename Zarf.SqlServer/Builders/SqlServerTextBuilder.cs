@@ -121,7 +121,7 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitAlias(AliasExpression alias)
         {
-            Visit(alias.Expression);
+            BuildExpression(alias.Expression);
             Append(" AS ", alias.Alias);
             return alias;
         }

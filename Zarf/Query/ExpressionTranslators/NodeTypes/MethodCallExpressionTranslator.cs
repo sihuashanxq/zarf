@@ -94,6 +94,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
             }
 
+            else if (obj is QueryExpression && methodCall.Method.Name == "Sum")
+            {
+                var x = new AggregateTranslator(Context, Compiler).Translate(obj as QueryExpression, methodCall.Arguments[0], methodCall.Method) as QueryExpression;
+                var sql = Context.DbContextParts.CommandTextBuilder.Build(x);
+                Context.QueryModelMapper.MapQueryModel(methodCall, x.QueryModel);
+                return x;
+            }
+
             obj = GetCompiledExpression(obj);
             if (obj.Is<QueryExpression>())
             {

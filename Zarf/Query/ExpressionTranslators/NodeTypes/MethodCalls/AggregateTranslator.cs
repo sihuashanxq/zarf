@@ -33,25 +33,30 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            if (methodCall.Arguments.Count == 1)
-            {
-                var col = new ColumnExpression(query, new Column(Context.Alias.GetNewColumn()), methodCall.Method.ReturnType);
+            return Translate(query, methodCall.Arguments[1], methodCall.Method);
+        }
 
-                query.AddProjection(new AggregateExpression(methodCall.Method, col, query, col.Column.Name));
+        public virtual Expression Translate(QueryExpression query, Expression keySelector, MethodInfo method)
+        {
+            if (keySelector == null)
+            {
+                var col = new ColumnExpression(query, new Column(Context.Alias.GetNewColumn()), method.ReturnType);
+
+                query.AddProjection(new AggregateExpression(method, col, query, col.Column.Name));
 
                 return query;
             }
 
-            var parameter = methodCall.Arguments[1].GetParameters().FirstOrDefault();
+            var parameter = keySelector.GetParameters().FirstOrDefault();
             var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter)
-                .Visit(methodCall.Arguments[1])
+                .Visit(keySelector)
                 .UnWrap()
                 .As<LambdaExpression>()
                 .Body;
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(query,modelExpression, methodCall.Method.ReturnType, query.QueryModel);
+            query.QueryModel = new QueryEntityModel(query, modelExpression, method.ReturnType, query.QueryModel);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
@@ -67,7 +72,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             if (selector.Is<AliasExpression>())
             {
                 var alias = selector.As<AliasExpression>();
-                var key = new AggregateExpression(methodCall.Method, alias.Expression, query, alias.Alias);
+                var key = new AggregateExpression(method, alias.Expression, query, alias.Alias);
 
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
@@ -78,7 +83,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             else if (selector.Is<ColumnExpression>())
             {
                 var col = selector.As<ColumnExpression>();
-                var key = new AggregateExpression(methodCall.Method, col, query, Context.Alias.GetNewColumn());
+                var key = new AggregateExpression(method, col, query, Context.Alias.GetNewColumn());
 
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);
@@ -88,7 +93,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
             else if (selector.NodeType != ExpressionType.Extension)
             {
-                var key = new AggregateExpression(methodCall.Method, selector, query, Context.Alias.GetNewColumn());
+                var key = new AggregateExpression(method, selector, query, Context.Alias.GetNewColumn());
 
                 query.AddProjection(key);
                 Context.MemberBindingMapper.Map(modelExpression.As<MemberExpression>(), key);

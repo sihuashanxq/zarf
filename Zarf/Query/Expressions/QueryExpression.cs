@@ -214,7 +214,7 @@ namespace Zarf.Query.Expressions
             var query = new QueryExpression(TypeOfExpression, ExpressionMapper, Alias);
             query.Orders.AddRange(Orders);
             query.Groups.AddRange(Groups);
-            query.Joins.AddRange(query.Joins);
+
             query.Limit = Limit;
             query.IsDistinct = IsDistinct;
             query.SubQuery = SubQuery?.Clone();

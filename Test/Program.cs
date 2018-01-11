@@ -45,7 +45,7 @@ namespace Zarf
                 {
                     Id = item.Id,
 
-                    N = xx.Where(wc=>wc.Id==item.Id).Sum(nn => item.Id)
+                    N = xx.Where(ww => ww.Id < 100).Sum(nn => nn.Age)
                 })
                   .Where(item => item.Id < 100).ToList();
 
@@ -53,7 +53,7 @@ namespace Zarf
                 {
                     Id = item.Id,
 
-                    N = db.Users.Where(wc => wc.Id == item.Id).Sum(nn => item.Id)
+                    N = db.Users.Sum(nn => nn.Age)
                 })
                 .Where(item => item.Id < 100).ToList();
 

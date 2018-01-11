@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
@@ -94,7 +95,8 @@ namespace Zarf.Query.ExpressionVisitors
             {
                 return false;
             }
-
+            var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
+          
             Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
             Query.QueryModel = new QueryEntityModel(Query, SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model), Query.QueryModel.ModelType, Query.QueryModel);
             Query.AddProjectionRange(query.Projections);
