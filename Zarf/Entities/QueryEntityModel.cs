@@ -71,6 +71,28 @@ namespace Zarf.Entities
             return null;
         }
 
+        public Expression GetModelExpression(MemberInfo memberInfo)
+        {
+            if (ModelElementType == memberInfo.DeclaringType)
+            {
+                return Model;
+            }
+
+            var may = ModelElementType.GetProperty(memberInfo.Name);
+
+            if (may != null && may.GetPropertyType() == memberInfo.GetPropertyType())
+            {
+                return Model;
+            }
+
+            if (Previous != null)
+            {
+                return Previous.GetModelExpression(memberInfo);
+            }
+
+            return null;
+        }
+
         public QueryEntityModel FindQueryModel(Expression modelExpression)
         {
             if (Model == modelExpression)

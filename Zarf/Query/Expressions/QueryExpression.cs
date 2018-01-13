@@ -43,6 +43,8 @@ namespace Zarf.Query.Expressions
 
         public QueryExpression SubQuery { get; protected set; }
 
+        public QueryExpression SourceQuery { get; set; }
+
         public QueryExpression Outer { get; protected set; }
 
         public QueryEntityModel QueryModel { get; set; }
@@ -77,9 +79,12 @@ namespace Zarf.Query.Expressions
                 QueryModel = QueryModel
             };
 
+            query.AddProjectionRange(query.GenQueryProjections());
+
             DefaultIfEmpty = false;
             Outer = query;
-            query.AddProjectionRange(query.GenQueryProjections());
+            SourceQuery = query;
+
             return query;
         }
 
@@ -212,13 +217,17 @@ namespace Zarf.Query.Expressions
         public QueryExpression Clone()
         {
             var query = new QueryExpression(TypeOfExpression, ExpressionMapper, Alias);
-            query.Orders.AddRange(Orders);
-            query.Groups.AddRange(Groups);
+            query.Orders.AddRange(Orders.ToList());
+            query.Groups.AddRange(Groups.ToList());
+            query.Joins.AddRange(Joins.ToList());
+            query.Sets.AddRange(Sets.ToList());
 
+            query.SourceQuery = this;
             query.Limit = Limit;
             query.IsDistinct = IsDistinct;
             query.SubQuery = SubQuery?.Clone();
             query.QueryModel = QueryModel;
+
             query.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
             return query;
         }
@@ -239,11 +248,6 @@ namespace Zarf.Query.Expressions
             }
 
             return SubQuery?.ConstainsQuery(subQuery) ?? false;
-        }
-
-        public void ChangeTypeOfExpression(Type typeOfExpression)
-        {
-            TypeOfExpression = typeOfExpression;
         }
     }
 }

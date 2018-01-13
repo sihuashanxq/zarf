@@ -11,11 +11,14 @@ namespace Zarf.Query.Expressions
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public override Type Type => Expression?.Type;
+        public override Type Type => _type ?? Expression?.Type;
 
-        public AliasExpression(string alias, Expression exp, Expression source)
+        private Type _type;
+
+        public AliasExpression(string alias, Expression exp, Expression source, Type type = null)
             : base(source)
         {
+            _type = type;
             Alias = alias;
             Expression = exp;
         }

@@ -29,7 +29,7 @@ namespace Zarf.Query.ExpressionVisitors
                 var query = node.As<QueryExpression>();
                 if (!Query.ConstainsQuery(query))
                 {
-                    CombineQuery(query);
+                    CombineAggregateQuery(query);
                 }
             }
 
@@ -45,7 +45,7 @@ namespace Zarf.Query.ExpressionVisitors
         {
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var modelExpression = Query.QueryModel.GetModelExpression(newExpression.Members[i].DeclaringType);
+                var modelExpression = Query.QueryModel.GetModelExpression(newExpression.Members[i]);
                 if (modelExpression == null) continue;
 
                 var member = Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]);
@@ -53,56 +53,51 @@ namespace Zarf.Query.ExpressionVisitors
 
                 if (query == null || Query.ConstainsQuery(query)) continue;
 
-                if (!CombineQuery(query))
+                if (!CombineAggregateQuery(query))
                 {
                     Context.MemberBindingMapper.Map(member, query);
+                }
+                else
+                {
+                    Context.MemberBindingMapper.Map(member, Query.Projections.LastOrDefault());
                 }
             }
 
             return newExpression;
         }
 
-        protected virtual bool CombineQuery(QueryExpression query)
+        protected virtual bool CombineAggregateQuery(QueryExpression query)
         {
-            var joinOn = null as Expression;
-            var combined = false;
-
             foreach (var item in query.Projections)
             {
-                var mappedProjection = query.ExpressionMapper.GetMappedProjection(item).As<AggregateExpression>();
-                if (mappedProjection == null)
+                if (!(item is AggregateExpression aggreate))
                 {
                     continue;
                 }
 
-                var subQueryAggreateVisitor = new SubQueryAggregateColumnRefrenceExpressionVisitor(query, mappedProjection);
+                Query.QueryModel = new QueryEntityModel(
+                    Query,
+                    SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model),
+                    Query.QueryModel.ModelType, Query.QueryModel);
 
-                foreach (var column in subQueryAggreateVisitor.RefrencedColumns)
+                //聚合列被合并到主查询中,移除对主查询的Cross Join
+                foreach (var join in query.Joins.ToList())
                 {
-                    var col = column.Clone();
-
-                    col.Query = query;
-
-                    joinOn = joinOn == null
-                        ? Expression.Equal(column, col)
-                        : Expression.AndAlso(joinOn, Expression.Equal(column, col));
+                    if (join.Query == Query || join.Query.SourceQuery == Query)
+                    {
+                        query.Joins.Remove(join);
+                    }
                 }
 
-                combined = true;
+                var alias = new AliasExpression(Context.Alias.GetNewColumn(), query, null, item.Type);
+
+                Query.AddProjection(alias);
+                Query.ExpressionMapper.Map(aggreate, alias);
+
+                return true;
             }
 
-            if (!combined)
-            {
-                return false;
-            }
-            var sql = Context.DbContextParts.CommandTextBuilder.Build(query);
-          
-            Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
-            Query.QueryModel = new QueryEntityModel(Query, SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model), Query.QueryModel.ModelType, Query.QueryModel);
-            Query.AddProjectionRange(query.Projections);
-            Query.CombineCondtion(joinOn);
-
-            return true;
+            return false;
         }
     }
 

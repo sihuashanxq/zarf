@@ -65,12 +65,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return translator;
             }
 
-            if (methodCall.Method.DeclaringType.GetGenericTypeDefinition().IsAssignableFrom(typeof(IQuery<>))
-                && methodCall.Method.Name == "ToList")
+            try
             {
-                return _methodCallTranslators[ToListTranslator.SupprotedMethods.FirstOrDefault()];
+                if (methodCall.Method.DeclaringType.GetGenericTypeDefinition().IsAssignableFrom(typeof(IQuery<>))
+                    && methodCall.Method.Name == "ToList")
+                {
+                    return _methodCallTranslators[ToListTranslator.SupprotedMethods.FirstOrDefault()];
+                }
             }
 
+            catch { }
             return null;
         }
 
@@ -94,9 +98,9 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
             }
 
-            else if (obj is QueryExpression && methodCall.Method.Name == "Sum")
+            else if (obj is QueryExpression && (methodCall.Method.Name == "Sum" || methodCall.Method.Name == "Count"))
             {
-                var x = new AggregateTranslator(Context, Compiler).Translate(obj as QueryExpression, methodCall.Arguments[0], methodCall.Method) as QueryExpression;
+                var x = new AggregateTranslator(Context, Compiler).Translate(obj as QueryExpression, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method) as QueryExpression;
                 var sql = Context.DbContextParts.CommandTextBuilder.Build(x);
                 Context.QueryModelMapper.MapQueryModel(methodCall, x.QueryModel);
                 return x;
@@ -173,38 +177,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         public IEnumerable<Expression> UnWrap(IEnumerable<Expression> exps)
         {
             return exps.Select(item => item.UnWrap());
-        }
-    }
-
-    public class RefrencedOuterParameterExpressionVisitor : ExpressionVisitorBase
-    {
-        private List<ParameterExpression> _inners;
-
-        private List<ParameterExpression> _outers;
-
-        public List<ParameterExpression> Outers => _outers;
-
-        public RefrencedOuterParameterExpressionVisitor(Expression expression)
-        {
-            _inners = new List<ParameterExpression>();
-            _outers = new List<ParameterExpression>();
-            Visit(expression);
-        }
-
-        protected override Expression VisitLambda(LambdaExpression lambda)
-        {
-            _inners.AddRange(lambda.Parameters);
-            return base.VisitLambda(lambda);
-        }
-
-        protected override Expression VisitParameter(ParameterExpression parameter)
-        {
-            if (!_inners.Contains(parameter))
-            {
-                _outers.Add(parameter);
-            }
-
-            return parameter;
         }
     }
 }

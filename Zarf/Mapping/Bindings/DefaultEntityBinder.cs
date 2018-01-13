@@ -95,19 +95,23 @@ namespace Zarf.Mapping.Bindings
                 return CreateSubQueryModel(queryModel);
             }
 
-            var tryGetMaped = Query.ExpressionMapper.GetMappedProjection(expression);
+            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Query.ExpressionMapper.GetMappedProjection(expression);
             if (tryGetMaped != null)
             {
                 var bind = BindQueryProjection(tryGetMaped);
                 if (bind == null)
                 {
-                    var mapped2 = Query.ExpressionMapper.GetMappedProjection(tryGetMaped);
-                    if (mapped2 != null)
-                    {
-                        tryGetMaped = mapped2;
-                    }
-
                     bind = BindQueryProjection(tryGetMaped);
+                    if (bind == null)
+                    {
+                        var mapped2 = Query.ExpressionMapper.GetMappedProjection(tryGetMaped);
+                        if (mapped2 != null)
+                        {
+                            tryGetMaped = mapped2;
+                        }
+
+                        bind = BindQueryProjection(tryGetMaped);
+                    }
                 }
 
                 if (bind == null)

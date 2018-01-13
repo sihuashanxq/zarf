@@ -52,8 +52,6 @@ namespace Zarf.Query
                 .Create(_dbContextParts.ConnectionString)
                 .ExecuteDataReader(_dbContextParts.CommandTextBuilder.Build(compiledQuery));
 
-            return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();
-
             if (typeof(TResult).IsCollection())
             {
                 return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();

@@ -402,34 +402,24 @@ namespace Zarf.Query.ExpressionVisitors
             }
         }
 
-        protected virtual Expression VisitColumn(ColumnExpression column)
+        protected virtual Expression VisitColumn(ColumnExpression outer)
         {
-            if (!Query.ConstainsQuery(column.Query) && !column.Query.ConstainsQuery(Query))
+            if (!Query.ConstainsQuery(outer.Query))
             {
-                var clonedColumn = column.Clone(Context.Alias.GetNewColumn());
-                var refrence = new ColumnExpression(column.Query, new Column(clonedColumn.Alias), column.Type);
+                var query = outer.Query.Clone();
+                var columnExpression = outer.Clone(Context.Alias.GetNewColumn());
 
-                column.Query.AddProjection(clonedColumn);
-                column.Query.ExpressionMapper.Map(refrence, clonedColumn);
+                columnExpression.Query = query;
 
-                Query.AddJoin(new JoinExpression(column.Query, null, JoinType.Cross));
+                outer.Query.AddProjection(columnExpression);
 
-                if (column.Query.Joins.Count == 0 &&
-                    column.Query.Projections.Count == 0 &&
-                    column.Query.SubQuery == null)
-                {
-                    Query.AddProjection(clonedColumn);
-                    RefrencedOuterColumns.Add(clonedColumn);
-                }
-                else
-                {
-                    Query.AddProjection(refrence);
-                    RefrencedOuterColumns.Add(refrence);
-                    return refrence;
-                }
+                Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
+
+                Query.AddProjection(columnExpression);
+                RefrencedOuterColumns.Add(columnExpression);
             }
 
-            return column;
+            return outer;
         }
 
         protected IEnumerable<ColumnExpression> GetAllColumns(QueryExpression query)

@@ -40,22 +40,25 @@ namespace Zarf
                     2.外层的Parameter引用只能在最后一个表达式方法中
                     3.外层的Parameter不能出现多个
                 */
+
                 var xx = db.Users.ToList();
                 var fd = xx.Select(item => new
                 {
                     Id = item.Id,
 
-                    N = xx.Where(ww => ww.Id < 100).Sum(nn => nn.Age)
+                    N = xx.Where(n => n.Id == item.Id).Count()
                 })
-                  .Where(item => item.Id < 100).ToList();
+               .Where(item => item.Id < 10).ToList();
 
-                var y = db.Users.Select(item => new
+                var y = db.Users.Where(item => item.Id < 100).Select(item => new
                 {
                     Id = item.Id,
 
-                    N = db.Users.Sum(nn => nn.Age)
-                })
-                .Where(item => item.Id < 100).ToList();
+                    N = db.Users.Where(n => n.Id == item.Id).Count()
+
+                }).ToList();
+
+                var n2 = db.Users.Count();
 
                 //var x = db
                 //    .Users
@@ -140,13 +143,6 @@ namespace Zarf
             Console.WriteLine();
             Console.WriteLine("Any Id>0..........................");
             Console.WriteLine(db.Query<User>().Any(item => item.Id > 0));
-
-            Console.WriteLine("Include Test");
-            var users = db.Query<User>()
-                .Include(item => item.Address)
-                .ThenInclude(item => item.Orders, (address, order) => order.AddressID == address.Id)
-                .Select(item => item)
-                .ToList();
         }
     }
 

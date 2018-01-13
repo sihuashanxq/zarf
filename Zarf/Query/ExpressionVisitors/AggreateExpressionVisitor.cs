@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
@@ -36,36 +37,51 @@ namespace Zarf.Query.ExpressionVisitors
         /// </summary>
         protected override Expression VisitMember(MemberExpression mem)
         {
-            var expression = base.Visit(mem);
             var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
-            var query = queryModel.Query ?? expression.As<ColumnExpression>()?.Query;
 
-            if (query != null && !Query.ConstainsQuery(query))
+            if (queryModel != null)
             {
-                var cQuery = query.Clone();
-
-                if (!HandledQueries.Contains(query))
+                if (!Query.ConstainsQuery(queryModel.Query))
                 {
-                    Query.AddJoin(new JoinExpression(cQuery, null, JoinType.Cross));
-                    HandledQueries.Add(query);
+                    throw new NotImplementedException("can not aggregate a column from outer refrence!");
                 }
 
-                //聚合函数不能有别名
-                if (expression is ColumnExpression column)
+                while (queryModel != null)
                 {
-                    Query.AddProjection(column);
-                    Query.Groups.Add(new GroupExpression(new[] { column }));
-                    return column;
-                }
+                    if (queryModel.Model.Type != mem.Member.DeclaringType)
+                    {
+                        queryModel = queryModel.Previous;
+                    }
 
-                //聚合函数不能有别名
-                if (expression is AliasExpression alias)
-                {
-                    Query.AddProjection(alias.Expression);
-                    Query.Groups.Add(new GroupExpression(new[] { alias.Expression.As<ColumnExpression>() }));
-                    return alias.Expression;
+                    var memberExpression = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
+                    var binding = Context.MemberBindingMapper.GetMapedExpression(memberExpression);
+
+                    if (binding == null)
+                    {
+                        queryModel = queryModel?.Previous;
+                        continue;
+                    }
+
+                    if (binding is AliasExpression alis)
+                    {
+                        if (!(alis.Expression is QueryExpression))
+                        {
+                            return alis.Expression;
+                        }
+
+                        //引用为表,则说明这是子查询中的聚合
+                        return new ColumnExpression(Query, new Column(alis.Alias), alis.Type);
+                    }
+                    else
+                    {
+                        return binding;
+                    }
+
+                    throw new Exception("find aggregage refrence colum faild!");
                 }
             }
+
+            var expression = base.Visit(mem);
 
             return expression.As<AliasExpression>()?.Expression ?? expression;
         }
