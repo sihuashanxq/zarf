@@ -28,33 +28,41 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var allExpression = Translate(query, methodCall.Arguments[1]);
 
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
-            {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
-            }
+            Context.ExpressionMapper.Map(allExpression, Utils.ExpressionConstantTrue);
 
-            if (query.QueryModel != null)
-            {
-                Context.QueryModelMapper.MapQueryModel(GetFirstParameter(methodCall.Arguments[1]), query.QueryModel);
-            }
+            return allExpression;
+        }
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+        public virtual Expression Translate(QueryExpression query, Expression predicate)
+        {
+            var parameter = predicate.GetParameters().FirstOrDefault();
 
-            var key = new RelationExpressionCompiler(Context).Compile(methodCall.Arguments[1].UnWrap()).UnWrap();
-            if (key.NodeType == ExpressionType.Lambda)
-            {
-                query.CombineCondtion(Expression.Not(key.As<LambdaExpression>().Body));
-            }
-            else
-            {
-                query.CombineCondtion(Expression.Not(key));
-            }
+            Utils.CheckNull(query, "query");
+
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+
+            predicate = CreateRealtionCompiler(query).Compile(predicate);
+            predicate = new RelationExpressionVisitor().Visit(predicate);
+            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+            predicate = predicate.UnWrap();
 
             query.Projections.Clear();
-            query.Projections.Add(Utils.ExpressionOne);
-            query.QueryModel = new QueryEntityModel(query,methodCall.Arguments[1], typeof(bool));
+            query.AddProjection(Utils.ExpressionConstantTrue);
+            query.CombineCondtion(predicate.NodeType == ExpressionType.Lambda
+                ? Expression.Not(predicate.As<LambdaExpression>().Body)
+                : Expression.Not(predicate));
+
+            query.QueryModel = new QueryEntityModel(query, predicate, typeof(bool), query.QueryModel);
+
             return new AllExpression(query);
+        }
+
+        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
+        {
+            return new RelationExpressionCompiler(Context);
         }
     }
 }

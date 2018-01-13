@@ -49,8 +49,6 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
             }
 
-            var s = Context.DbContextParts.CommandTextBuilder.Build(query);
-
             return query;
         }
 

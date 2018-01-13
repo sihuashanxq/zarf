@@ -46,27 +46,28 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             foreach (var item in joins)
             {
-                var joinQuery = GetJoinQuery(item.InternalDbQuery);
+                Queries.Add(GetJoinQuery(item.InternalDbQuery));
+                Queries.LastOrDefault().Projections.Clear();
+
+                query.AddJoin(new JoinExpression(Queries.Last(), null, item.JoinType));
 
                 for (var i = 0; i < item.Predicate.Parameters.Count; i++)
                 {
                     Context.QueryMapper.MapQuery(item.Predicate.Parameters[i], Queries[i]);
-
-                    if (Queries[i].QueryModel != null)
-                    {
-                        Context.QueryModelMapper.MapQueryModel(item.Predicate.Parameters[i], Queries[i].QueryModel);
-                    }
+                    Context.QueryModelMapper.MapQueryModel(item.Predicate.Parameters[i], Queries[i].QueryModel);
                 }
 
                 var predicate = CreateRealtionCompiler(query).Compile(item.Predicate);
-                var join = new JoinExpression(Queries.Last(), predicate, item.JoinType);
-                query.AddJoin(join);
+                predicate = new RelationExpressionVisitor().Visit(predicate);
+                predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+
+                query.Joins.LastOrDefault().Predicate = predicate;
             }
 
             return query;
         }
 
-        private QueryExpression GetJoinQuery(IInternalQuery dbQuery)
+        protected virtual QueryExpression GetJoinQuery(IInternalQuery dbQuery)
         {
             var expression = dbQuery.GetType().GetProperty("Expression").GetValue(dbQuery) as Expression;
             if (expression == null)
@@ -74,11 +75,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 throw new Exception("error join query!");
             }
 
-            var joinQuery = GetCompiledExpression<QueryExpression>(expression);
-
-            Queries.Add(joinQuery);
-
-            return joinQuery;
+            return GetCompiledExpression<QueryExpression>(expression);
         }
 
         protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)

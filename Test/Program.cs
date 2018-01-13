@@ -41,6 +41,10 @@ namespace Zarf
                     3.外层的Parameter不能出现多个
                 */
 
+                var zz = db.Users.Join(db.Users, (a, b) => a.Id == b.Id + 1)
+                    .Select((a, b) => new { a.Id, B = b.Id }).Sum(item => item.Id);
+
+                //BasicTest(db);
                 var xx = db.Users.ToList();
                 var fd = xx.Select(item => new
                 {
@@ -54,7 +58,8 @@ namespace Zarf
                 {
                     Id = item.Id,
 
-                    N = db.Users.Where(n => n.Id == item.Id).Count()
+                    N = db.Users.Join(db.Users, (a1, b2) => a1.Id == b2.Id + 1, JoinType.Inner)
+                    .Select((a3, b4) => new { a3.Id, B = b4.Id }).Sum(n => n.Id)
 
                 }).ToList();
 
@@ -107,18 +112,9 @@ namespace Zarf
             db.Query<User>().Where(item => item.Id > 1).ToList().ForEach(item => Console.WriteLine(item));
 
             Console.WriteLine();
-            Console.WriteLine("Inner Join..........................");
-
-            Console.WriteLine();
             Console.WriteLine("Order By DESC..........................");
             db.Query<User>().OrderByDescending(item => item.Id)
                 .ToList().ForEach(item => Console.WriteLine(item));
-
-            Console.WriteLine();
-            Console.WriteLine("RIGHT Join..........................");
-
-            Console.WriteLine();
-            Console.WriteLine("Full Join..........................");
 
             Console.WriteLine();
             Console.WriteLine("CONCAT..........................");
@@ -137,7 +133,7 @@ namespace Zarf
             Console.WriteLine(db.Query<User>().All(item => item.Id > 10000));
 
             Console.WriteLine();
-            Console.WriteLine("All Id MAX..........................");
+            Console.WriteLine("Id MAX..........................");
             Console.WriteLine(db.Query<User>().Max(item => item.Id));
 
             Console.WriteLine();

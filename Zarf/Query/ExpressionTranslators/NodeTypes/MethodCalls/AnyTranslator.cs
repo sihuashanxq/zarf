@@ -5,6 +5,8 @@ using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Mapping;
+using Zarf.Entities;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
@@ -25,16 +27,38 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (query.Where != null && (query.Projections.Count != 0 || query.Sets.Count != 0))
-            {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
-            }
+            var anyExpression = Translate(query, methodCall.Arguments[1]);
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+            Context.ExpressionMapper.Map(anyExpression, Utils.ExpressionConstantTrue);
 
-            //query.AddColumns(new[] { new ColumnDescriptor(Utils.ExpressionOne) });
-            query.CombineCondtion(GetCompiledExpression(methodCall.Arguments[1]));
+            return anyExpression;
+        }
+
+        public virtual Expression Translate(QueryExpression query, Expression predicate)
+        {
+            var parameter = predicate.GetParameters().FirstOrDefault();
+
+            Utils.CheckNull(query, "query");
+
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+
+            predicate = CreateRealtionCompiler(query).Compile(predicate);
+            predicate = new RelationExpressionVisitor().Visit(predicate);
+            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+
+            query.Projections.Clear();
+            query.AddProjection(Utils.ExpressionConstantTrue);
+            query.CombineCondtion(predicate);
+
+            query.QueryModel = new QueryEntityModel(query, predicate, typeof(bool), query.QueryModel);
+
             return new AnyExpression(query);
+        }
+
+        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
+        {
+            return new RelationExpressionCompiler(Context);
         }
     }
 }

@@ -31,39 +31,40 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
             var modelType = methodCall.Method.ReturnType;
             var parameters = methodCall.Arguments[1].GetParameters().ToList();
+            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameters[0]).Visit(methodCall.Arguments[1]);
+
+            query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
 
             for (var i = 0; i < parameters.Count; i++)
             {
                 if (i != 0)
                 {
                     Context.QueryMapper.MapQuery(parameters[i], query.Joins[i - 1].Query);
-
-                    if (query.Joins[i - 1].Query.QueryModel != null)
-                    {
-                        Context.QueryModelMapper.MapQueryModel(parameters[i], query.Joins[i - 1].Query.QueryModel);
-                    }
+                    Context.QueryModelMapper.MapQueryModel(parameters[i], query.Joins[i - 1].Query.QueryModel);
                     continue;
                 }
 
                 Context.QueryMapper.MapQuery(parameters[i], query);
+                Context.QueryModelMapper.MapQueryModel(parameters[i], query.QueryModel);
             }
-
-            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameters[0]).Visit(methodCall.Arguments[1]);
 
             Utils.CheckNull(query, "query");
 
-            query.QueryModel = new QueryEntityModel(query,modelExpression, modelType, query.QueryModel);
+            CreateProjection(query, modelExpression);
 
-            Context.QueryModelMapper.MapQueryModel(parameters[0], query.QueryModel);
-
-            var m = CreateProjectionVisitor(query).Visit(modelExpression);
+            if (query.QueryModel.Model.Is<ConstantExpression>())
+            {
+                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
+            }
 
             return query;
         }
 
-        protected ProjectionExpressionVisitor CreateProjectionVisitor(QueryExpression query)
+        protected void CreateProjection(QueryExpression query, Expression modelExpression)
         {
-            return new ProjectionExpressionVisitor(query, Context);
+            modelExpression = new ProjectionExpressionVisitor(query, Context).Visit(modelExpression);
+
+            new ResultExpressionVisitor(Context, query).Visit(modelExpression);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Zarf.Query.Expressions
     {
         public JoinType JoinType { get; }
 
-        public Expression Predicate { get; }
+        public Expression Predicate { get; set; }
 
         public QueryExpression Query { get; }
 

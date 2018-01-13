@@ -32,6 +32,8 @@ namespace Zarf
 
         public static Expression ExpressionOne = Expression.Constant(1);
 
+        public static Expression ExpressionConstantTrue = Expression.Constant(true);
+
         public static Dictionary<ExpressionType, string> OperatorMap = new Dictionary<ExpressionType, string>()
         {
             { ExpressionType.Equal, " = " },

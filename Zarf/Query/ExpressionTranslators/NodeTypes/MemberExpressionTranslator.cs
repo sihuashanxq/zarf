@@ -39,10 +39,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                             owner = owner.Outer;
                         }
 
-                        //if (owner.QueryModel == queryModel)
-                        //{
-                        //    return alias.Expression;
-                        //}
+                        if (owner.QueryModel == queryModel)
+                        {
+                            return alias.Expression;
+                        }
 
                         if (owner.QueryModel.ContainsModel(queryModel.Model))
                         {
