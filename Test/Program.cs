@@ -46,20 +46,12 @@ namespace Zarf
 
                 //BasicTest(db);
                 var xx = db.Users.ToList();
-                var fd = xx.Select(item => new
-                {
-                    Id = item.Id,
-
-                    N = xx.Where(n => n.Id == item.Id).Count()
-                })
-               .Where(item => item.Id < 10).ToList();
 
                 var y = db.Users.Where(item => item.Id < 100).Select(item => new
                 {
                     Id = item.Id,
 
-                    N = db.Users.Join(db.Users, (a1, b2) => a1.Id == b2.Id + 1, JoinType.Inner)
-                    .Select((a3, b4) => new { a3.Id, B = b4.Id }).Sum(n => n.Id)
+                    N = db.Users.FirstOrDefault()
 
                 }).ToList();
 

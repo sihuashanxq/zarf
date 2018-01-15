@@ -73,12 +73,12 @@ namespace Zarf.Entities
 
         public Expression GetModelExpression(MemberInfo memberInfo)
         {
-            if (ModelElementType == memberInfo.DeclaringType)
+            if (Model.Type == memberInfo.DeclaringType)
             {
                 return Model;
             }
 
-            var may = ModelElementType.GetProperty(memberInfo.Name);
+            var may = Model.Type.GetProperty(memberInfo.Name);
 
             if (may != null && may.GetPropertyType() == memberInfo.GetPropertyType())
             {

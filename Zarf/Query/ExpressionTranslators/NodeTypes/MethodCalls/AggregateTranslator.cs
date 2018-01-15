@@ -46,7 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             return Translate(query, methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1], methodCall.Method);
         }
 
-        public virtual Expression Translate(QueryExpression query, Expression keySelector, MethodInfo method)
+        public virtual QueryExpression Translate(QueryExpression query, Expression keySelector, MethodInfo method)
         {
             query.Projections.Clear();
             query.Groups.Clear();

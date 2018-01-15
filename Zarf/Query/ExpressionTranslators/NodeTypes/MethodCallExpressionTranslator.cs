@@ -9,7 +9,6 @@ using Zarf.Mapping;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionTranslators.Methods;
 using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
-using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
@@ -34,8 +33,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             Register(WhereTranslator.SupprotedMethods, new WhereTranslator(queryContext, queryCompiper));
             Register(AllTranslator.SupprotedMethods, new AllTranslator(queryContext, queryCompiper));
             Register(AnyTranslator.SupprotedMethods, new AnyTranslator(queryContext, queryCompiper));
-            Register(IncludeTranslator.SupprotedMethods, new IncludeTranslator(queryContext, queryCompiper));
-            Register(ThenIncludeTranslator.SupprotedMethods, new ThenIncludeTranslator(queryContext, queryCompiper));
             Register(JoinSelectTranslator.SupprotedMethods, new JoinSelectTranslator(queryContext, queryCompiper));
             Register(ToListTranslator.SupprotedMethods, new ToListTranslator(queryContext, queryCompiper));
         }
@@ -46,6 +43,12 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             if (translator != null)
             {
                 return translator.Translate(methodCall);
+            }
+
+            var trySubQuery = new SubQueryTranslator(Context, Compiler).Translate(methodCall);
+            if (trySubQuery != null)
+            {
+                return trySubQuery;
             }
 
             return TranslateMethodCall(methodCall);
@@ -89,34 +92,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         protected virtual Expression TranslateMethodCall(MethodCallExpression methodCall)
         {
             var obj = GetCompiledExpression(methodCall.Object);
-            if (typeof(IQuery).IsAssignableFrom(obj?.Type))
-            {
-                obj = CreateSubQuery(obj.As<ConstantExpression>(), methodCall);
-            }
-            else if (obj is QueryExpression query && methodCall.Method.Name == "Where")
-            {
-                return new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
-            }
-
-            else if (obj is QueryExpression && (methodCall.Method.Name == "Sum" || methodCall.Method.Name == "Count"))
-            {
-                var x = new AggregateTranslator(Context, Compiler).Translate(obj as QueryExpression, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method) as QueryExpression;
-                var sql = Context.DbContextParts.CommandTextBuilder.Build(x);
-                Context.QueryModelMapper.MapQueryModel(methodCall, x.QueryModel);
-                return x;
-            }
-
-            obj = GetCompiledExpression(obj);
-            if (obj.Is<QueryExpression>())
-            {
-                Context.QueryModelMapper.MapQueryModel(methodCall, obj.As<QueryExpression>().QueryModel);
-            }
-
-            if (obj?.NodeType == ExpressionType.Extension)
-            {
-                Console.WriteLine("MethodCall");
-                return obj;
-            }
 
             var args = new List<Expression>();
             var methodInfo = methodCall.Method;
@@ -157,22 +132,6 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             return Expression.Call(obj, methodInfo, args);
         }
 
-        protected Expression CreateSubQuery(Expression obj, MethodCallExpression methodCall)
-        {
-            var query = obj.As<ConstantExpression>()?.Value as IQuery;
-
-            var internalQuery = query?.GetInternalQuery();
-            var internalQueryExpression = new[] { internalQuery.GetExpression() };
-            var typeOfEntity = internalQuery.GetTypeOfEntity();
-
-            var arguments = internalQueryExpression.Concat(methodCall.Arguments);
-            var argums = methodCall.Method.GetParameters();
-
-            var method = ReflectionUtil.FindSameDefinitionQueryableMethod(methodCall.Method, typeOfEntity);
-            var call = Expression.Call(null, method, arguments.ToArray());
-
-            return call;
-        }
 
         public IEnumerable<Expression> UnWrap(IEnumerable<Expression> exps)
         {

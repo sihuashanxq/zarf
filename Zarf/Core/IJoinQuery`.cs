@@ -6,6 +6,7 @@ namespace Zarf.Core
 {
     public interface IJoinQuery
     {
+
     }
 
     public interface IJoinQuery<T1, T2> : IJoinQuery

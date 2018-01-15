@@ -20,7 +20,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         static SelectTranslator()
         {
             SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select")
-                .Concat(new[] { QueryQueryable.SelectMethod });
+                .Concat(new[] { ZarfQueryable.SelectMethod });
         }
 
         public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -47,6 +47,29 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             if (query.QueryModel.Model.Is<ConstantExpression>())
             {
                 query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
+            }
+
+            return query;
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression selector)
+        {
+            var modelType = selector.Type.GetModelElementType();
+            var parameter = selector.GetParameters().FirstOrDefault();
+            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(selector);
+
+            Utils.CheckNull(query, "query");
+
+            query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
+
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+
+            CreateProjection(query, modelExpression);
+
+            if (query.QueryModel.Model.Is<ConstantExpression>())
+            {
+                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, selector));
             }
 
             return query;

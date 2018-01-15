@@ -76,10 +76,6 @@ namespace Zarf
 
         IQuery<TEntity> Union(IQuery<TEntity> source2);
 
-        IIncludeQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath, Expression<Func<TEntity, TKey, bool>> propertyRelation);
-
-        IIncludeQuery<TEntity, TKey> Include<TKey>(Expression<Func<TEntity, IEnumerable<TKey>>> propertyPath);
-
         int Sum(Expression<Func<TEntity, int>> selector);
 
         long Sum(Expression<Func<TEntity, long>> selector);
@@ -133,8 +129,6 @@ namespace Zarf
         IEnumerable<TEntity> AsEnumerable();
 
         List<TEntity> ToList();
-
-        TEntity[] ToArray();
 
         IEnumerator<TEntity> GetEnumerator();
     }

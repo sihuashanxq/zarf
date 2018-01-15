@@ -7,9 +7,9 @@ using Zarf.Entities;
 
 namespace Zarf.Core
 {
-    internal class JoinQuery : IJoinQuery
+    public class JoinQuery : IJoinQuery
     {
-        protected List<JoinQuery> Joins { get; set; }
+        public List<JoinQuery> Joins { get; set; }
 
         public LambdaExpression Predicate { get; set; }
 
@@ -17,7 +17,7 @@ namespace Zarf.Core
 
         public IInternalQuery InternalDbQuery { get; set; }
 
-        internal static JoinQuery CreateJoinQuery(LambdaExpression predicate, IInternalQuery dbQuery, JoinType joinType)
+        public static JoinQuery CreateJoinQuery(LambdaExpression predicate, IInternalQuery dbQuery, JoinType joinType)
         {
             return new JoinQuery()
             {

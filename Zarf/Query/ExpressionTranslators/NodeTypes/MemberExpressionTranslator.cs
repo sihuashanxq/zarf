@@ -75,7 +75,12 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var query = obj.As<QueryExpression>();
             if (query == null)
             {
-                return Utils.EvalMemberValue(mem.Member, obj, out var value) ? value : mem;
+                if (Utils.EvalMemberValue(mem.Member, obj, out var evalValue))
+                {
+                    return evalValue;
+                }
+
+                return mem;
             }
 
             return new ColumnExpression(query, mem.Member);

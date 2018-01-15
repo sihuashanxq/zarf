@@ -29,9 +29,15 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var modelType = methodCall.Method.ReturnType;
-            var parameters = methodCall.Arguments[1].GetParameters().ToList();
-            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameters[0]).Visit(methodCall.Arguments[1]);
+
+            return Translate(query, methodCall.Arguments[1]);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression selector)
+        {
+            var modelType = selector.Type;
+            var parameters = selector.GetParameters().ToList();
+            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameters[0]).Visit(selector);
 
             query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
 
@@ -54,7 +60,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             if (query.QueryModel.Model.Is<ConstantExpression>())
             {
-                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
+                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, selector));
             }
 
             return query;

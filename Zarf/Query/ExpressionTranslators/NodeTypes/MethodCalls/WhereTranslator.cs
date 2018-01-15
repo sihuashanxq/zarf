@@ -15,7 +15,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         static WhereTranslator()
         {
             SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Where")
-                .Concat(new[] { QueryQueryable.WhereMethod });
+                ;
         }
 
         public WhereTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
@@ -34,7 +34,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             return Translate(query, methodCall.Arguments[1]);
         }
 
-        public virtual Expression Translate(QueryExpression query, Expression predicate)
+        public virtual QueryExpression Translate(QueryExpression query, Expression predicate)
         {
             var parameter = predicate.GetParameters().FirstOrDefault();
 

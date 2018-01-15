@@ -16,7 +16,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(ConstantExpression constant)
         {
-            if (!typeof(IInternalQuery).IsAssignableFrom(constant.Type))
+            if (!typeof(IInternalQuery).IsAssignableFrom(constant.Type) &&
+                !typeof(IQuery).IsAssignableFrom(constant.Type))
             {
                 return constant;
             }
@@ -36,7 +37,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var query = new QueryExpression(typeOfEntity, Context.ExpressionMapper, Context.Alias.GetNewTable());
             var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(parameter);
 
-            query.QueryModel = new QueryEntityModel(query,modelExpression, constant.Type);
+            query.QueryModel = new QueryEntityModel(query, modelExpression, constant.Type);
 
             Context.QueryMapper.MapQuery(parameter, query);
             Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);

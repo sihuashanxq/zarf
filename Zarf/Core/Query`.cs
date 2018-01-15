@@ -56,11 +56,6 @@ namespace Zarf
             return InternalQuery.ToList();
         }
 
-        public TEntity[] ToArray()
-        {
-            return InternalQuery.ToArray();
-        }
-
         public IEnumerable<TEntity> AsEnumerable()
         {
             return InternalQuery.AsEnumerable();
@@ -174,71 +169,6 @@ namespace Zarf
         public IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
         {
             return new Query<TEntity>(InternalQuery.GroupBy(keySelector) as IInternalQuery<TEntity>);
-        }
-
-        /// <summary>
-        /// 查询包含属性
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <typeparam name="TProperty">属性类型</typeparam>
-        /// <param name="dbQuery">原始查询</param>
-        /// <param name="propertyPath">属性路径</param>
-        /// <param name="propertyRelation">关联关系</param>
-        public IIncludeQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath, Expression<Func<TEntity, TProperty, bool>> propertyRelation)
-        {
-            return new IncludeQuery<TEntity, TProperty>(
-                InternalQuery.Include(
-                    propertyPath,
-                    propertyRelation ?? CreateDeafultKeyRealtion<TEntity, TProperty>()
-                    )
-                );
-        }
-
-        public IIncludeQuery<TEntity, TProperty> Include<TProperty>(Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath)
-        {
-            return Include(propertyPath, null);
-        }
-
-        protected Expression<Func<TTEntity, TProperty, bool>> CreateDeafultKeyRealtion<TTEntity, TProperty>()
-        {
-            var typeOfEntity = typeof(TTEntity);
-            var typeOfProperty = typeof(TProperty);
-
-            var idOfEntity = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<PrimaryKeyAttribute>() != null || item.Name == "Id");
-            var foreignKeyOfProperty = FindEntityForeignKey(typeOfProperty, typeOfEntity.Name + "Id");
-
-            if (idOfEntity == null)
-            {
-                throw new NotImplementedException($"Type Of {typeOfEntity.FullName} Need A PrimaryKey Or Id Member");
-            }
-
-            if (foreignKeyOfProperty == null)
-            {
-                throw new NotImplementedException($"Type Of {typeOfProperty.FullName} Have Not A Foreign Key With{typeOfEntity.FullName}");
-            }
-
-            var oEntity = Expression.Parameter(typeOfEntity);
-            var oProperty = Expression.Parameter(typeOfProperty);
-
-            return
-                Expression.Lambda<Func<TTEntity, TProperty, bool>>(
-                    Expression.Equal(
-                        Expression.MakeMemberAccess(oEntity, idOfEntity),
-                        Expression.MakeMemberAccess(oProperty, foreignKeyOfProperty)
-                    ),
-                    new[] { oEntity, oProperty }
-            );
-        }
-
-        protected MemberInfo FindEntityForeignKey(Type typeOfEntity, string defaultKey)
-        {
-            var foreignKey = typeOfEntity.GetMembers().FirstOrDefault(item => item.GetCustomAttribute<ForeignKeyAttribute>()?.Name == defaultKey);
-            if (foreignKey == null)
-            {
-                return typeOfEntity.GetMembers().FirstOrDefault(item => item.ToColumn().Name == defaultKey);
-            }
-
-            return foreignKey;
         }
 
         public IQuery<TEntity> Distinct()

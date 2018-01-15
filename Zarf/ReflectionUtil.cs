@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
+using Zarf.Core.Internals;
 using Zarf.Extensions;
 
 namespace Zarf
@@ -122,8 +123,6 @@ namespace Zarf
             SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
             JoinSelect = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
-            Include = typeof(QueryExtension).GetMethod("Include", BindingFlags.NonPublic | BindingFlags.Static);
-            ThenInclude = typeof(QueryExtension).GetMethod("ThenInclude", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
         public static IEnumerable<TEntity> Where<TEntity>(this IEnumerable<TEntity> entities, Func<TEntity, bool> predicate)
@@ -131,81 +130,59 @@ namespace Zarf
             return Enumerable.Where(entities, predicate);
         }
 
-        //public static IEnumerable<TEntity> Where<TOEntity, TEntity>(this IEnumerable<TEntity> entities, TOEntity oEntity, Func<TOEntity, TEntity, bool> predicate)
-        //{
-        //    foreach (var entity in entities)
-        //    {
-        //        if (predicate(oEntity, entity))
-        //        {
-        //            yield return entity;
-        //        }
-        //    }
-        //}
-
         /// <summary>
         /// Get The  Method Of <see cref="Query{TEntity}"/> 
         /// Mapped <see cref="Queryable"/> Extension Method
         /// </summary>
-        /// <param name="givenMethod">The Method Of <see cref="Query{TEntity}"/></param>
+        /// <param name="method">The Method Of <see cref="Query{TEntity}"/></param>
         /// <returns><see cref="MethodInfo"/></returns>
-        public static MethodInfo FindSameDefinitionQueryableMethod(MethodInfo givenMethod, Type giveType)
+        public static MethodInfo FindQueryableMethod(MethodInfo method, Type typeOfEntity, Type typeOfResult)
         {
-            var querableCandidates = QueryableMethods.Where(item => item.Name == givenMethod.Name);
-            var givenParameters = givenMethod.GetParameters();
-
-            if (givenMethod.Name == "Select")
+            Func<MethodInfo, MethodInfo> makeGenericMethod = (m) =>
             {
-                return QueryQueryable.SelectMethod.MakeGenericMethod(giveType, givenMethod.ReturnType.GetModelElementType());
-            }
+                if (!m.IsGenericMethod)
+                {
+                    return m;
+                }
 
-            if (givenMethod.Name == "Where")
-            {
-                return QueryQueryable.WhereMethod.MakeGenericMethod(giveType);
-            }
+                if (m.GetGenericArguments().Length == 2)
+                {
+                    return m.MakeGenericMethod(typeOfEntity, typeOfResult);
+                }
 
-            foreach (var item in querableCandidates.Concat(typeof(Enumerable).GetMethods().Where(item => item.Name == "ToList")))
+                return m.MakeGenericMethod(typeOfEntity);
+            };
+
+            var parameters = method.GetParameters();
+            var conds = typeof(IQuery).IsAssignableFrom(method.DeclaringType)
+                ? ZarfQueryable.Methods.Where(item => item.Name == method.Name).ToList()
+                : ReflectionUtil.QueryableMethods.Where(item => item.Name == method.Name).ToList();
+
+            foreach (var cond in conds)
             {
-                var condidation = item.IsGenericMethod ? item.MakeGenericMethod(giveType) : item;
-                var condParameters = condidation.GetParameters();
-                if (condParameters.Length != givenParameters.Length + 1)
+                var genericCondMethod = makeGenericMethod(cond);
+                var genericCondParameters = genericCondMethod.GetParameters();
+                if (genericCondParameters.Length != parameters.Length + 1)
                 {
                     continue;
                 }
 
-                var matched = true;
-                for (var i = 1; i < condParameters.Length; i++)
+                var i = 1;
+                while (i < genericCondParameters.Length)
                 {
-                    if (condParameters[i].ParameterType != givenParameters[i - 1].ParameterType)
+                    if (genericCondParameters[i].ParameterType != parameters[i - 1].ParameterType)
                     {
-                        matched = false;
                         break;
                     }
                 }
 
-                if (matched)
+                if (i >= genericCondParameters.Length)
                 {
-                    return condidation;
+                    return genericCondMethod;
                 }
             }
 
-            throw new Exception($"can not find {givenMethod.Name}the mapped Queryable Method");
-        }
-    }
-
-    public static class QueryQueryable
-    {
-        public static MethodInfo SelectMethod = typeof(QueryQueryable).GetMethod(nameof(Select));
-
-        public static MethodInfo WhereMethod = typeof(QueryQueryable).GetMethod(nameof(Where));
-
-        public static IQueryable<TResult> Select<TEntity, TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TResult>> selector)
-        {
-            return Queryable.Select(query, selector);
-        }
-
-        public static IQueryable<TEntity> Where<TEntity>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate)
-        {
-            return Queryable.Where(query, predicate);
+            throw new Exception($"can not find {method.Name}the mapped Queryable Method");
         }
     }
 
@@ -215,7 +192,7 @@ namespace Zarf
 
         public static MethodInfo FirstOrDefaultMethod = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault));
 
-        public static MethodInfo FirstOrDefault2Method = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault2));
+        public static MethodInfo FirstOrDefaultHasParameterMethod = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault2));
 
         public static List<TSource> ToList<TSource>(IEnumerable<TSource> source)
         {

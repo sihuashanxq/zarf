@@ -14,7 +14,10 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static FirstTranslator()
         {
-            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "First" || item.Name == "FirstOrDefault");
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(
+                item => item.Name == "First" ||
+                item.Name == "FirstOrDefault")
+                .Concat(ZarfQueryable.Methods.Where(item => item.Name == "First" || item.Name == "FirstOrDefault"));
         }
 
         public FirstTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
