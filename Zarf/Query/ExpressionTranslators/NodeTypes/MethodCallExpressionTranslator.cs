@@ -51,7 +51,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return trySubQuery;
             }
 
-            return TranslateMethodCall(methodCall);
+            return TryInvokeConstantMethodCall(methodCall);
         }
 
         private ITranslaor GetTranslator(MethodCallExpression methodCall)
@@ -89,53 +89,44 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             }
         }
 
-        protected virtual Expression TranslateMethodCall(MethodCallExpression methodCall)
+        /// <summary>
+        /// 尝试调用方法
+        /// </summary>
+        /// <param name="methodCall"></param>
+        protected virtual Expression TryInvokeConstantMethodCall(MethodCallExpression methodCall)
         {
-            var obj = GetCompiledExpression(methodCall.Object);
+            var methodObj = GetCompiledExpression(methodCall.Object);
+            var methodArguments = new List<Expression>();
 
-            var args = new List<Expression>();
-            var methodInfo = methodCall.Method;
             foreach (var item in methodCall.Arguments)
             {
-                args.Add(GetCompiledExpression(item));
+                methodArguments.Add(GetCompiledExpression(item));
             }
 
-            //自定义sql函数
-            var sqlFunction = methodCall.Method.GetCustomAttribute<SqlFunctionAttribute>();
-            if (sqlFunction != null)
+            if (methodObj == null || methodObj.NodeType == ExpressionType.Constant)
             {
-                return new SqlFunctionExpression(methodCall.Method, sqlFunction.Name, obj, args);
-            }
-
-            if (obj == null || obj.NodeType == ExpressionType.Constant)
-            {
+                var canInvoke = true;
                 var parameters = new object[methodCall.Arguments.Count];
-                var instance = obj.As<ConstantExpression>()?.Value;
-                var canEval = true;
-                for (var i = 0; i < args.Count; i++)
+                var obj = methodObj.As<ConstantExpression>()?.Value;
+
+                for (var i = 0; i < methodArguments.Count; i++)
                 {
-                    if (args[i].NodeType != ExpressionType.Constant)
+                    if (methodArguments[i].NodeType != ExpressionType.Constant)
                     {
-                        canEval = false;
+                        canInvoke = false;
                         break;
                     }
 
-                    parameters[i] = args[i].Cast<ConstantExpression>().Value;
+                    parameters[i] = methodArguments[i].As<ConstantExpression>().Value;
                 }
 
-                if (canEval)
+                if (canInvoke)
                 {
-                    return Compiler.Compile(Expression.Constant(methodInfo.Invoke(instance, parameters)));
+                    return GetCompiledExpression(Expression.Constant(methodCall.Method.Invoke(obj, parameters)));
                 }
             }
 
-            return Expression.Call(obj, methodInfo, args);
-        }
-
-
-        public IEnumerable<Expression> UnWrap(IEnumerable<Expression> exps)
-        {
-            return exps.Select(item => item.UnWrap());
+            return Expression.Call(methodObj, methodCall.Method, methodArguments);
         }
     }
 }

@@ -119,7 +119,7 @@ namespace Zarf
 
         static ReflectionUtil()
         {
-            QueryableMethods = typeof(Queryable).GetMethods();
+            QueryableMethods = typeof(Queryable).GetMethods().Concat(ZarfQueryable.Methods).ToArray();
             SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
             JoinSelect = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
@@ -130,60 +130,7 @@ namespace Zarf
             return Enumerable.Where(entities, predicate);
         }
 
-        /// <summary>
-        /// Get The  Method Of <see cref="Query{TEntity}"/> 
-        /// Mapped <see cref="Queryable"/> Extension Method
-        /// </summary>
-        /// <param name="method">The Method Of <see cref="Query{TEntity}"/></param>
-        /// <returns><see cref="MethodInfo"/></returns>
-        public static MethodInfo FindQueryableMethod(MethodInfo method, Type typeOfEntity, Type typeOfResult)
-        {
-            Func<MethodInfo, MethodInfo> makeGenericMethod = (m) =>
-            {
-                if (!m.IsGenericMethod)
-                {
-                    return m;
-                }
-
-                if (m.GetGenericArguments().Length == 2)
-                {
-                    return m.MakeGenericMethod(typeOfEntity, typeOfResult);
-                }
-
-                return m.MakeGenericMethod(typeOfEntity);
-            };
-
-            var parameters = method.GetParameters();
-            var conds = typeof(IQuery).IsAssignableFrom(method.DeclaringType)
-                ? ZarfQueryable.Methods.Where(item => item.Name == method.Name).ToList()
-                : ReflectionUtil.QueryableMethods.Where(item => item.Name == method.Name).ToList();
-
-            foreach (var cond in conds)
-            {
-                var genericCondMethod = makeGenericMethod(cond);
-                var genericCondParameters = genericCondMethod.GetParameters();
-                if (genericCondParameters.Length != parameters.Length + 1)
-                {
-                    continue;
-                }
-
-                var i = 1;
-                while (i < genericCondParameters.Length)
-                {
-                    if (genericCondParameters[i].ParameterType != parameters[i - 1].ParameterType)
-                    {
-                        break;
-                    }
-                }
-
-                if (i >= genericCondParameters.Length)
-                {
-                    return genericCondMethod;
-                }
-            }
-
-            throw new Exception($"can not find {method.Name}the mapped Queryable Method");
-        }
+        
     }
 
     public static class QueryEnumerable

@@ -26,16 +26,17 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            if (methodCall.Arguments.Count == 1)
-            {
-                return query;
-            }
 
-            return Translate(query, methodCall.Arguments[1]);
+            return Translate(query, methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1]);
         }
 
         public virtual QueryExpression Translate(QueryExpression query, Expression predicate)
         {
+            if (predicate == null)
+            {
+                return query;
+            }
+
             var parameter = predicate.GetParameters().FirstOrDefault();
 
             Utils.CheckNull(query, "query");

@@ -19,8 +19,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         static SelectTranslator()
         {
-            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select")
-                .Concat(new[] { ZarfQueryable.SelectMethod });
+            SupprotedMethods = ReflectionUtil.QueryableMethods.Where(item => item.Name == "Select");
         }
 
         public SelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

@@ -80,6 +80,7 @@ namespace Zarf.Query.Expressions
             };
 
             query.AddProjectionRange(query.GenQueryProjections());
+            query.QueryModel.Query = query;
 
             DefaultIfEmpty = false;
             Outer = query;

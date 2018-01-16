@@ -11,10 +11,6 @@ namespace Zarf
     {
         public static MethodInfo[] Methods = typeof(ZarfQueryable).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
-        public static MethodInfo SelectMethod = typeof(ZarfQueryable).GetMethod(nameof(Select));
-
-        public static MethodInfo WhereMethod = typeof(ZarfQueryable).GetMethod(nameof(Where));
-
         public static bool All<TEntity>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate)
         {
             throw new NotImplementedException();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using Zarf.Core;
 using Zarf.Extensions;
@@ -38,64 +39,97 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return GetCompiledExpression(obj);
             }
 
-            if (!(obj is QueryExpression)) return null;
-
             var query = obj as QueryExpression;
-
-            if (methodCall.Method.Name == "Select" && typeof(IJoinQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
+            if (query == null)
             {
-                query = new JoinSelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                return query;
             }
 
-            if (methodCall.Method.Name == "Where")
+            switch (methodCall.Method.Name)
             {
-                query = new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                case "Select":
+                    if (typeof(IJoinQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
+                    {
+                        query = new JoinSelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                    }
+                    else
+                    {
+                        query = new SelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                    }
+                    break;
+                case "Where":
+                    query = new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                    break;
+                case "Count":
+                case "LongCount":
+                case "Sum":
+                case "Max":
+                case "Min":
+                case "Average":
+                    query = new AggregateTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method);
+                    break;
+                default:
+                    break;
             }
 
-            if (new[] { "Count", "LongCount", "Sum", "Max", "Min", "Average" }.Contains(methodCall.Method.Name))
-            {
-                query = new AggregateTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method);
-            }
-
-            if (methodCall.Method.Name == "Select")
-            {
-                query = new SelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
-            }
+            var methodName = methodCall.Method.Name;
 
             if (new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" }.Contains(methodCall.Method.Name))
             {
-                //
+                query = new FirstTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 1 ? methodCall.Arguments[0] : null);
             }
 
-            if (methodCall.Method.Name == "All")
+            if (methodName == "All")
             {
                 //
             }
 
-            if (methodCall.Method.Name == "Any")
+            if (methodName == "Any")
             {
                 //
             }
 
-            if (methodCall.Method.Name == "Skip")
+            if (methodName == "Skip")
+            {
+                query = new SkipTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+            }
+
+            if (methodName == "Take")
             {
 
             }
 
-            if (methodCall.Method.Name == "Take")
+            if (methodName == "OrderBy")
             {
 
             }
 
-            if (methodCall.Method.Name == "OrderBy")
+            if (methodName == "GroupBy")
             {
 
             }
 
-            if (methodCall.Method.Name == "GroupBy")
+            if (methodName == "Union")
             {
 
             }
+
+            if (methodName == "Except")
+            {
+
+            }
+
+            if (methodName == "Concat")
+            {
+
+            }
+
+            if (methodName == "Intersect")
+            {
+
+            }
+
+            query.QueryModel.ModelType = methodCall.Method.ReturnType;
 
             Context.QueryModelMapper.MapQueryModel(methodCall, query.QueryModel);
 
@@ -105,21 +139,81 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
         protected Expression InvokeSubQueryMethodCall(Expression obj, MethodCallExpression methodCall)
         {
             //join 特殊处理,不支持外部参数引用
-            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.DeclaringType) &&
-                methodCall.Method.Name == "Join")
-            {
-                var body = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
-                var queryObj = Expression.Lambda(body).Compile().DynamicInvoke();
+            var method = methodCall.Method;
 
-                return GetCompiledExpression(Expression.Constant(queryObj));
+            if (typeof(IQuery).IsAssignableFrom(method.DeclaringType) && method.Name == "Join")
+            {
+                var joinBody = Expression.Call(obj, method, methodCall.Arguments);
+                var joinQuery = Expression.Lambda(joinBody).Compile().DynamicInvoke();
+
+                return GetCompiledExpression(Expression.Constant(joinQuery));
             }
 
             var iQuery = obj.As<ConstantExpression>()?.Value as IQuery;
-            var typeOfEntity = iQuery?.GetInternalQuery().GetTypeOfEntity();
-            var queryExpression = new[] { iQuery?.GetInternalQuery()?.GetExpression() };
+            if (iQuery == null)
+            {
+                throw new NullReferenceException("subquery refrence null!");
+            }
 
-            var method = ReflectionUtil.FindQueryableMethod(methodCall.Method, typeOfEntity, methodCall.Method.ReturnType.GetModelElementType());
-            return Expression.Call(null, method, queryExpression.Concat(methodCall.Arguments).ToArray());
+            var typeOfEntity = iQuery.GetInternalQuery().GetTypeOfEntity();
+            var callArgumnets = new[] { iQuery.GetInternalQuery().GetExpression() };
+            var typeOfResult = method.ReturnType.GetModelElementType();
+
+            var queryMethod = FindQueryableMethod(method, typeOfEntity, typeOfResult);
+            if (queryMethod == null)
+            {
+                throw new NullReferenceException("not found subquery method!");
+            }
+
+            return Expression.Call(null, queryMethod, callArgumnets.Concat(methodCall.Arguments).ToArray());
+        }
+
+        public static MethodInfo FindQueryableMethod(MethodInfo method, Type typeOfEntity, Type typeOfResult)
+        {
+            Func<MethodInfo, MethodInfo> makeGenericMethod = (m) =>
+            {
+                if (!m.IsGenericMethod)
+                {
+                    return m;
+                }
+
+                if (m.GetGenericArguments().Length == 2)
+                {
+                    return m.MakeGenericMethod(typeOfEntity, typeOfResult);
+                }
+
+                return m.MakeGenericMethod(typeOfEntity);
+            };
+
+            var parameters = method.GetParameters();
+            var conds = ZarfQueryable.Methods.Where(item => item.Name == method.Name).ToList();
+
+            foreach (var cond in conds)
+            {
+                var genericCondMethod = makeGenericMethod(cond);
+                var genericCondParameters = genericCondMethod.GetParameters();
+                if (genericCondParameters.Length != parameters.Length + 1)
+                {
+                    continue;
+                }
+
+                var i = 1;
+                while (i < genericCondParameters.Length)
+                {
+                    if (genericCondParameters[i].ParameterType != parameters[i - 1].ParameterType)
+                    {
+                        break;
+                    }
+                    i++;
+                }
+
+                if (i >= genericCondParameters.Length)
+                {
+                    return genericCondMethod;
+                }
+            }
+
+            throw new Exception($"can not find {method.Name}the mapped Queryable Method");
         }
     }
 }

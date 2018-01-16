@@ -41,21 +41,14 @@ namespace Zarf
                     3.外层的Parameter不能出现多个
                 */
 
-                var zz = db.Users.Join(db.Users, (a, b) => a.Id == b.Id + 1)
-                    .Select((a, b) => new { a.Id, B = b.Id }).Sum(item => item.Id);
-
-                //BasicTest(db);
-                var xx = db.Users.ToList();
 
                 var y = db.Users.Where(item => item.Id < 100).Select(item => new
                 {
                     Id = item.Id,
 
-                    N = db.Users.FirstOrDefault()
+                    N = db.Users.Skip(2).FirstOrDefault()
 
                 }).ToList();
-
-                var n2 = db.Users.Count();
 
                 //var x = db
                 //    .Users

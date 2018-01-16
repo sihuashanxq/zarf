@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using System.Linq;
 using System.Reflection;
-using Zarf.Mapping;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
@@ -27,7 +25,13 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var offset = (int)methodCall.Arguments[1].As<ConstantExpression>().Value;
+
+            return Translate(query, methodCall.Arguments[1]);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression offSet)
+        {
+            var offset = (int)offSet.As<ConstantExpression>().Value;
             var skip = new SkipExpression(offset, query.Orders.ToList());
 
             Utils.CheckNull(query, "query");
@@ -42,6 +46,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
                 Expression.Constant(offset));
 
             query.CombineCondtion(Expression.Lambda(skipCondtion));
+
             return query;
         }
     }
