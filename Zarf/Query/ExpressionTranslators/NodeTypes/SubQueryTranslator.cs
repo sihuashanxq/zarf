@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
@@ -45,48 +44,55 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 return query;
             }
 
-            switch (methodCall.Method.Name)
-            {
-                case "Select":
-                    if (typeof(IJoinQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
-                    {
-                        query = new JoinSelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
-                    }
-                    else
-                    {
-                        query = new SelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
-                    }
-                    break;
-                case "Where":
-                    query = new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
-                    break;
-                case "Count":
-                case "LongCount":
-                case "Sum":
-                case "Max":
-                case "Min":
-                case "Average":
-                    query = new AggregateTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method);
-                    break;
-                default:
-                    break;
-            }
-
             var methodName = methodCall.Method.Name;
-
-            if (new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" }.Contains(methodCall.Method.Name))
-            {
-                query = new FirstTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 1 ? methodCall.Arguments[0] : null);
-            }
 
             if (methodName == "All")
             {
-                //
+                query = new AllTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+
+                var allExpresion = new AllExpression(query);
+
+                Context.ExpressionMapper.Map(allExpresion, Utils.ExpressionConstantTrue);
+
+                return allExpresion;
             }
 
             if (methodName == "Any")
             {
-                //
+                query = new AnyTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+
+                var anyExpression = new AnyExpression(query);
+
+                Context.ExpressionMapper.Map(anyExpression, Utils.ExpressionConstantTrue);
+
+                return anyExpression;
+            }
+
+            if (methodName == "Select")
+            {
+                if (typeof(IJoinQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
+                {
+                    query = new JoinSelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                }
+                else
+                {
+                    query = new SelectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+                }
+            }
+
+            if (methodName == "Where")
+            {
+                query = new WhereTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
+            }
+
+            if (new[] { "Count", "LongCount", "Sum", "Max", "Min", "Average" }.Contains(methodName))
+            {
+                query = new AggregateTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 0 ? null : methodCall.Arguments[0], methodCall.Method);
+            }
+
+            if (new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" }.Contains(methodCall.Method.Name))
+            {
+                query = new FirstTranslator(Context, Compiler).Translate(query, methodCall.Arguments.Count == 1 ? methodCall.Arguments[0] : null);
             }
 
             if (methodName == "Skip")
@@ -96,37 +102,32 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
             if (methodName == "Take")
             {
-
+                query = new TakeTranslator(Context, Compiler).Translate(query, methodCall.Arguments[0]);
             }
 
             if (methodName == "OrderBy")
             {
-
+                query = new OrderByTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
             if (methodName == "GroupBy")
             {
-
+                query = new GroupByTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
-            if (methodName == "Union")
+            if (methodName == "Union"|| methodName == "Concat")
             {
-
+                query = new UnionTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
             if (methodName == "Except")
             {
-
-            }
-
-            if (methodName == "Concat")
-            {
-
+                query = new ExceptTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
             if (methodName == "Intersect")
             {
-
+                query = new IntersectTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
             query.QueryModel.ModelType = methodCall.Method.ReturnType;

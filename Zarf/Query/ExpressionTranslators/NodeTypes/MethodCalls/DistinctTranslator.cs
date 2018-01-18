@@ -19,6 +19,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public DistinctTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
@@ -27,6 +28,11 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Utils.CheckNull(query, "query");
 
+            return Translate(query, null);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression exp)
+        {
             query.IsDistinct = true;
 
             return query;

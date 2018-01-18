@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
@@ -24,21 +26,44 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            return Translate(query, methodCall.Arguments[1]);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression keySelector)
+        {
+            var parameter = keySelector.GetParameters().FirstOrDefault();
             if (query.Sets.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
-            //query.Groups.Add(
-            //    new GroupExpression(
-            //        GetColumns(
-            //            GetCompiledExpression(
-            //                methodCall.Arguments[1]
-            //            )
-            //        ).Select(item => item.Expression).OfType<ColumnExpression>()
-            //    )
-            //);
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+
+            var keyExpression = new RelationExpressionCompiler(Context).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
+            if (keyExpression is AliasExpression alias)
+            {
+                var keyQuery = Context.ProjectionOwner.GetQuery(alias);
+                if (!query.ConstainsQuery(keyQuery))
+                {
+                    throw new System.Exception("");
+                }
+                else if (alias.Expression is ColumnExpression)
+                {
+                    keyExpression = alias.Expression.As<ColumnExpression>();
+                }
+                else if (keyQuery != query)
+                {
+                    keyExpression = new ColumnExpression(keyQuery, new Column(alias.Alias), alias.Type);
+                }
+            }
+
+            if (!keyExpression.Is<ColumnExpression>())
+            {
+                throw new System.Exception();
+            }
+
+            query.Groups.Add(new GroupExpression(new[] { keyExpression.As<ColumnExpression>() }));
 
             return query;
         }

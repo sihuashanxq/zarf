@@ -166,11 +166,6 @@ namespace Zarf
             return new Query<TEntity>(InternalQuery.ThenByDescending(keySelector) as IInternalQuery<TEntity>);
         }
 
-        public IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
-        {
-            return new Query<TEntity>(InternalQuery.GroupBy(keySelector) as IInternalQuery<TEntity>);
-        }
-
         public IQuery<TEntity> Distinct()
         {
             return new Query<TEntity>(InternalQuery.Distinct() as IInternalQuery<TEntity>);
@@ -324,6 +319,15 @@ namespace Zarf
         public IJoinQuery<TEntity, TInner> Join<TInner>(IQuery<TInner> inner, Expression<Func<TEntity, TInner, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
             return new JoinQuery<TEntity, TInner>(JoinQuery.CreateJoinQuery(predicate, inner.InternalQuery, joinType), InternalQuery);
+        }
+
+        public IQuery<TEntity> GroupBy<TKey>(Expression<Func<TEntity, TKey>> keySelector)
+        {
+            var groupMethod = ZarfQueryable.Methods.First(item => item.Name == "GroupBy").MakeGenericMethod(new[] { typeof(TEntity), typeof(TKey) });
+            var groupExpression = Expression.Call(null, groupMethod, InternalQuery.Expression, keySelector);
+            var internalQuery = InternalQuery.Provider.CreateQuery<TEntity>(groupExpression) as IInternalQuery<TEntity>;
+
+            return new Query<TEntity>(internalQuery);
         }
     }
 }

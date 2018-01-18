@@ -10,7 +10,7 @@ namespace Zarf.Core.Internals
         Type GetTypeOfEntity();
     }
 
-    public interface IInternalQuery<TEntity> : IInternalQuery, IQueryable<TEntity>, IOrderedQueryable<TEntity>
+    public interface IInternalQuery<TEntity> :  IInternalQuery, IQueryable<TEntity>, IOrderedQueryable<TEntity>
     {
 
     }

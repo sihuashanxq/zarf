@@ -398,7 +398,7 @@ namespace Zarf.Query.ExpressionVisitors
                 case AllExpression all:
                     return VisitAll(all);
                 default:
-                    throw new Exception("");
+                    return extension;
             }
         }
 

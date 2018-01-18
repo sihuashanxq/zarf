@@ -166,22 +166,7 @@ namespace Zarf
             throw new NotImplementedException();
         }
 
-        public static IQueryable<TResult> GroupBy<TEntity, TKey, TElement, TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TKey>> keySelector, Expression<Func<TEntity, TElement>> elementSelector, Expression<Func<TKey, IEnumerable<TElement>, TResult>> resultSelector)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static IQueryable<TResult> GroupBy<TEntity, TKey, TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TKey>> keySelector, Expression<Func<TKey, IEnumerable<TEntity>, TResult>> resultSelector)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static IQueryable<IGrouping<TKey, TElement>> GroupBy<TEntity, TKey, TElement>(IQueryable<TEntity> query, Expression<Func<TEntity, TKey>> keySelector, Expression<Func<TEntity, TElement>> elementSelector)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static IQueryable<IGrouping<TKey, TEntity>> GroupBy<TEntity, TKey>(IQueryable<TEntity> query, Expression<Func<TEntity, TKey>> keySelector)
+        public static IQueryable<TEntity> GroupBy<TEntity, TKey>(IQueryable<TEntity> query, Expression<Func<TEntity, TKey>> keySelector)
         {
             throw new NotImplementedException();
         }

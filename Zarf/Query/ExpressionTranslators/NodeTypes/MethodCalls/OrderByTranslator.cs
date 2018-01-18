@@ -5,6 +5,7 @@ using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.Methods
 {
@@ -29,32 +30,48 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         }
 
-        private OrderType GetOrderType(MethodCallExpression methodCall)
-        {
-            return methodCall.Method.Name == "OrderBy" || methodCall.Method.Name == "ThenBy"
-                ? OrderType.Asc
-                : OrderType.Desc;
-        }
-
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+
+            return Translate(query, methodCall.Arguments[1]);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression keySelector)
+        {
+            var parameter = keySelector.GetParameters().FirstOrDefault();
             if (query.Sets.Count != 0)
             {
                 query = query.PushDownSubQuery(Context.Alias.GetNewTable());
             }
 
-            MapParameterWithQuery(GetFirstParameter(methodCall.Arguments[1]), query);
+            Context.QueryMapper.MapQuery(parameter, query);
+            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
 
-            //query.Orders.Add(new OrderExpression(
-            //      GetColumns(
-            //            GetCompiledExpression(
-            //                methodCall.Arguments[1]
-            //            )
-            //        ).Select(item => item.Expression).OfType<ColumnExpression>(),
-            //      GetOrderType(methodCall)
-            //    )
-            //);
+            var keyExpression = new RelationExpressionCompiler(Context).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
+            if (keyExpression is AliasExpression alias)
+            {
+                var keyQuery = Context.ProjectionOwner.GetQuery(alias);
+                if (!query.ConstainsQuery(keyQuery))
+                {
+                    throw new System.Exception("");
+                }
+                else if (alias.Expression is ColumnExpression)
+                {
+                    keyExpression = alias.Expression.As<ColumnExpression>();
+                }
+                else if (keyQuery != query)
+                {
+                    keyExpression = new ColumnExpression(keyQuery, new Column(alias.Alias), alias.Type);
+                }
+            }
+
+            if (!keyExpression.Is<ColumnExpression>())
+            {
+                throw new System.Exception();
+            }
+
+            query.Orders.Add(new OrderExpression(new[] { keyExpression.As<ColumnExpression>() }));
 
             return query;
         }

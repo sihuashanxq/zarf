@@ -25,17 +25,19 @@ namespace Zarf.Query.ExpressionTranslators.Methods
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var setsQuery = GetCompiledExpression<QueryExpression>(methodCall.Arguments[1]);
+
+            return Translate(query, methodCall.Arguments[1]);
+        }
+
+        public virtual QueryExpression Translate(QueryExpression query, Expression sets)
+        {
+            var setsQuery = GetCompiledExpression<QueryExpression>(sets);
 
             Utils.CheckNull(query, "Query Expression");
-            Utils.CheckNull(setsQuery, "Intersect Query Expression");
-
-            //if (setsQuery.Columns.Count == 0)
-            //{
-            //    //setsQuery.AddColumns(GetColumns(setsQuery));
-            //}
+            Utils.CheckNull(setsQuery, "Except Query Expression");
 
             query.Sets.Add(new IntersectExpression(setsQuery));
+
             return query;
         }
     }

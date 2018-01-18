@@ -14,8 +14,6 @@ namespace Zarf.Query.ExpressionTranslators
 
         public IQueryCompiler Compiler { get; }
 
-        public RelationExpressionCompiler RelationVisitor { get; }
-
         public Translator(IQueryContext queryContext, IQueryCompiler queryCompiper)
         {
             Context = queryContext;
@@ -25,11 +23,6 @@ namespace Zarf.Query.ExpressionTranslators
         public abstract Expression Translate(TExpression query);
 
         public Expression Translate(Expression query) => Translate(query.Cast<TExpression>());
-
-        protected void MapParameterWithQuery(ParameterExpression parameter, QueryExpression query)
-        {
-            Context.QueryMapper.MapQuery(parameter, query);
-        }
 
         protected TNodeType GetCompiledExpression<TNodeType>(Expression exp)
             where TNodeType : Expression
@@ -45,21 +38,6 @@ namespace Zarf.Query.ExpressionTranslators
         protected List<ParameterExpression> GetParameteres(Expression lambda)
         {
             return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();
-        }
-
-        protected ParameterExpression GetFirstParameter(Expression lambda)
-        {
-            return lambda.UnWrap().As<LambdaExpression>().Parameters.FirstOrDefault();
-        }
-
-        protected ParameterExpression GetLastParameter(Expression lambda)
-        {
-            return lambda.UnWrap().As<LambdaExpression>().Parameters.LastOrDefault();
-        }
-
-        protected Expression HandleCondtion(Expression predicate)
-        {
-            return RelationVisitor.Visit(predicate);
         }
     }
 }

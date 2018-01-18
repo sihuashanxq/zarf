@@ -28,14 +28,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override Expression Translate(MethodCallExpression methodCall)
         {
             var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var allExpression = Translate(query, methodCall.Arguments[1]);
+            var allExpression = new AllExpression(Translate(query, methodCall.Arguments[1]));
 
             Context.ExpressionMapper.Map(allExpression, Utils.ExpressionConstantTrue);
 
             return allExpression;
         }
 
-        public virtual Expression Translate(QueryExpression query, Expression predicate)
+        public virtual QueryExpression Translate(QueryExpression query, Expression predicate)
         {
             var parameter = predicate.GetParameters().FirstOrDefault();
 
@@ -57,7 +57,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             query.QueryModel = new QueryEntityModel(query, predicate, typeof(bool), query.QueryModel);
 
-            return new AllExpression(query);
+            return query;
         }
 
         protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)

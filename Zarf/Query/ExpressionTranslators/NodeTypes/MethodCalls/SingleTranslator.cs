@@ -27,7 +27,12 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
             Utils.CheckNull(query, "query");
 
-            query.Limit = 2;
+            if (query.QueryModel.RefrencedColumns.Count == 0)
+            {
+                query.Limit = 2;
+            }
+
+            query.QueryModel.ModelType = methodCall.Method.ReturnType;
 
             return query;
         }
