@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     public class QueryModelExpressionVisitor : ExpressionVisitorBase
     {

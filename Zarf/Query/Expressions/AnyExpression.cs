@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     public class AnyExpression : Expression
     {

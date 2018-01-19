@@ -8,8 +8,8 @@ using Zarf.Core;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
-using Zarf.Query;
-using Zarf.Query.Expressions;
+using Zarf.Queries;
+using Zarf.Queries.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {

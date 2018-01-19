@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using Zarf.Builders;
 
 namespace Zarf.SqlServer.Builders

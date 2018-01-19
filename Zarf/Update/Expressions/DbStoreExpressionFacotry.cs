@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
 namespace Zarf.Update.Expressions
 {

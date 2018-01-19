@@ -3,20 +3,17 @@ using System.Linq.Expressions;
 using System.Collections.Generic;
 using Zarf.Core;
 using Zarf.Entities;
-using Zarf.Core.Internals;
 
 namespace Zarf
 {
     public interface IQuery
     {
-        IInternalQuery GetInternalQuery();
+
     }
 
     public interface IQuery<TEntity> : IQuery
     {
         DbContext DbContext { get; }
-
-        IInternalQuery<TEntity> InternalQuery { get; }
 
         IQuery<TEntity> Where(Expression<Func<TEntity, bool>> predicate);
 

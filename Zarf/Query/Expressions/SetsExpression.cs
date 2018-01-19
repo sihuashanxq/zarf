@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     /// <summary>
     /// 集合表达式

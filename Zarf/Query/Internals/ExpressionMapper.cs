@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.Internals
+namespace Zarf.Queries.Internals
 {
     public class ExpressionMapper : IQueryProjectionMapper
     {

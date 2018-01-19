@@ -2,8 +2,8 @@
 using System.Linq.Expressions;
 
 using Zarf.Mapping;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionTranslators;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionTranslators;
 
 namespace Zarf.Extensions
 {

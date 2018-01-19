@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class MemberInitExpressionTranslator : Translator<MemberInitExpression>
     {

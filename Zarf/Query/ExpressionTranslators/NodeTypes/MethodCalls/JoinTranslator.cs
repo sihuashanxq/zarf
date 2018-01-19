@@ -7,10 +7,10 @@ using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionVisitors;
 
-namespace Zarf.Query.ExpressionTranslators.Methods
+namespace Zarf.Queries.ExpressionTranslators.Methods
 {
     public class JoinTranslator : Translator<MethodCallExpression>
     {
@@ -69,7 +69,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
 
         public virtual Expression Transalte(JoinQuery joinQuery)
         {
-            var query = GetCompiledExpression<QueryExpression>(joinQuery.InternalDbQuery.GetExpression());
+            var query = GetCompiledExpression<QueryExpression>(joinQuery.InternalDbQuery.Expression);
             var joins = joinQuery.Joins;
             if (joins == null)
             {

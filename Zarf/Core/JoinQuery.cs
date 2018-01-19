@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Core.Internals;
 using Zarf.Entities;
+using Zarf.Extensions;
 
 namespace Zarf.Core
 {
@@ -74,7 +75,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3> Join<T3>(IQuery<T3> query, Expression<Func<T1, T2, T3, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3>(Joins, InternalDbQuery);
         }
 
@@ -94,7 +95,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3, T4> Join<T4>(IQuery<T4> query, Expression<Func<T1, T2, T3, T4, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3, T4>(Joins, InternalDbQuery);
         }
 
@@ -113,7 +114,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3, T4, T5> Join<T5>(IQuery<T5> query, Expression<Func<T1, T2, T3, T4, T5, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3, T4, T5>(Joins, InternalDbQuery);
         }
 
@@ -132,7 +133,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3, T4, T5, T6> Join<T6>(IQuery<T6> query, Expression<Func<T1, T2, T3, T4, T5, T6, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3, T4, T5, T6>(Joins, InternalDbQuery);
         }
 
@@ -151,7 +152,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3, T4, T5, T6, T7> Join<T7>(IQuery<T7> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3, T4, T5, T6, T7>(Joins, InternalDbQuery);
         }
 
@@ -170,7 +171,7 @@ namespace Zarf.Core
 
         public IJoinQuery<T1, T2, T3, T4, T5, T6, T7, T8> Join<T8>(IQuery<T8> query, Expression<Func<T1, T2, T3, T4, T5, T6, T7, T8, bool>> predicate, JoinType joinType = JoinType.Inner)
         {
-            Joins.Add(CreateJoinQuery(predicate, query.InternalQuery, joinType));
+            Joins.Add(CreateJoinQuery(predicate, query.As<Query>().InternalQuery, joinType));
             return new JoinQuery<T1, T2, T3, T4, T5, T6, T7, T8>(Joins, InternalDbQuery);
         }
 

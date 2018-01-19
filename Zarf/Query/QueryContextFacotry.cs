@@ -1,8 +1,8 @@
 ﻿using Zarf.Core;
 using Zarf.Mapping;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.ExpressionVisitors;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public class QueryContextFacotry : IQueryContextFactory
     {

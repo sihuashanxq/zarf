@@ -2,9 +2,9 @@
 using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {

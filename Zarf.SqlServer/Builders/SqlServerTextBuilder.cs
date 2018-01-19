@@ -6,7 +6,7 @@ using System.Text;
 using Zarf.Builders;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using Zarf.Update.Expressions;
 
 namespace Zarf.SqlServer.Builders

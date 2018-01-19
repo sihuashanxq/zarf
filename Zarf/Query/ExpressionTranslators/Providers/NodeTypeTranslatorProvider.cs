@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.ExpressionTranslators.NodeTypes;
+using Zarf.Queries.ExpressionTranslators.NodeTypes;
 
-namespace Zarf.Query.ExpressionTranslators
+namespace Zarf.Queries.ExpressionTranslators
 {
     public class NodeTypeTranslatorProvider : ITransaltorProvider
     {

@@ -2,14 +2,14 @@
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using System.Reflection.Emit;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     internal class SubQueryModelTypeDescriptor
     {

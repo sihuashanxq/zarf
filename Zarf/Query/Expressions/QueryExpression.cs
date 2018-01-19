@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Query.Internals;
+using Zarf.Queries.Internals;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     public class QueryExpression : Expression
     {

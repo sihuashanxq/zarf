@@ -2,9 +2,9 @@
 using System.Linq.Expressions;
 using System.Collections.Generic;
 
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     /// <summary>
     /// 属性导航

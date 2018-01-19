@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Entities;
-using Zarf.Query;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries;
+using Zarf.Queries.ExpressionVisitors;
 
 namespace Zarf
 {
@@ -33,13 +33,6 @@ namespace Zarf
             {
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-
-                /*
-                    Select 中包含的子查询
-                    1.引用的外层Parameter不能跨作用域
-                    2.外层的Parameter引用只能在最后一个表达式方法中
-                    3.外层的Parameter不能出现多个
-                */
                 var y = db.Users.Where(item => item.Id < 100).Select(item => new
                 {
                     Id = item.Id,
@@ -47,7 +40,6 @@ namespace Zarf
                     N = db.Users.Skip(2).FirstOrDefault()
 
                 }).ToList();
-
                 var x = db
                     .Users
                     .Select(item => new { item.Id, item.Name })

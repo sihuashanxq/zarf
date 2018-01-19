@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Query;
+using Zarf.Queries;
 using Zarf.Core;
 using Zarf.Core.Internals;
 

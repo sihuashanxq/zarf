@@ -3,10 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionTranslators;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionTranslators;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     public class QueryCompiler : ExpressionVisitorBase, IQueryCompiler
     {

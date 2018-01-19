@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Query;
+using Zarf.Queries;
 
 namespace Zarf.Core.Internals
 {

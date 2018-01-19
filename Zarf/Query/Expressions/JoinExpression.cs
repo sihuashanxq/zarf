@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System;
 using Zarf.Entities;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     ///<summary>
     ///Represent a join query 

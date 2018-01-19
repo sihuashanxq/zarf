@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using System;
 using System.Collections.Generic;
 using Zarf.Update.Expressions;

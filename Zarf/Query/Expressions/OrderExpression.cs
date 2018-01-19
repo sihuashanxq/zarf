@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 using Zarf.Entities;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     public class OrderExpression : Expression
     {

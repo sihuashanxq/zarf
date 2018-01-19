@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public class EntityEnumerator<TEntity> : IEnumerator<TEntity>
     {

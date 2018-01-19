@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     /// <summary>
     /// 聚合表达式   COUNT SUM  AVG etc..

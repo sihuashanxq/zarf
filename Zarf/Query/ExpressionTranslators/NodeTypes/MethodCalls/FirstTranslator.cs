@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionTranslators.Methods
+namespace Zarf.Queries.ExpressionTranslators.Methods
 {
     public class FirstTranslator : WhereTranslator
     {

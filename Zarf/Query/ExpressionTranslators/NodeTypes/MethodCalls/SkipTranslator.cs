@@ -2,11 +2,11 @@
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using System.Linq;
 using System.Reflection;
 
-namespace Zarf.Query.ExpressionTranslators.Methods
+namespace Zarf.Queries.ExpressionTranslators.Methods
 {
     public class SkipTranslator : Translator<MethodCallExpression>
     {

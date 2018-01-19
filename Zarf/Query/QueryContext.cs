@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Zarf.Mapping;
 using Zarf.Core;
-using Zarf.Query.Internals;
+using Zarf.Queries.Internals;
 using Zarf.Entities;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public interface ISubQueryValueCache
     {

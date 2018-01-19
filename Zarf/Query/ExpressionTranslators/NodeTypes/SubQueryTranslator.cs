@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionTranslators.Methods;
-using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionTranslators.Methods;
+using Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class SubQueryTranslator : Translator<MethodCallExpression>
     {
@@ -115,7 +115,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 query = new GroupByTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
 
-            if (methodName == "Union"|| methodName == "Concat")
+            if (methodName == "Union" || methodName == "Concat")
             {
                 query = new UnionTranslator(Context, Compiler).Translate(query, methodCall.Arguments[1]);
             }
@@ -156,8 +156,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 throw new NullReferenceException("subquery refrence null!");
             }
 
-            var typeOfEntity = iQuery.GetInternalQuery().GetTypeOfEntity();
-            var callArgumnets = new[] { iQuery.GetInternalQuery().GetExpression() };
+            var typeOfEntity = iQuery.As<Query>().InternalQuery.ElementType;
+            var callArgumnets = new[] { iQuery.As<Query>().InternalQuery.Expression };
             var typeOfResult = method.ReturnType.GetModelElementType();
 
             var queryMethod = FindQueryableMethod(method, typeOfEntity, typeOfResult);

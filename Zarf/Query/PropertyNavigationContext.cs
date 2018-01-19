@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Collections.Generic;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     //LOCK TODO
     public class PropertyNavigationContext : IPropertyNavigationContext

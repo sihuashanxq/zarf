@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class ParameterExpressionTranslator : Translator<ParameterExpression>
     {

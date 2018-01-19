@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Core.Internals;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionVisitors;
 using Zarf.Entities;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class ConstantExpressionTranslator : Translator<ConstantExpression>
     {

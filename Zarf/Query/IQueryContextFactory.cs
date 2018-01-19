@@ -1,6 +1,6 @@
 ﻿using Zarf.Core;
 using Zarf.Mapping;
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public interface IQueryContextFactory
     {

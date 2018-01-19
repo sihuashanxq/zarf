@@ -3,12 +3,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using Zarf.Mapping;
 using Zarf.Entities;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.ExpressionVisitors;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls
 {
     public class AnyTranslator : Translator<MethodCallExpression>
     {

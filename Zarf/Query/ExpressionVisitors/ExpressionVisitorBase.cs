@@ -1,7 +1,7 @@
 using Zarf.Extensions;
 using System.Linq.Expressions;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     public abstract class ExpressionVisitorBase : ExpressionVisitor
     {

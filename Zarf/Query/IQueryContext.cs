@@ -1,12 +1,12 @@
 ﻿using Zarf.Mapping;
 using System.Collections.Generic;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 using Zarf.Core;
 using System.Linq.Expressions;
-using Zarf.Query.Internals;
+using Zarf.Queries.Internals;
 using Zarf.Entities;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public interface IQueryContext
     {

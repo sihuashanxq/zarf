@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using Zarf.Entities;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     public class InsertExpression : Expression
     {

@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {

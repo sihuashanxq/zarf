@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public class QueryMapper : IQueryMapper
     {

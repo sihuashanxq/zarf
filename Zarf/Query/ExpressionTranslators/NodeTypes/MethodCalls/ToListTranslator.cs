@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core.Internals;
 using Zarf.Entities;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionVisitors;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class ToListTranslator : Translator<MethodCallExpression>
     {

@@ -4,7 +4,7 @@ using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
 
-namespace Zarf.Query.Expressions
+namespace Zarf.Queries.Expressions
 {
     public class ColumnExpression : Expression
     {

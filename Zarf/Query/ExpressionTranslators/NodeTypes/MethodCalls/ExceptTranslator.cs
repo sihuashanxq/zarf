@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionTranslators.Methods
+namespace Zarf.Queries.ExpressionTranslators.Methods
 {
     public class ExceptTranslator : Translator<MethodCallExpression>
     {

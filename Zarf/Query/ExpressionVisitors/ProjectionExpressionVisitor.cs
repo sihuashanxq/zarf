@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     /// <summary>
     /// 根据子查询生成Column

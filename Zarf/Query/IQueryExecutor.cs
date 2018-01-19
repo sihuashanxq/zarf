@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Collections.Generic;
 
-namespace Zarf.Query
+namespace Zarf.Queries
 {
     public interface IQueryExecutor
     {

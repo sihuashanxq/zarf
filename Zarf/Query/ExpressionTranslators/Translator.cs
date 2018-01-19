@@ -3,10 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionVisitors;
 
-namespace Zarf.Query.ExpressionTranslators
+namespace Zarf.Queries.ExpressionTranslators
 {
     public abstract class Translator<TExpression> : ITranslator<TExpression>, ITranslaor
     {

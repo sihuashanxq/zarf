@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Queries.ExpressionVisitors;
 
 namespace Zarf.Mapping
 {

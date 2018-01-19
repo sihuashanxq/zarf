@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Query.Expressions;
+using Zarf.Queries.Expressions;
 
-namespace Zarf.Query.ExpressionVisitors
+namespace Zarf.Queries.ExpressionVisitors
 {
     public class ModelRefrenceExpressionVisitor : ExpressionVisitorBase
     {

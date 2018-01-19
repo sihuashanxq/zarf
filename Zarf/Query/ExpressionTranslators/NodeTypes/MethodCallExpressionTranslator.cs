@@ -6,11 +6,11 @@ using System.Collections;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Query.Expressions;
-using Zarf.Query.ExpressionTranslators.Methods;
-using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
+using Zarf.Queries.Expressions;
+using Zarf.Queries.ExpressionTranslators.Methods;
+using Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls;
 
-namespace Zarf.Query.ExpressionTranslators.NodeTypes
+namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 {
     public class MethodCallExpressionTranslator : Translator<MethodCallExpression>
     {
