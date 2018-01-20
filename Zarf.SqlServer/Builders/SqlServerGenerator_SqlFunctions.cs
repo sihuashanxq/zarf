@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Queries.Expressions;
-using Zarf.Builders;
+using Zarf.Generators;
 
 namespace Zarf.SqlServer.Builders
 {
-    internal partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerGenerator : SQLGenerator
     {
         protected static readonly Type StringType = typeof(string);
 

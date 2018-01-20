@@ -1,4 +1,4 @@
-﻿using Zarf.Builders;
+﻿using Zarf.Generators;
 using Zarf.Core;
 using Zarf.SqlServer.Builders;
 
@@ -6,7 +6,7 @@ namespace Zarf.SqlServer.Core
 {
     public class SqlServerDbContextParts : IDbContextParts
     {
-        public ISqlTextBuilder CommandTextBuilder { get; }
+        public ISQLGenerator CommandTextBuilder { get; }
 
         public IDbEntityCommandFacotry EntityCommandFacotry { get; }
 
@@ -18,7 +18,7 @@ namespace Zarf.SqlServer.Core
 
         public SqlServerDbContextParts(string connectionString)
         {
-            CommandTextBuilder = new SqlServerTextBuilder();
+            CommandTextBuilder = new SqlServerGenerator();
             EntityConnectionFacotry = new SqlServerDbEntityConnectionFacotry(connectionString);
             EntityCommandFacotry = new SqlServerDbEntityCommandFactory(EntityConnectionFacotry);
             EntityConnection = EntityConnectionFacotry.Create();

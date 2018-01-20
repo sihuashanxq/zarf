@@ -8,6 +8,7 @@ using Zarf.Queries.ExpressionTranslators;
 using Zarf.Queries.ExpressionVisitors;
 using System.Linq;
 using System.Collections;
+using Zarf.Entities;
 
 namespace Zarf.Queries
 {
@@ -46,22 +47,25 @@ namespace Zarf.Queries
                 compiledQuery = new QueryCompiler(queryContext).Compile(query);
             }
 
-            var entityActivator = new DefaultEntityBinder(queryContext).Bind<TEntity>(new BindingContext(compiledQuery));
+            var modelActivator = new DefaultEntityBinder(queryContext).Bind<TEntity>(new BindingContext(compiledQuery));
+            var parameters = new List<DbParameter>();
+
+            var commandText = _dbContextParts.CommandTextBuilder.Generate(compiledQuery, parameters);
             var dataReader = _dbContextParts
                 .EntityCommandFacotry
                 .Create(_dbContextParts.ConnectionString)
-                .ExecuteDataReader(_dbContextParts.CommandTextBuilder.Build(compiledQuery));
+                .ExecuteDataReader(commandText, parameters.ToArray());
 
             if (typeof(TResult).IsCollection())
             {
-                return new EntityEnumerator<TEntity>(entityActivator, dataReader).Cast<TResult>();
+                return new EntityEnumerator<TEntity>(modelActivator, dataReader).Cast<TResult>();
             }
 
             using (dataReader)
             {
                 if (dataReader.Read())
                 {
-                    return entityActivator.DynamicInvoke(dataReader).Cast<TResult>();
+                    return modelActivator.DynamicInvoke(dataReader).Cast<TResult>();
                 }
             }
 

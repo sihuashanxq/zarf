@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using Zarf.Builders;
+using Zarf.Generators;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Queries.Expressions;
@@ -11,23 +11,8 @@ using Zarf.Update.Expressions;
 
 namespace Zarf.SqlServer.Builders
 {
-    internal partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerGenerator : SQLGenerator
     {
-        public class DisposeAction : IDisposable
-        {
-            private Action _action;
-
-            public DisposeAction(Action action)
-            {
-                _action = action;
-            }
-
-            public void Dispose()
-            {
-                _action?.Invoke();
-            }
-        }
-
         protected static readonly Dictionary<string, string> Aggregates = new Dictionary<string, string>()
         {
             {"Min","Min" },
@@ -38,28 +23,35 @@ namespace Zarf.SqlServer.Builders
             {"LongCount","Count_Big" }
         };
 
-        protected bool StopGenColumnAlias { get; set; }
+        private int _parameterOffSet = 0;
 
-        protected StringBuilder Builder { get; set; } = new StringBuilder();
+        protected StringBuilder SQL { get; set; }
 
-        protected IDisposable BeginStopGenColumnAlias()
-        {
-            var stopGenColumnAlias = StopGenColumnAlias;
-            StopGenColumnAlias = true;
-            return new DisposeAction(() =>
-            {
-                StopGenColumnAlias = stopGenColumnAlias;
-            });
-        }
+        protected List<DbParameter> Parameters { get; set; }
 
-        public override string Build(Expression expression)
+        public override string Generate(Expression expression, List<DbParameter> parameters)
         {
             lock (this)
             {
-                Builder.Clear();
+                _parameterOffSet = 0;
+
+                SQL = new StringBuilder();
+                Parameters = parameters;
+
                 BuildExpression(expression);
-                return Builder.ToString();
+
+                return SQL.ToString();
             }
+        }
+
+        public override string Generate(Expression expression)
+        {
+            return Generate(expression, new List<DbParameter>());
+        }
+
+        protected DbParameter GenParameter(object parameterValue)
+        {
+            return new DbParameter("@P" + _parameterOffSet++, parameterValue);
         }
 
         protected override Expression VisitAggregate(AggregateExpression aggregate)
@@ -73,10 +65,7 @@ namespace Zarf.SqlServer.Builders
                 }
                 else
                 {
-                    using (BeginStopGenColumnAlias())
-                    {
-                        BuildExpression(aggregate.KeySelector);
-                    }
+                    BuildExpression(aggregate.KeySelector);
                 }
 
                 Append(')');
@@ -97,8 +86,8 @@ namespace Zarf.SqlServer.Builders
         {
             if (column.Query != null && !column.Query.Alias.IsNullOrEmpty())
             {
-                Builder.Append(column.Query.Alias.Escape());
-                Builder.Append('.');
+                SQL.Append(column.Query.Alias.Escape());
+                SQL.Append('.');
             }
 
             if (column.Column == null)
@@ -107,13 +96,13 @@ namespace Zarf.SqlServer.Builders
             }
             else
             {
-                Builder.Append(column.Column.Name.Escape());
+                SQL.Append(column.Column.Name.Escape());
             }
 
-            if (!StopGenColumnAlias && !column.Alias.IsNullOrEmpty())
+            if (!column.Alias.IsNullOrEmpty())
             {
                 Append(" AS ");
-                Builder.Append(column.Alias.Escape());
+                SQL.Append(column.Alias.Escape());
             }
 
             return column;
@@ -145,11 +134,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitGroup(GroupExpression group)
         {
-            using (BeginStopGenColumnAlias())
-            {
-                BuildColumns(group.Columns);
-                return group;
-            }
+
+            BuildColumns(group.Columns);
+            return group;
         }
 
         protected override Expression VisitIntersect(IntersectExpression intersec)
@@ -197,13 +184,11 @@ namespace Zarf.SqlServer.Builders
                 Append("  AS " + join.Query.Alias.Escape());
             }
 
-            using (BeginStopGenColumnAlias())
+
+            if (join.JoinType != JoinType.Cross)
             {
-                if (join.JoinType != JoinType.Cross)
-                {
-                    Append(" ON ");
-                    BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
-                }
+                Append(" ON ");
+                BuildExpression(join.Predicate ?? Utils.ExpressionTrue);
             }
 
             return join;
@@ -211,15 +196,13 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitOrder(OrderExpression order)
         {
-            using (BeginStopGenColumnAlias())
-            {
-                var direction = order.OrderType == OrderType.Desc
-                    ? " DESC "
-                    : " ASC ";
 
-                BuildColumns(order.Columns);
-                Builder.Append(direction);
-            }
+            var direction = order.OrderType == OrderType.Desc
+                ? " DESC "
+                : " ASC ";
+
+            BuildColumns(order.Columns);
+            SQL.Append(direction);
             return order;
         }
 
@@ -260,12 +243,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitWhere(WhereExperssion where)
         {
-            using (BeginStopGenColumnAlias())
-            {
-                Append(" WHERE ");
-                BuildExpression(where.Predicate);
-                return where;
-            }
+            Append(" WHERE ");
+            BuildExpression(where.Predicate);
+            return where;
         }
 
         protected override Expression VisitAll(AllExpression all)
@@ -299,7 +279,7 @@ namespace Zarf.SqlServer.Builders
                     Append(',');
                 }
 
-                Builder.Length--;
+                SQL.Length--;
                 Append(")  AS __ROWINDEX__");
             }
 
@@ -308,29 +288,30 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitConstant(ConstantExpression constant)
         {
+            DbParameter parameter = null;
+
             if (constant.Type == typeof(bool))
             {
-                Builder.Append(constant.Value.Cast<bool>() ? 1 : 0);
+                parameter = GenParameter(constant.Value.Cast<bool>() ? 1 : 0);
             }
             else if (NumbericTypes.Contains(constant.Type))
             {
-                Append(constant.Value);
+                parameter = GenParameter(constant.Value);
             }
             else if (constant.Value.Is<DateTime>())
             {
                 //998毫秒Sql Server 999毫秒报错
                 var date = constant.Value.Cast<DateTime>();
-                Append(
-                    '\'',
-                    date.Year,
-                    date.ToString("-MM-dd HH:mm:ss."),
-                    date.Millisecond > 998 ? 998 : date.Millisecond,
-                    '\'');
+
+                parameter = GenParameter('\'' + date.Year + date.ToString("-MM-dd HH:mm:ss.") + (date.Millisecond > 998 ? 998 : date.Millisecond) + '\'');
             }
             else
             {
-                Append('\'', constant.Value.ToString(), '\'');
+                parameter = GenParameter(constant.Value.ToString());
             }
+
+            Parameters.Add(parameter);
+            Append(parameter.Name);
 
             return constant;
         }
@@ -389,7 +370,7 @@ namespace Zarf.SqlServer.Builders
                 }
 
                 BuildExpression(left);
-                Builder.Append(op);
+                SQL.Append(op);
                 BuildExpression(right);
 
                 return binary;
@@ -406,7 +387,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            Builder.Length--;
+            SQL.Length--;
         }
 
         protected virtual void BuildLimit(QueryExpression query)
@@ -445,7 +426,7 @@ namespace Zarf.SqlServer.Builders
                     Append(',');
                 }
 
-                Builder.Length--;
+                SQL.Length--;
             }
         }
 
@@ -512,7 +493,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            Builder.Length--;
+            SQL.Length--;
         }
 
         protected virtual void BuildGroups(QueryExpression query)
@@ -530,7 +511,7 @@ namespace Zarf.SqlServer.Builders
                 Append(',');
             }
 
-            Builder.Length--;
+            SQL.Length--;
         }
 
         protected virtual void BuildWhere(QueryExpression query)
@@ -541,11 +522,11 @@ namespace Zarf.SqlServer.Builders
             }
         }
 
-        protected virtual SqlServerTextBuilder Append(params object[] args)
+        protected virtual SqlServerGenerator Append(params object[] args)
         {
             foreach (var arg in args)
             {
-                Builder.Append(arg);
+                SQL.Append(arg);
             }
 
             return this;
@@ -603,15 +584,15 @@ namespace Zarf.SqlServer.Builders
             {
                 Append(col.Escape()).Append(',');
             }
-            Builder.Length--;
+            SQL.Length--;
             Append(") VALUES ");
 
-            var dbParams = insert.DbParams.ToList();
+            var parameters = insert.DbParams.ToList();
             var colCount = insert.Columns.Count();
 
-            for (var i = 0; i < dbParams.Count; i++)
+            for (var i = 0; i < parameters.Count; i++)
             {
-                var parameter = dbParams[i];
+                var parameter = parameters[i];
                 var mod = (i % colCount);
                 if (mod == 0)
                 {
@@ -641,18 +622,18 @@ namespace Zarf.SqlServer.Builders
             Append("SET ");
 
             var columns = update.Columns.ToList();
-            var dbParams = update.DbParams.ToList();
+            var parameters = update.DbParams.ToList();
             for (var i = 0; i < columns.Count; i++)
             {
                 var col = columns[i];
-                var dbParam = dbParams[i];
+                var dbParam = parameters[i];
                 Append(col.Escape()).
                 Append('=').
                 Append(dbParam.Name).
                 Append(',');
             }
 
-            Builder.Length--;
+            SQL.Length--;
 
             Append(" WHERE ").
             Append(update.Identity).
@@ -685,7 +666,7 @@ namespace Zarf.SqlServer.Builders
                     Append(primaryKeyValue.Name + ',');
                 }
 
-                Builder.Length--;
+                SQL.Length--;
                 Append(')');
             }
 

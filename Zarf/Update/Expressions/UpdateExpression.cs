@@ -23,13 +23,13 @@ namespace Zarf.Queries.Expressions
 
         public UpdateExpression(
             Table table,
-            IEnumerable<DbParameter> dbParams,
+            IEnumerable<DbParameter> parameters,
             IEnumerable<string> columns,
             string identity,
             DbParameter identityValue)
         {
             Table = table;
-            DbParams = dbParams;
+            DbParams = parameters;
             Columns = columns;
             Identity = identity;
             IdentityValue = identityValue;

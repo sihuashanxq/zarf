@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using Zarf.Builders;
+using Zarf.Generators;
 using Zarf.Extensions;
 
 namespace Zarf.SqlServer.Builders
 {
-    internal partial class SqlServerTextBuilder : SqlTextBuilder
+    internal partial class SqlServerGenerator : SQLGenerator
     {
         protected static HashSet<string> LikeMethods = new HashSet<string>
         {
@@ -227,7 +227,7 @@ namespace Zarf.SqlServer.Builders
                         BuildExpression(argument);
                         Append(',');
                     }
-                    Builder.Length--;
+                    SQL.Length--;
                     Append(')');
                     break;
                 default:
@@ -348,7 +348,7 @@ namespace Zarf.SqlServer.Builders
                     break;
                 case "Tanh":
                     BuildMathSinh(methodCall);
-                    Builder.Append('/');
+                    SQL.Append('/');
                     BuildMathCosh(methodCall);
                     break;
                 case "Truncate":

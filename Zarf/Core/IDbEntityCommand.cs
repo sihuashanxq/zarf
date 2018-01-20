@@ -10,17 +10,17 @@ namespace Zarf.Core
 
         IDbCommand DbCommand { get; }
 
-        IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams);
+        IDataReader ExecuteDataReader(string commandText, params DbParameter[] parameters);
 
-        void ExecuteNonQuery(string commandText, params DbParameter[] dbParams);
+        void ExecuteNonQuery(string commandText, params DbParameter[] parameters);
 
-        object ExecuteScalar(string commandText, params DbParameter[] dbParams);
+        object ExecuteScalar(string commandText, params DbParameter[] parameters);
 
-        Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams);
+        Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] parameters);
 
-        Task ExecuteNonQueryAsync(string commandText, params DbParameter[] dbParams);
+        Task ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
 
-        Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] dbParams);
+        Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] parameters);
 
         void AddParameterWithValue(string parameterName, object value);
     }

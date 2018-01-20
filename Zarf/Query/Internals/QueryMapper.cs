@@ -6,11 +6,11 @@ namespace Zarf.Queries
 {
     public class QueryMapper : IQueryMapper
     {
-        protected virtual Dictionary<ParameterExpression, QueryExpression> Queries { get; set; }
+        protected  Dictionary<ParameterExpression, QueryExpression> Mappers { get; set; }
 
         public QueryMapper()
         {
-            Queries = new Dictionary<ParameterExpression, QueryExpression>();
+            Mappers = new Dictionary<ParameterExpression, QueryExpression>();
         }
 
         public void MapQuery(ParameterExpression parameter, QueryExpression query)
@@ -20,12 +20,12 @@ namespace Zarf.Queries
                 return;
             }
 
-            Queries[parameter] = query;
+            Mappers[parameter] = query;
         }
 
         public QueryExpression GetMappedQuery(ParameterExpression parameter)
         {
-            return Queries.TryGetValue(parameter, out QueryExpression query) ? query : null;
+            return Mappers.TryGetValue(parameter, out QueryExpression query) ? query : null;
         }
     }
 }

@@ -220,57 +220,5 @@ namespace Zarf
         {
             return dbQuery.Join(joinQuery, predicate, JoinType.Cross);
         }
-
-        /// <summary>
-        /// 查询包含属性
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <typeparam name="TProperty">属性类型</typeparam>
-        /// <param name="dbQuery">原始查询</param>
-        /// <param name="propertyPath">属性路径</param>
-        /// <param name="propertyRelation">关联关系</param>
-        /// <returns></returns>
-        internal static IInternalQuery<TEntity> Include<TEntity, TProperty>
-        (
-            this IInternalQuery<TEntity> dbQuery,
-            Expression<Func<TEntity, IEnumerable<TProperty>>> propertyPath,
-            Expression<Func<TEntity, TProperty, bool>> propertyRelation
-        )
-        {
-            return new InternalQuery<TEntity>(dbQuery.Provider,
-                  Expression.Call(
-                      ReflectionUtil.Include.MakeGenericMethod(typeof(TEntity), typeof(TProperty)),
-                      dbQuery.Expression,
-                      Expression.Quote(propertyPath),
-                      Expression.Quote(propertyRelation)
-                    )
-                );
-        }
-
-        /// <summary>
-        /// 查询包含属性
-        /// </summary>
-        /// <typeparam name="TEntity">实体类型</typeparam>
-        /// <typeparam name="TPrevious">上一个被包含属性类型</typeparam>
-        /// <typeparam name="TProperty">属性类型</typeparam>
-        /// <param name="dbQuery">原始查询</param>
-        /// <param name="propertyPath">属性路径</param>
-        /// <param name="propertyRelation">关联关系</param>
-        internal static IInternalQuery<TEntity> ThenInclude<TEntity, TPrevious, TProperty>
-        (
-            this IInternalQuery<TEntity> dbQuery,
-            Expression<Func<TPrevious, IEnumerable<TProperty>>> propertyPath,
-            Expression<Func<TPrevious, TProperty, bool>> propertyRelation
-        )
-        {
-            return new InternalQuery<TEntity>(dbQuery.Provider,
-                     Expression.Call(
-                     ReflectionUtil.ThenInclude.MakeGenericMethod(typeof(TEntity), typeof(TPrevious), typeof(TProperty)),
-                     dbQuery.Expression,
-                     Expression.Quote(propertyPath),
-                     Expression.Quote(propertyRelation)
-                    )
-                );
-        }
     }
 }

@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Zarf.Builders;
+using Zarf.Generators;
 using Zarf.Core;
 using Zarf.Update.Expressions;
+using Zarf.Entities;
 
 namespace Zarf.Update.Executors
 {
@@ -12,14 +13,14 @@ namespace Zarf.Update.Executors
     {
         public IDbEntityCommandFacotry CommandFacotry { get; }
 
-        public ISqlTextBuilder SqlBuilder { get; }
+        public ISQLGenerator SQLGenerator { get; }
 
         public DbModificationCommandGroupBuilder CommandGroupBuilder { get; }
 
-        public DbModifyExecutor(IDbEntityCommandFacotry commandFacotry, ISqlTextBuilder sqlBuilder, IEntityTracker tracker)
+        public DbModifyExecutor(IDbEntityCommandFacotry commandFacotry, ISQLGenerator sqlBuilder, IEntityTracker tracker)
         {
             CommandFacotry = commandFacotry;
-            SqlBuilder = sqlBuilder;
+            SQLGenerator = sqlBuilder;
             CommandGroupBuilder = new DbModificationCommandGroupBuilder(tracker);
         }
 
@@ -60,7 +61,7 @@ namespace Zarf.Update.Executors
 
         public string BuildCommandText(DbModificationCommandGroup commandGroup)
         {
-            return SqlBuilder.Build(DbStoreExpressionFacotry.Default.Create(commandGroup));
+            return SQLGenerator.Generate(DbStoreExpressionFacotry.Default.Create(commandGroup));
         }
     }
 }

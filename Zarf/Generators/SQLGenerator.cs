@@ -3,22 +3,32 @@ using Zarf.Queries.Expressions;
 using System;
 using System.Collections.Generic;
 using Zarf.Update.Expressions;
+using Zarf.Entities;
 
-namespace Zarf.Builders
+namespace Zarf.Generators
 {
-    public abstract class SqlTextBuilder : ExpressionVisitor, ISqlTextBuilder
+    public abstract class SQLGenerator : ExpressionVisitor, ISQLGenerator
     {
         protected static HashSet<Type> NumbericTypes = new HashSet<Type>()
         {
             typeof(Int32),
+            typeof(Int32?),
             typeof(Int16),
+            typeof(Int16?),
             typeof(Int64),
+            typeof(Int64?),
             typeof(UInt16),
+            typeof(UInt16?),
             typeof(UInt32),
+            typeof(UInt32?),
             typeof(UInt64),
+            typeof(UInt64?),
             typeof(Single),
+            typeof(Single?),
             typeof(Double),
-            typeof(Decimal)
+            typeof(Double?),
+            typeof(Decimal),
+            typeof(Decimal?)
         };
 
         protected override Expression VisitExtension(Expression node)
@@ -115,6 +125,8 @@ namespace Zarf.Builders
 
         protected abstract Expression VisitStore(DbStoreExpression store);
 
-        public abstract string Build(Expression expression);
+        public abstract string Generate(Expression expression, List<DbParameter> parameters);
+
+        public abstract string Generate(Expression expression);
     }
 }

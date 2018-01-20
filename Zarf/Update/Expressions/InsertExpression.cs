@@ -21,10 +21,10 @@ namespace Zarf.Queries.Expressions
 
         public bool GenerateIdentity { get; }
 
-        public InsertExpression(Table table, IEnumerable<DbParameter> dbParams, IEnumerable<string> columns, bool generateIdentity = false)
+        public InsertExpression(Table table, IEnumerable<DbParameter> parameters, IEnumerable<string> columns, bool generateIdentity = false)
         {
             Table = table;
-            DbParams = dbParams;
+            DbParams = parameters;
             Columns = columns;
             GenerateIdentity = generateIdentity;
         }

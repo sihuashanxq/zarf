@@ -15,22 +15,22 @@ namespace Zarf.Queries.ExpressionVisitors
 
         public QueryExpression Query { get; }
 
-        public ParameterExpression QueryRefrence { get; }
+        public ParameterExpression QueryParameter { get; }
 
         public ModelRefrenceExpressionVisitor(
             IQueryContext context,
             QueryExpression query,
-            ParameterExpression queryRefrence)
+            ParameterExpression queryParameter)
         {
             Context = context;
             Query = query;
-            QueryRefrence = queryRefrence;
+            QueryParameter = queryParameter;
         }
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
             var modelElementType = parameter.Type.GetModelElementType();
-            var query = parameter == QueryRefrence ? Query : Context.QueryMapper.GetMappedQuery(parameter);
+            var query = parameter == QueryParameter ? Query : Context.QueryMapper.GetMappedQuery(parameter);
 
             if (query != null)
             {

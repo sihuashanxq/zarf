@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Zarf.Entities;
 
 namespace Zarf.Update
@@ -10,11 +8,11 @@ namespace Zarf.Update
     {
         public List<DbModificationCommand> Commands { get; }
 
-        public int DbParameterCount
+        public int ParameterCount
         {
             get
             {
-                return Commands?.Sum(item => item.DbParameterCount) ?? 0;
+                return Commands?.Sum(item => item.ParameterCount) ?? 0;
             }
         }
 
@@ -28,11 +26,12 @@ namespace Zarf.Update
             get
             {
                 var parameters = new List<DbParameter>();
+
                 foreach (var item in Commands)
                 {
-                    if (item.DbParams != null)
+                    if (item.Parameters != null)
                     {
-                        parameters.AddRange(item.DbParams);
+                        parameters.AddRange(item.Parameters);
                     }
 
                     if (item.PrimaryKeyValues != null)

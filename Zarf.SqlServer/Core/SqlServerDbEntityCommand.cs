@@ -18,21 +18,21 @@ namespace Zarf.SqlServer.Core
             SqlCommand.Transaction = SqlEntityConnection.SqlTransaction;
         }
 
-        public override async Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams)
+        public override async Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] parameters)
         {
-            PrepareDbCommand(commandText, dbParams);
+            PrepareDbCommand(commandText, parameters);
             return await SqlCommand.ExecuteReaderAsync();
         }
 
-        public override async Task ExecuteNonQueryAsync(string commandText, params DbParameter[] dbParams)
+        public override async Task ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters)
         {
-            PrepareDbCommand(commandText, dbParams);
+            PrepareDbCommand(commandText, parameters);
             await SqlCommand.ExecuteNonQueryAsync();
         }
 
-        public override async Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] dbParams)
+        public override async Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] parameters)
         {
-            PrepareDbCommand(commandText, dbParams);
+            PrepareDbCommand(commandText, parameters);
             return await SqlCommand.ExecuteScalarAsync();
         }
     }

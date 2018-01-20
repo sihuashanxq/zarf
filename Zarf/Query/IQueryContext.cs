@@ -12,10 +12,6 @@ namespace Zarf.Queries
     {
         IQueryMapper QueryMapper { get; }
 
-        IPropertyNavigationContext PropertyNavigationContext { get; }
-
-        IQueryColumnOrdinalMapper ProjectionMappingProvider { get; }
-
         IAliasGenerator Alias { get; }
 
         ISubQueryValueCache MemberValueCache { get; }

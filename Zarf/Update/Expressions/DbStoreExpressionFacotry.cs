@@ -24,7 +24,7 @@ namespace Zarf.Update.Expressions
                     case EntityState.Insert:
                         persists.Add(new InsertExpression(
                             command.Entry.Type.ToTable(),
-                            command.DbParams,
+                            command.Parameters,
                             command.Columns,
                             command.Entry.AutoIncrementProperty != null
                         ));
@@ -32,7 +32,7 @@ namespace Zarf.Update.Expressions
                     case EntityState.Update:
                         persists.Add(new UpdateExpression(
                             command.Entry.Type.ToTable(),
-                            command.DbParams,
+                            command.Parameters,
                             command.Columns,
                             command.PrimaryKey,
                             command.PrimaryKeyValues.FirstOrDefault()

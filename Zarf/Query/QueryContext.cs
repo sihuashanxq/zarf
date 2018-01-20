@@ -35,10 +35,6 @@ namespace Zarf.Queries
 
     public class QueryContext : IQueryContext
     {
-        public IQueryColumnOrdinalMapper ProjectionMappingProvider { get; }
-
-        public IPropertyNavigationContext PropertyNavigationContext { get; }
-
         public IQueryMapper QueryMapper { get; }
 
         public IAliasGenerator Alias { get; }
@@ -58,16 +54,12 @@ namespace Zarf.Queries
         public IQueryProjectionMapper ExpressionMapper { get; }
 
         public QueryContext(
-            IQueryColumnOrdinalMapper projectionMappingProvider,
-            IPropertyNavigationContext navigationContext,
             IQueryMapper sourceProvider,
             IAliasGenerator aliasGenerator,
             ISubQueryValueCache memValueCache,
             IDbContextParts dbContextParts
             )
         {
-            ProjectionMappingProvider = projectionMappingProvider;
-            PropertyNavigationContext = navigationContext;
             QueryMapper = sourceProvider;
             Alias = aliasGenerator;
             MemberValueCache = memValueCache;

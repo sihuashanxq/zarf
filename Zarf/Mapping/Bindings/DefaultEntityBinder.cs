@@ -378,7 +378,7 @@ namespace Zarf.Mapping.Bindings
 
             return Expression.Call(
                 null,
-                ReflectionUtil.SubQueryWhere.MakeGenericMethod(propertyModel.Type),
+                ReflectionUtil.EnumerableWhere.MakeGenericMethod(propertyModel.Type),
                 Expression.Call(null, convert, subQueryObj),
                 Expression.Lambda(predicate, propertyModel));
         }

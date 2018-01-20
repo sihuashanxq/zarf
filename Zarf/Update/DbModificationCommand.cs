@@ -14,13 +14,13 @@ namespace Zarf.Update
 
         public List<string> Columns { get; }
 
-        public List<DbParameter> DbParams { get; }
+        public List<DbParameter> Parameters { get; }
 
         public string PrimaryKey { get; }
 
         public List<DbParameter> PrimaryKeyValues { get; }
 
-        public int DbParameterCount => (DbParams?.Count ?? 0) + (PrimaryKeyValues?.Count ?? 0);
+        public int ParameterCount => (Parameters?.Count ?? 0) + (PrimaryKeyValues?.Count ?? 0);
 
         public EntityState State => Entry.State;
 
@@ -34,7 +34,7 @@ namespace Zarf.Update
             : this(entity)
         {
             Columns = columns.ToList();
-            DbParams = columnParams.ToList();
+            Parameters = columnParams.ToList();
         }
 
         public DbModificationCommand(EntityEntry entry, IEnumerable<string> columns, IEnumerable<DbParameter> columnParams, string primaryKey, DbParameter primaryKeyValue)

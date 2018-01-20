@@ -1,5 +1,4 @@
 ﻿using Zarf.Core;
-using Zarf.Mapping;
 namespace Zarf.Queries
 {
     public interface IQueryContextFactory
@@ -7,8 +6,6 @@ namespace Zarf.Queries
         IQueryContext CreateContext(IDbContextParts dbContextParts);
 
         IQueryContext CreateContext(
-            IQueryColumnOrdinalMapper mappingProvider = null,
-            IPropertyNavigationContext navigationContext = null,
             IQueryMapper sourceProvider = null,
             IAliasGenerator generator = null,
             ISubQueryValueCache memValue = null,

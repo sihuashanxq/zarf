@@ -45,7 +45,7 @@ namespace Zarf.Update
         protected void BuildInsert(List<DbModificationCommandGroup> groups, EntityEntry entry)
         {
             var columns = new List<string>();
-            var dbParams = new List<DbParameter>();
+            var parameters = new List<DbParameter>();
 
             foreach (var item in entry.Members)
             {
@@ -55,10 +55,10 @@ namespace Zarf.Update
                 }
 
                 columns.Add(GetColumnName(item));
-                dbParams.Add(new DbParameter(GetNewParameterName(), item.GetValue(entry.Entity)));
+                parameters.Add(new DbParameter(GetNewParameterName(), item.GetValue(entry.Entity)));
             }
 
-            AddCommandToGroup(groups, new DbModificationCommand(entry, columns, dbParams));
+            AddCommandToGroup(groups, new DbModificationCommand(entry, columns, parameters));
         }
 
         protected void BuildUpdate(List<DbModificationCommandGroup> groups, EntityEntry entry)
@@ -132,7 +132,7 @@ namespace Zarf.Update
 
             if (modifyCommand.State == EntityState.Insert)
             {
-                last.DbParams.AddRange(modifyCommand.DbParams);
+                last.Parameters.AddRange(modifyCommand.Parameters);
             }
             else
             {
@@ -143,7 +143,7 @@ namespace Zarf.Update
         protected DbModificationCommandGroup FindCommadGroup(List<DbModificationCommandGroup> groups, DbModificationCommand modifyCommand)
         {
             var group = groups.LastOrDefault();
-            if (group != null && group.DbParameterCount + modifyCommand.DbParameterCount < MaxParameterCount)
+            if (group != null && group.ParameterCount + modifyCommand.ParameterCount < MaxParameterCount)
             {
                 if ((modifyCommand.State != EntityState.Insert || modifyCommand.Entry.AutoIncrementProperty == null) &&
                     group.Commands.Any(item => item.State != EntityState.Insert || item.Entry.AutoIncrementProperty == null))

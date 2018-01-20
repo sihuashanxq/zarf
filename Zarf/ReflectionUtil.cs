@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core;
-using Zarf.Core.Internals;
-using Zarf.Extensions;
 
 namespace Zarf
 {
     public static class ReflectionUtil
     {
-        public static MethodInfo SubQueryWhere { get; }
-
-        public static MethodInfo Include { get; }
-
-        public static MethodInfo ThenInclude { get; }
+        public static MethodInfo EnumerableWhere { get; }
 
         public static MethodInfo Join { get; }
 
@@ -120,7 +113,7 @@ namespace Zarf
         static ReflectionUtil()
         {
             QueryableMethods = typeof(Queryable).GetMethods().Concat(ZarfQueryable.Methods).ToArray();
-            SubQueryWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
+            EnumerableWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
             Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
             JoinSelect = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
         }
@@ -129,8 +122,6 @@ namespace Zarf
         {
             return Enumerable.Where(entities, predicate);
         }
-
-        
     }
 
     public static class QueryEnumerable

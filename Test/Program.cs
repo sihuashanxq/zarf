@@ -33,17 +33,7 @@ namespace Zarf
             {
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-                var y = db.Users.Where(item => item.Id < 100).Select(item => new
-                {
-                    Id = item.Id,
-
-                    N = db.Users.Skip(2).FirstOrDefault()
-
-                }).ToList();
-                var x = db
-                    .Users
-                    .Select(item => new { item.Id, item.Name })
-                    .Where(item => db.Users.Where(d => item.Id == 5).ToList() != null).ToList();
+                var y = db.Users.Where(item => item.Name == "1 ' OR 1=1;select * from [address]--").ToList();
 
                 Console.ReadKey();
             }

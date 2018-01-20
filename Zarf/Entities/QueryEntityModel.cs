@@ -56,7 +56,7 @@ namespace Zarf.Entities
             return false;
         }
 
-        public Expression GetModelExpression(Type modelEleType, MemberInfo memberInfo = null)
+        public Expression GetModelExpression(Type modelEleType)
         {
             if (ModelElementType == modelEleType)
             {

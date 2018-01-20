@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Threading.Tasks;
 using Zarf.Entities;
 
@@ -17,19 +16,19 @@ namespace Zarf.Core
             EntityConnection = dbConnection;
         }
 
-        public IDataReader ExecuteDataReader(string commandText, params DbParameter[] dbParams)
+        public IDataReader ExecuteDataReader(string commandText, params DbParameter[] parameters)
         {
-            return PrepareDbCommand(commandText, dbParams).ExecuteReader(CommandBehavior.Default);
+            return PrepareDbCommand(commandText, parameters).ExecuteReader(CommandBehavior.Default);
         }
 
-        public object ExecuteScalar(string commandText, params DbParameter[] dbParams)
+        public object ExecuteScalar(string commandText, params DbParameter[] parameters)
         {
-            return PrepareDbCommand(commandText, dbParams).ExecuteScalar();
+            return PrepareDbCommand(commandText, parameters).ExecuteScalar();
         }
 
-        public void ExecuteNonQuery(string commandText, params DbParameter[] dbParams)
+        public void ExecuteNonQuery(string commandText, params DbParameter[] parameters)
         {
-            PrepareDbCommand(commandText, dbParams).ExecuteNonQuery();
+            PrepareDbCommand(commandText, parameters).ExecuteNonQuery();
         }
 
         public void AddParameterWithValue(string parameterName, object value)
@@ -40,7 +39,7 @@ namespace Zarf.Core
             DbCommand.Parameters.Add(parameter);
         }
 
-        protected virtual IDbCommand PrepareDbCommand(string commandText, params DbParameter[] dbParams)
+        protected virtual IDbCommand PrepareDbCommand(string commandText, params DbParameter[] parameters)
         {
             DbCommand.Parameters.Clear();
             DbCommand.CommandText = commandText;
@@ -49,9 +48,9 @@ namespace Zarf.Core
                 DbCommand.Connection.Open();
             }
 
-            if (dbParams != null)
+            if (parameters != null)
             {
-                foreach (var item in dbParams)
+                foreach (var item in parameters)
                 {
                     AddParameterWithValue(item.Name, item.Value);
                 }
@@ -60,10 +59,10 @@ namespace Zarf.Core
             return DbCommand;
         }
 
-        public abstract Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] dbParams);
+        public abstract Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] parameters);
 
-        public abstract Task ExecuteNonQueryAsync(string commandText, params DbParameter[] dbParams);
+        public abstract Task ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);
 
-        public abstract Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] dbParams);
+        public abstract Task<object> ExecuteScalarAsync(string commandText, params DbParameter[] parameters);
     }
 }

@@ -1,9 +1,9 @@
-﻿using Zarf.Builders;
+﻿using Zarf.Generators;
 namespace Zarf.Core
 {
     public interface IDbContextParts
     {
-        ISqlTextBuilder CommandTextBuilder { get; }
+        ISQLGenerator CommandTextBuilder { get; }
 
         IDbEntityConnection EntityConnection { get; }
 
