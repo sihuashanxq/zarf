@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Zarf.Mapping.Bindings
+namespace Zarf.Bindings
 {
-    public interface IBinder
+    public interface IModelBinder
     {
         Delegate Bind<TEntity>(IBindingContext bindingContext);
     }

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Zarf.Entities;
-using Zarf.Mapping;
+using Zarf.Metadata.Descriptors;
 using Zarf.Update;
 
 namespace Zarf

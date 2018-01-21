@@ -2,8 +2,9 @@
 using System.Reflection;
 using System.Linq;
 using System.Collections;
-using Zarf.Entities;
+
 using System.ComponentModel.DataAnnotations.Schema;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Extensions
 {

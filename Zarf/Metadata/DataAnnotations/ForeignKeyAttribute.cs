@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Zarf.Entities
+namespace Zarf.Metadata.DataAnnotations
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class ForeignKeyAttribute : Attribute

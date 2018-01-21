@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Entities;
+
 using Zarf.Extensions;
+using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors

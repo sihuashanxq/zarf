@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Zarf.Entities;
+
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Core
 {

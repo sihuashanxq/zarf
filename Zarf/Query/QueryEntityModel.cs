@@ -5,7 +5,7 @@ using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 
-namespace Zarf.Entities
+namespace Zarf.Query
 {
     public class QueryEntityModelRefrenceOuterColumn
     {

@@ -1,28 +1,14 @@
 ﻿using System;
 using System.Reflection;
-using Zarf.Entities;
 using Zarf.Extensions;
 using System.Linq;
-using Zarf.Mapping;
 using System.Collections.Generic;
+using Zarf.Metadata.DataAnnotations;
 
-namespace Zarf.Update
+namespace Zarf.Metadata.Descriptors
 {
     public class MemberDescriptor : IMemberDescriptor
     {
-        static Type[] NumericTypes = new[]
-        {
-            typeof(byte),typeof(byte?),
-            typeof(int),typeof(int?),
-            typeof(uint),typeof(uint?),
-            typeof(short),typeof(short?),
-            typeof(ushort),typeof(ushort?),
-            typeof(long),typeof(long?),
-            typeof(ulong),typeof(ulong?),
-            typeof(decimal),typeof(decimal?),
-            typeof(float),typeof(float?),
-        };
-
         public bool IsPrimaryKey { get; }
 
         public bool IsAutoIncrement { get; }
@@ -48,9 +34,8 @@ namespace Zarf.Update
             MemberType = member.GetPropertyType();
             IsPrimaryKey = Attributes.FirstOrDefault(item => item is PrimaryKeyAttribute) != null;
             RefrenceForeignKey = Attributes.OfType<ForeignKeyAttribute>()?.FirstOrDefault()?.Name ?? Name;
-            IsAutoIncrement = NumericTypes.Contains(MemberType) && Attributes.OfType<AutoIncrementAttribute>().FirstOrDefault() != null;
+            IsAutoIncrement = ReflectionUtil.NumbericTypes.Contains(MemberType) && Attributes.OfType<AutoIncrementAttribute>().FirstOrDefault() != null;
         }
-
 
         public object GetValue(object obj)
         {

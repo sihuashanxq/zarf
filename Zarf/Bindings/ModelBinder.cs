@@ -4,31 +4,16 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Mapping.Bindings.Binders;
 using Zarf.Query;
 using Zarf.Query.Expressions;
 
-namespace Zarf.Mapping.Bindings
+namespace Zarf.Bindings
 {
-    public class MemberExpressionPair
-    {
-        public MemberInfo Member { get; set; }
-
-        public Expression Expression { get; set; }
-
-        public MemberExpressionPair(MemberInfo mem, Expression exp)
-        {
-            Member = mem;
-            Expression = exp;
-        }
-    }
-
     /// <summary>
     /// 默认实体绑定实现
     /// </summary>
-    public class DefaultEntityBinder : ExpressionVisitor, IBinder
+    public class ModelBinder : ExpressionVisitor, IModelBinder
     {
         public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader), "reader");
 
@@ -44,7 +29,7 @@ namespace Zarf.Mapping.Bindings
 
         const string VarPrefix = "_var_";
 
-        public DefaultEntityBinder(IQueryContext queryContext)
+        public ModelBinder(IQueryContext queryContext)
         {
             QueryContext = queryContext;
             ExpressionEquality = new ExpressionEqualityComparer();
@@ -440,6 +425,6 @@ namespace Zarf.Mapping.Bindings
             return v;
         }
 
-        public static MethodInfo GetOrSetMemberValueMethod = typeof(DefaultEntityBinder).GetMethod(nameof(GetOrAddSubQueryValue));
+        public static MethodInfo GetOrSetMemberValueMethod = typeof(ModelBinder).GetMethod(nameof(GetOrAddSubQueryValue));
     }
 }

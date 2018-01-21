@@ -4,10 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using Zarf.Generators;
-using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.SqlServer.Generators
 {
@@ -196,8 +196,7 @@ namespace Zarf.SqlServer.Generators
 
         protected override Expression VisitOrder(OrderExpression order)
         {
-
-            var direction = order.OrderType == OrderType.Desc
+            var direction = order.Direction == OrderDirection.Desc
                 ? " DESC "
                 : " ASC ";
 
@@ -294,7 +293,7 @@ namespace Zarf.SqlServer.Generators
             {
                 parameter = GenParameter(constant.Value.Cast<bool>() ? 1 : 0);
             }
-            else if (NumbericTypes.Contains(constant.Type))
+            else if (ReflectionUtil.NumbericTypes.Contains(constant.Type))
             {
                 parameter = GenParameter(constant.Value);
             }

@@ -2,12 +2,11 @@
 using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
-using Zarf.Mapping.Bindings;
-using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 using System.Linq;
-using Zarf.Entities;
 using Zarf.Generators;
+using Zarf.Metadata.Entities;
+using Zarf.Bindings;
 
 namespace Zarf.Query.Internals
 {
@@ -45,13 +44,13 @@ namespace Zarf.Query.Internals
                 ? query
                 : new QueryCompiler(context).Compile(query);
 
-            var bindingContext = new BindingContext(compiledQuery, this);
-            var modelActivator = new DefaultEntityBinder(context).Bind<TEntity>(bindingContext);
             var parameters = new List<DbParameter>();
+            var bindingContext = new BindingContext(compiledQuery, this);
+            var modelActivator = new ModelBinder(context).Bind<TEntity>(bindingContext);
+
             var commandText = SQLGenerator.Generate(compiledQuery, parameters);
-            var dbConnection = DbConnectionFactory.Create();
-            var dbCommand = DbCommandFactory.Create(dbConnection);
-            var dataReader = dbCommand.ExecuteDataReader(commandText, parameters.ToArray());
+            var command = DbCommandFactory.Create(DbConnectionFactory.Create());
+            var dataReader = command.ExecuteDataReader(commandText, parameters.ToArray());
 
             if (typeof(TResult).IsCollection())
             {

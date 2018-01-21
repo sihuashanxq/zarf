@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Zarf.Query;
 
-namespace Zarf.Mapping.Bindings
+namespace Zarf.Bindings
 {
     public class BindingContext : IBindingContext
     {

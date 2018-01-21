@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core.Internals;
-using Zarf.Entities;
+
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 

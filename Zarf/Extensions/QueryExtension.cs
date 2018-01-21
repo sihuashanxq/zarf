@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Core;
-using Zarf.Entities;
+using Zarf.Metadata.Entities;
 
 namespace Zarf
 {

@@ -2,8 +2,9 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Entities;
+
 using Zarf.Extensions;
+using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
 
@@ -66,7 +67,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             var cols = new[] { key.As<ColumnExpression>() };
-            var direction = method.Name.EndsWith("Descending") ? OrderType.Desc : OrderType.Asc;
+            var direction = method.Name.EndsWith("Descending") ? OrderDirection.Desc : OrderDirection.Asc;
 
             select.Orders.Add(new OrderExpression(cols, direction));
 

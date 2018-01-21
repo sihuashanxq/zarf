@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Zarf.Entities;
+
 using System.Collections.Generic;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Query.Expressions
 {

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using Zarf.Entities;
+
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Query.Expressions
 {

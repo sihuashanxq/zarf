@@ -110,6 +110,28 @@ namespace Zarf
             BooleanNullableType
         };
 
+        public static HashSet<Type> NumbericTypes = new HashSet<Type>()
+        {
+            typeof(Int32),
+            typeof(Int32?),
+            typeof(Int16),
+            typeof(Int16?),
+            typeof(Int64),
+            typeof(Int64?),
+            typeof(UInt16),
+            typeof(UInt16?),
+            typeof(UInt32),
+            typeof(UInt32?),
+            typeof(UInt64),
+            typeof(UInt64?),
+            typeof(Single),
+            typeof(Single?),
+            typeof(Double),
+            typeof(Double?),
+            typeof(Decimal),
+            typeof(Decimal?)
+        };
+
         static ReflectionUtil()
         {
             QueryableMethods = typeof(Queryable).GetMethods().Concat(QueryableDefinition.Methods).ToArray();

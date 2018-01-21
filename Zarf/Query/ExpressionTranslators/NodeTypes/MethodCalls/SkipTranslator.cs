@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Entities;
+
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using System.Linq;
 using System.Reflection;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {

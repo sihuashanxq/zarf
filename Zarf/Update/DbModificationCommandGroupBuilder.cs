@@ -2,8 +2,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
-using Zarf.Entities;
-using Zarf.Mapping;
+using Zarf.Metadata.Descriptors;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Update
 {

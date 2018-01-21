@@ -4,8 +4,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
-using Zarf.Mapping;
-using Zarf.Entities;
 using Zarf.Query.ExpressionVisitors;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls

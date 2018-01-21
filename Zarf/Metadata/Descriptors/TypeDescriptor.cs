@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Zarf.Entities;
 
-namespace Zarf.Mapping
+namespace Zarf.Metadata.Descriptors
 {
     public class TypeDescriptor
     {

@@ -2,7 +2,7 @@
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Zarf.Core;
-using Zarf.Entities;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.SqlServer.Core
 {

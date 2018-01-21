@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Zarf.Entities
+﻿namespace Zarf.Metadata.Entities
 {
     public enum JoinType
     {

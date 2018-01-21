@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Zarf.Entities
+namespace Zarf.Metadata.DataAnnotations
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class PrimaryKeyAttribute : Attribute
+    public class AutoIncrementAttribute : Attribute
     {
 
     }

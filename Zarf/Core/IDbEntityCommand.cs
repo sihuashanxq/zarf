@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Threading.Tasks;
-using Zarf.Entities;
+
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Core
 {

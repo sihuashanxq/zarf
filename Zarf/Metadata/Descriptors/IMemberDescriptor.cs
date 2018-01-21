@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Zarf.Entities
+namespace Zarf.Metadata.Descriptors
 {
     public interface IMemberDescriptor
     {

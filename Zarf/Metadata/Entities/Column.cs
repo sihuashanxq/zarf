@@ -1,4 +1,4 @@
-﻿namespace Zarf.Entities
+﻿namespace Zarf.Metadata.Entities
 {
     public class Column
     {

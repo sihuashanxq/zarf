@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Entities;
+using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
 
@@ -9,28 +8,6 @@ namespace Zarf.Generators
 {
     public abstract class SQLGenerator : ExpressionVisitor, ISQLGenerator
     {
-        protected static HashSet<Type> NumbericTypes = new HashSet<Type>()
-        {
-            typeof(Int32),
-            typeof(Int32?),
-            typeof(Int16),
-            typeof(Int16?),
-            typeof(Int64),
-            typeof(Int64?),
-            typeof(UInt16),
-            typeof(UInt16?),
-            typeof(UInt32),
-            typeof(UInt32?),
-            typeof(UInt64),
-            typeof(UInt64?),
-            typeof(Single),
-            typeof(Single?),
-            typeof(Double),
-            typeof(Double?),
-            typeof(Decimal),
-            typeof(Decimal?)
-        };
-
         protected override Expression VisitExtension(Expression node)
         {
             switch (node)

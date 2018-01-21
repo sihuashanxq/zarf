@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zarf", "Zarf\Zarf.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Zarf.SqlServer", "Zarf.SqlServer\Zarf.SqlServer.csproj", "{67309346-32FC-4338-835B-0679188107AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{96593023-E717-464E-A317-040BDCF3E131}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples", "Test\Samples.csproj", "{96593023-E717-464E-A317-040BDCF3E131}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

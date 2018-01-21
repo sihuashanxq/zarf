@@ -3,7 +3,7 @@ using System.Data;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace Zarf.Mapping.Bindings.Binders
+namespace Zarf.Bindings
 {
     public class MemberValueGetterProvider
     {

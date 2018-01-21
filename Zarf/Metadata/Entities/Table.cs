@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Zarf.Entities
+﻿namespace Zarf.Metadata.Entities
 {
     public class Table
     {

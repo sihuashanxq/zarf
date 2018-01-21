@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using Zarf.Entities;
+
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using System.Reflection.Emit;
@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Query.ExpressionVisitors
 {
