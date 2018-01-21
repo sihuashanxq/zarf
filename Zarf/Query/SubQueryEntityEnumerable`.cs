@@ -6,15 +6,15 @@ namespace Zarf.Queries
 {
     public class EntityPropertyEnumerable<TEntity> : EntityEnumerable<TEntity>
     {
-        public EntityPropertyEnumerable(Expression query, IQueryContext context, IDbContextParts dbContextParts)
-            : base(query, dbContextParts, context)
+        public EntityPropertyEnumerable(Expression query, IQueryContext context, IQueryExecutor executor)
+            : base(query, executor, context)
         {
-  
+
         }
 
         public override IEnumerator<TEntity> GetEnumerator()
         {
-            return Enumerator ?? (Enumerator = Interpreter.Execute<TEntity>(Expression, Context));
+            return Enumerator ?? (Enumerator = Executor.Execute<TEntity>(Expression, Context));
         }
     }
 }

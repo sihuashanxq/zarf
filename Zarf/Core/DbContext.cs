@@ -1,37 +1,49 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Zarf.Core;
+using Zarf.Queries;
 using Zarf.Update;
-using Zarf.Update.Executors;
 
 namespace Zarf
 {
-    public abstract class DbContext : IDisposable
+    public class DbContext : IDisposable, IServiceScope
     {
-        public IDbContextParts DbContextParts { get; }
-
-        public IDbModifyExecutor DbModifyExecutor { get; }
-
-        public IEntityTracker Tracker { get; }
-
-        public IEntityEntryCache EntryCache { get; }
-
         private int _immInsertRowsCount;
 
-        public DbContext(IDbContextParts dbContextParts)
+        public IServiceProvider ServiceProvider => DbService.ServiceProvder;
+
+        public IDbService DbService { get; protected set; }
+
+        public IDbModifyExecutor DbModifyExecutor => GetService<IDbModifyExecutor>();
+
+        public IEntityTracker Tracker => GetService<IEntityTracker>();
+
+        public IEntityEntryCache EntryEntryCache => GetService<IEntityEntryCache>();
+
+        public IQueryContextFactory QueryContextFactory => GetService<IQueryContextFactory>();
+
+        public IQueryExecutor QueryExecutor => GetService<IQueryExecutor>();
+
+        public string ConnectionString { get; }
+
+        public DbContext(Func<IDbServiceBuilder, IDbService> serviceBuilder)
         {
-            DbContextParts = dbContextParts;
-            Tracker = new EntityTracker();
-            EntryCache = new EntityEntryCache();
-            DbModifyExecutor = new DbModifyExecutor(DbContextParts.EntityCommandFacotry, dbContextParts.CommandTextBuilder, Tracker);
+            DbService = serviceBuilder(null);
+            ConnectionString = DbService.ConnectionString;
+        }
+
+        protected TService GetService<TService>()
+        {
+            return ServiceProvider.GetService<TService>();
         }
 
         public IQuery<TEntity> Query<TEntity>()
         {
-            return new Query<TEntity>(this);
+            return new Query<TEntity>(this, ServiceProvider.GetService<IQueryExecutor>());
         }
 
         public void TrackEntity<TEntity>(TEntity entity)
@@ -58,7 +70,7 @@ namespace Zarf
                 }
                 else
                 {
-                    EntryCache.AddOrUpdate(entry);
+                    EntryEntryCache.AddOrUpdate(entry);
                 }
             }
 
@@ -84,7 +96,7 @@ namespace Zarf
 
         public virtual void Update<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Update));
+            EntryEntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Update));
         }
 
         public virtual Task UpdateAsync<TEntity>(TEntity entity)
@@ -96,7 +108,7 @@ namespace Zarf
 
         public virtual void Delete<TEntity, TProperty>(TEntity entity, Expression<Func<TEntity, TProperty>> identity)
         {
-            EntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
+            EntryEntryCache.AddOrUpdate(EntityEntry.Create(entity, EntityState.Delete));
         }
 
         public virtual Task DeleteAsync<TEntity>(TEntity entity)
@@ -106,12 +118,12 @@ namespace Zarf
 
         public IDbEntityTransaction BeginTransaction()
         {
-            if (!DbContextParts.EntityConnection.HasTransaction())
+            if (!DbService.EntityConnection.HasTransaction())
             {
                 Save();
             }
 
-            return DbContextParts.EntityConnection.BeginTransaction();
+            return DbService.EntityConnection.BeginTransaction();
         }
 
         public Task<IDbEntityTransaction> BeginTransactionAsync()
@@ -122,7 +134,7 @@ namespace Zarf
         public int Save()
         {
             var rowsCount = _immInsertRowsCount;
-            var entries = EntryCache.GetCahcedEntries().ToList();
+            var entries = EntryEntryCache.GetCahcedEntries().ToList();
             _immInsertRowsCount = 0;
 
             if (entries.Count == 0)
@@ -135,9 +147,9 @@ namespace Zarf
 
         private int Save(IEnumerable<EntityEntry> entries)
         {
-            if (!DbContextParts.EntityConnection.HasTransaction())
+            if (!DbService.EntityConnection.HasTransaction())
             {
-                using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
+                using (var transaction = DbService.EntityConnection.BeginTransaction())
                 {
                     try
                     {
@@ -158,15 +170,15 @@ namespace Zarf
 
         public async Task<int> SaveAsync()
         {
-            var entries = EntryCache.GetCahcedEntries().ToList();
+            var entries = EntryEntryCache.GetCahcedEntries().ToList();
             if (entries == null)
             {
                 return await Task.FromResult(0);
             }
 
-            if (!DbContextParts.EntityConnection.HasTransaction())
+            if (!DbService.EntityConnection.HasTransaction())
             {
-                using (var transaction = DbContextParts.EntityConnection.BeginTransaction())
+                using (var transaction = DbService.EntityConnection.BeginTransaction())
                 {
                     try
                     {
@@ -188,9 +200,9 @@ namespace Zarf
         public void Dispose()
         {
             Save();
-            EntryCache.Clear();
+            EntryEntryCache.Clear();
             Tracker.Clear();
-            DbContextParts.EntityConnection.Dispose();
+            DbService.EntityConnection.Dispose();
         }
     }
 }

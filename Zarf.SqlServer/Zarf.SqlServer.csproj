@@ -8,8 +8,4 @@
     <ProjectReference Include="..\Zarf\Zarf.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
 </Project>

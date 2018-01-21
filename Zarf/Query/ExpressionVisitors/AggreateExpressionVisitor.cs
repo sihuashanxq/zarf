@@ -37,7 +37,7 @@ namespace Zarf.Queries.ExpressionVisitors
         /// </summary>
         protected override Expression VisitMember(MemberExpression mem)
         {
-            var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
+            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(mem.Expression);
 
             if (queryModel != null)
             {
@@ -54,7 +54,7 @@ namespace Zarf.Queries.ExpressionVisitors
                     }
 
                     var memberExpression = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
-                    var binding = Context.MemberBindingMapper.GetMapedExpression(memberExpression);
+                    var binding = QueryContext.MemberBindingMapper.GetMapedExpression(memberExpression);
 
                     if (binding == null)
                     {

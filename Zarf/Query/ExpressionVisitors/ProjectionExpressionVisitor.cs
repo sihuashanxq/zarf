@@ -48,8 +48,8 @@ namespace Zarf.Queries.ExpressionVisitors
                 }
 
                 Query.AddProjection(binding.Expression);
-                Context.ProjectionOwner.AddProjection(binding.Expression, Query);
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
+                QueryContext.ProjectionOwner.AddProjection(binding.Expression, Query);
+                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
             }
 
             return memberInit;
@@ -82,8 +82,8 @@ namespace Zarf.Queries.ExpressionVisitors
                 }
 
                 Query.AddProjection(newExpression.Arguments[i]);
-                Context.ProjectionOwner.AddProjection(newExpression.Arguments[i], Query);
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
+                QueryContext.ProjectionOwner.AddProjection(newExpression.Arguments[i], Query);
+                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
             }
 
             return newExpression;
@@ -91,7 +91,7 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var query = Context.QueryMapper.GetMappedQuery(parameter);
+            var query = QueryContext.QueryMapper.GetMappedQuery(parameter);
             if (query == null)
             {
                 return parameter;
@@ -100,7 +100,7 @@ namespace Zarf.Queries.ExpressionVisitors
             foreach (var item in query.GenQueryProjections())
             {
                 Query.AddProjection(item);
-                Context.ProjectionOwner.AddProjection(item, Query);
+                QueryContext.ProjectionOwner.AddProjection(item, Query);
             }
 
             return parameter;

@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
-using System;
-using Zarf.Queries.Expressions;
+using Zarf.Queries;
 
 namespace Zarf.Mapping.Bindings
 {
@@ -8,9 +7,12 @@ namespace Zarf.Mapping.Bindings
     {
         public Expression Query { get; }
 
-        public BindingContext(Expression query)
+        public IQueryExecutor QueryExecutor { get; }
+
+        public BindingContext(Expression query, IQueryExecutor executor)
         {
             Query = query;
+            QueryExecutor = executor;
         }
     }
 }

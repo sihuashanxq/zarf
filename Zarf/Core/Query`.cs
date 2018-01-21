@@ -6,6 +6,7 @@ using Zarf.Core;
 using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
+using Zarf.Queries;
 
 namespace Zarf
 {
@@ -22,10 +23,10 @@ namespace Zarf
 
         public DbContext DbContext { get; }
 
-        public Query(DbContext dbContext)
+        public Query(DbContext dbContext, IQueryExecutor executor)
         {
             DbContext = dbContext;
-            EntityInternalQuery = new InternalQuery<TEntity>(new QueryProvider(DbContext));
+            EntityInternalQuery = new InternalQuery<TEntity>(new QueryProvider(DbContext, executor));
         }
 
         internal Query(IInternalQuery<TEntity> internalDbQuery)
@@ -331,7 +332,7 @@ namespace Zarf
         {
             var groupExpression = Expression.Call(
                 null,
-                ZarfQueryable.Methods.FirstOrDefault(item => item.Name == "GroupBy").MakeGenericMethod(new[] { typeof(TEntity), typeof(TKey) }),
+                QueryableDefinition.Methods.FirstOrDefault(item => item.Name == "GroupBy").MakeGenericMethod(new[] { typeof(TEntity), typeof(TKey) }),
                 EntityInternalQuery.Expression,
                 keySelector);
 

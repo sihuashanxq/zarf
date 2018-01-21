@@ -20,7 +20,7 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         static JoinTranslator()
         {
-            SupprotedMethods = new[] { ReflectionUtil.Join };
+            SupprotedMethods = new[] { ReflectionUtil.JoinMethod };
         }
 
         public JoinTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

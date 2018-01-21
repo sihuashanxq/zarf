@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,6 +9,8 @@ using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Queries;
 using Zarf.Queries.ExpressionVisitors;
+using Zarf.SqlServer;
+using Zarf.SqlServer;
 
 namespace Zarf
 {
@@ -29,12 +32,14 @@ namespace Zarf
 
         static void Main(string[] args)
         {
+            IQueryCompiler a = null;
+            IQueryCompiler b = null;
             using (var db = new DbUserContext())
             {
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-                var y = db.Users.Where(item => item.Name == "1 ' OR 1=1;select * from [address]--").ToList();
-
+                Console.WriteLine(a == b);
+                BasicTest(db);
                 Console.ReadKey();
             }
         }
@@ -154,10 +159,9 @@ namespace Zarf
         public string Name { get; set; }
     }
 
-    public class DbUserContext : SqlServerDbContext
+    public class DbUserContext : DbContext
     {
-        public DbUserContext() :
-            base(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")
+        public DbUserContext() : base((s) => s.UseSqlServer(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True"))
         {
             Users = this.Query<User>();
         }

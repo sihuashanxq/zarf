@@ -38,7 +38,7 @@ namespace Zarf.Core
             return new InternalQuery<TResult>(
                dbQuery.Provider,
                Expression.Call(
-                   ReflectionUtil.JoinSelect.MakeGenericMethod(typeof(TResult)),
+                   ReflectionUtil.JoinSelectMethod.MakeGenericMethod(typeof(TResult)),
                    dbQuery.Expression,
                    selector
                    )
@@ -53,7 +53,7 @@ namespace Zarf.Core
             return new InternalQuery<TResult>(
                 provider,
                 Expression.Call(
-                    ReflectionUtil.Join.MakeGenericMethod(typeof(TResult)),
+                    ReflectionUtil.JoinMethod.MakeGenericMethod(typeof(TResult)),
                     query,
                     Expression.Constant(joins)
                     )

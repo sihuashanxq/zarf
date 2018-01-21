@@ -41,8 +41,6 @@ namespace Zarf.Queries
 
         public ISubQueryValueCache MemberValueCache { get; }
 
-        public IDbContextParts DbContextParts { get; }
-
         public IQueryProjectionMapper ColumnCaching { get; }
 
         public MemberBindingMapper MemberBindingMapper { get; }
@@ -56,19 +54,17 @@ namespace Zarf.Queries
         public QueryContext(
             IQueryMapper sourceProvider,
             IAliasGenerator aliasGenerator,
-            ISubQueryValueCache memValueCache,
-            IDbContextParts dbContextParts
+            ISubQueryValueCache memValueCache
             )
         {
             QueryMapper = sourceProvider;
             Alias = aliasGenerator;
             MemberValueCache = memValueCache;
-            DbContextParts = dbContextParts;
-            ColumnCaching = new ExpressionMapper();
+            ColumnCaching = new QueryProjectionMapper();
             MemberBindingMapper = new MemberBindingMapper();
             ProjectionOwner = new ProjectionOwnerMapper();
             QueryModelMapper = new QueryModelMapper();
-            ExpressionMapper = new ExpressionMapper();
+            ExpressionMapper = new QueryProjectionMapper();
         }
     }
 }

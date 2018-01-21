@@ -56,21 +56,19 @@ namespace Zarf
         /// <summary>
         /// 属性string.Empty 
         /// </summary>
-        /// <param name="memberInfo">类成员 FieldInfo|Property</param>
-        /// <param name="objExp">所属实例</param>
-        /// <returns></returns>
-        public static bool EvalMemberValue(MemberInfo memberInfo, Expression objExp, out Expression value)
+        public static bool TryEvaluateObjectMemberValue(MemberInfo memberInfo, Expression objExpression, out Expression value)
         {
-            object obj = null;
-            if (objExp != null && !objExp.Is<ConstantExpression>())
+            var obj = null as object;
+
+            if (objExpression != null && !objExpression.Is<ConstantExpression>())
             {
                 value = null;
                 return false;
             }
 
-            if (objExp.Is<ConstantExpression>())
+            if (objExpression.Is<ConstantExpression>())
             {
-                obj = objExp.Cast<ConstantExpression>().Value;
+                obj = objExpression.Cast<ConstantExpression>().Value;
             }
 
             var field = memberInfo.As<FieldInfo>();

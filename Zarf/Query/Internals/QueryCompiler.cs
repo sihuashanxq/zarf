@@ -10,14 +10,14 @@ namespace Zarf.Queries.ExpressionVisitors
 {
     public class QueryCompiler : ExpressionVisitorBase, IQueryCompiler
     {
-        protected IQueryContext Context { get; }
+        protected IQueryContext QueryContext { get; }
 
-        protected ITransaltorProvider TranslatorProvider { get; }
+        protected ITransaltorProvider Provider { get; }
 
-        public QueryCompiler(IQueryContext context)
+        public QueryCompiler(IQueryContext queryContext)
         {
-            Context = context;
-            TranslatorProvider = new NodeTypeTranslatorProvider(context, this);
+            QueryContext = queryContext;
+            Provider = new NodeTypeTranslatorProvider(queryContext, this);
         }
 
         public override Expression Visit(Expression node)
@@ -27,7 +27,7 @@ namespace Zarf.Queries.ExpressionVisitors
                 return node;
             }
 
-            return TranslatorProvider.GetTranslator(node)?.Translate(node) ?? base.Visit(node);
+            return Provider.GetTranslator(node)?.Translate(node) ?? base.Visit(node);
         }
 
         public virtual Expression Compile(Expression query)

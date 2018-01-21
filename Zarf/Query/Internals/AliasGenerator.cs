@@ -1,4 +1,4 @@
-﻿namespace Zarf.Queries
+﻿namespace Zarf.Queries.Internals
 {
     /// <summary>
     /// 别名生成器

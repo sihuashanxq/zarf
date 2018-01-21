@@ -18,7 +18,7 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         static JoinSelectTranslator()
         {
-            SupprotedMethods = new[] { ReflectionUtil.JoinSelect };
+            SupprotedMethods = new[] { ReflectionUtil.JoinSelectMethod };
         }
 
         public JoinSelectTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)

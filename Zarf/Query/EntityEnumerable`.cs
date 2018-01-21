@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Core;
+using Zarf.Queries.Internals;
 
 namespace Zarf.Queries
 {
@@ -11,30 +12,20 @@ namespace Zarf.Queries
 
         protected Expression Expression { get; }
 
-        protected IQueryExecutor Interpreter { get; }
+        protected IQueryExecutor Executor { get; }
 
         protected IQueryContext Context { get; }
 
-        public EntityEnumerable(Expression query, IDbContextParts dbContextParts)
+        public EntityEnumerable(Expression query, IQueryExecutor executor, IQueryContext context)
         {
             Expression = query;
-            Interpreter = new QueryExecutor(dbContextParts);
-        }
-
-        public EntityEnumerable(Expression query, IDbContextParts dbContextParts, IQueryContext context)
-            : this(query, dbContextParts)
-        {
+            Executor = executor;
             Context = context;
         }
 
         public virtual IEnumerator<TEntity> GetEnumerator()
         {
-            if (Context != null)
-            {
-                return Enumerator ?? (Enumerator = Interpreter.Execute<TEntity>(Expression, Context));
-            }
-
-            return Enumerator ?? (Enumerator = Interpreter.Execute<TEntity>(Expression));
+            return Enumerator ?? (Enumerator = Executor.Execute<TEntity>(Expression, Context));
         }
 
         IEnumerator IEnumerable.GetEnumerator()

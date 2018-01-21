@@ -33,7 +33,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                 return new JoinTranslator(Context, Compiler).Transalte(joinQuery);
             }
 
-            if (obj is MethodCallExpression call && call.Method.DeclaringType == typeof(ZarfQueryable))
+            if (obj is MethodCallExpression call && call.Method.DeclaringType == typeof(QueryableDefinition))
             {
                 return GetCompiledExpression(obj);
             }
@@ -187,7 +187,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
             };
 
             var parameters = method.GetParameters();
-            var conds = ZarfQueryable.Methods.Where(item => item.Name == method.Name).ToList();
+            var conds = QueryableDefinition.Methods.Where(item => item.Name == method.Name).ToList();
 
             foreach (var cond in conds)
             {

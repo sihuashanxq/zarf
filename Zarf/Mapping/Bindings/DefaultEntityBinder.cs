@@ -4,7 +4,6 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Core;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
@@ -33,7 +32,9 @@ namespace Zarf.Mapping.Bindings
     {
         public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader), "reader");
 
-        public IQueryContext Context { get; }
+        public IQueryContext QueryContext { get; }
+
+        protected IBindingContext BindingContext { get; set; }
 
         public ExpressionEqualityComparer ExpressionEquality { get; }
 
@@ -43,17 +44,17 @@ namespace Zarf.Mapping.Bindings
 
         const string VarPrefix = "_var_";
 
-        public DefaultEntityBinder(IQueryContext context)
+        public DefaultEntityBinder(IQueryContext queryContext)
         {
-            Context = context;
+            QueryContext = queryContext;
             ExpressionEquality = new ExpressionEqualityComparer();
         }
 
-        public Delegate Bind<TEntity>(IBindingContext context)
+        public Delegate Bind<TEntity>(IBindingContext bindingContext)
         {
-            var model = context.Query.As<QueryExpression>()?.QueryModel?.Model ?? context.Query;
+            var model = bindingContext.Query.As<QueryExpression>()?.QueryModel?.Model ?? bindingContext.Query;
+            var query = bindingContext.Query;
 
-            var query = context.Query;
             if (query.Is<AggregateExpression>())
             {
                 Query = query.As<AggregateExpression>()
@@ -73,6 +74,8 @@ namespace Zarf.Mapping.Bindings
                 Query = query.As<QueryExpression>();
             }
 
+            BindingContext = bindingContext;
+
             var modelCreation = Visit(model);
             return Expression.Lambda(modelCreation, DataReader).Compile();
         }
@@ -80,7 +83,7 @@ namespace Zarf.Mapping.Bindings
         public override Expression Visit(Expression expression)
         {
             //子查询
-            var queryModel = Context.QueryModelMapper.GetQueryModel(expression);
+            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(expression);
             if (queryModel != null &&
                 queryModel != Query.QueryModel &&
                 queryModel.ModelType.IsCollection())
@@ -95,7 +98,7 @@ namespace Zarf.Mapping.Bindings
                 return CreateSubQueryModel(queryModel);
             }
 
-            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Query.ExpressionMapper.GetMappedProjection(expression);
+            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Query.ExpressionMapper.GetMappedExpression(expression);
             if (tryGetMaped != null)
             {
                 var bind = BindQueryProjection(tryGetMaped);
@@ -104,7 +107,7 @@ namespace Zarf.Mapping.Bindings
                     bind = BindQueryProjection(tryGetMaped);
                     if (bind == null)
                     {
-                        var mapped2 = Query.ExpressionMapper.GetMappedProjection(tryGetMaped);
+                        var mapped2 = Query.ExpressionMapper.GetMappedExpression(tryGetMaped);
                         if (mapped2 != null)
                         {
                             tryGetMaped = mapped2;
@@ -162,7 +165,7 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitMember(MemberExpression member)
         {
-            var queryModel = Context.QueryModelMapper.GetQueryModel(member.Expression) ?? Context.QueryModelMapper.GetQueryModel(member);
+            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(member.Expression) ?? QueryContext.QueryModelMapper.GetQueryModel(member);
             var bind = GetMemberBindingExpression(queryModel, member.Member);
             if (bind == null)
             {
@@ -207,7 +210,7 @@ namespace Zarf.Mapping.Bindings
         {
             for (var i = 0; i < Query.Projections.Count; i++)
             {
-                var mappedProjection = Query.ExpressionMapper.GetMappedProjection(projection);
+                var mappedProjection = Query.ExpressionMapper.GetMappedExpression(projection);
 
                 if (ExpressionEquality.Equals(Query.Projections[i], projection) ||
                     ExpressionEquality.Equals(Query.Projections[i], mappedProjection))
@@ -230,7 +233,7 @@ namespace Zarf.Mapping.Bindings
                 }
 
                 var memberExpression = Expression.MakeMemberAccess(queryModel.Model, member);
-                var projection = Context.MemberBindingMapper.GetMapedExpression(memberExpression);
+                var projection = QueryContext.MemberBindingMapper.GetMapedExpression(memberExpression);
 
                 if (projection == null)
                 {
@@ -282,13 +285,6 @@ namespace Zarf.Mapping.Bindings
                 return binding;
             }
 
-            if (binding == null)
-            {
-                var x = 1;
-            }
-
-            var y = binding;
-
             //此处是简单类型,应该是聚合,Select(item)
             binding = binding is QueryExpression
             ? Visit(memberExpression)
@@ -296,7 +292,6 @@ namespace Zarf.Mapping.Bindings
 
             if (binding == null)
             {
-                var x = 1;
                 throw new Exception("projection not found!");
             }
 
@@ -308,15 +303,15 @@ namespace Zarf.Mapping.Bindings
             var modelElementType = queryModel.ModelElementType;
             var modelType = typeof(EntityPropertyEnumerable<>).MakeGenericType(modelElementType);
             var modelEleNew = Expression.New(
-                        modelType.GetConstructor(new Type[] { typeof(Expression), typeof(IQueryContext), typeof(IDbContextParts) }),
+                        modelType.GetConstructor(new Type[] { typeof(Expression), typeof(IQueryContext), typeof(IQueryExecutor) }),
                         Expression.Constant(queryModel.Query),
-                        Expression.Constant(Context),
-                        Expression.Constant(Context.DbContextParts));
+                        Expression.Constant(QueryContext),
+                        Expression.Constant(BindingContext.QueryExecutor));
 
             Expression model = Expression.Convert(Expression.Call(
                     null,
                     GetOrSetMemberValueMethod,
-                    Expression.Constant(Context.MemberValueCache),
+                    Expression.Constant(QueryContext.MemberValueCache),
                     Expression.Constant(queryModel),
                     modelEleNew),
                     typeof(IEnumerable<>).MakeGenericType(modelElementType)

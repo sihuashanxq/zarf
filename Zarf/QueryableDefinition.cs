@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 namespace Zarf
 {
-    public static class ZarfQueryable
+    public static class QueryableDefinition
     {
-        public static MethodInfo[] Methods = typeof(ZarfQueryable).GetMethods(BindingFlags.Public | BindingFlags.Static);
+        public static MethodInfo[] Methods = typeof(QueryableDefinition).GetMethods(BindingFlags.Public | BindingFlags.Static);
 
         public static bool All<TEntity>(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate)
         {

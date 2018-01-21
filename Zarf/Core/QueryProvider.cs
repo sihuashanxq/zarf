@@ -1,8 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
-using Zarf.Queries;
-using Zarf.Core;
 using Zarf.Core.Internals;
+using Zarf.Queries;
 
 namespace Zarf
 {
@@ -10,12 +9,12 @@ namespace Zarf
     {
         public DbContext Context { get; }
 
-        public IQueryExecutor QueryInterpreter { get; }
+        public IQueryExecutor Executor { get; }
 
-        public QueryProvider(DbContext dbContext)
+        public QueryProvider(DbContext context, IQueryExecutor executor)
         {
-            Context = dbContext;
-            QueryInterpreter = new QueryExecutor(dbContext.DbContextParts);
+            Context = context;
+            Executor = executor;
         }
 
         public IQueryable CreateQuery(Expression query)
@@ -35,7 +34,7 @@ namespace Zarf
 
         public TResult Execute<TResult>(Expression query)
         {
-            return QueryInterpreter.ExecuteSingle<TResult>(query);
+            return Executor.ExecuteSingle<TResult>(query, Context.QueryContextFactory.CreateContext());
         }
     }
 }

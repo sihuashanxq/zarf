@@ -10,9 +10,9 @@ namespace Zarf
     {
         public static MethodInfo EnumerableWhere { get; }
 
-        public static MethodInfo Join { get; }
+        public static MethodInfo JoinMethod { get; }
 
-        public static MethodInfo JoinSelect { get; }
+        public static MethodInfo JoinSelectMethod { get; }
 
         public static MethodInfo[] QueryableMethods { get; }
 
@@ -112,10 +112,10 @@ namespace Zarf
 
         static ReflectionUtil()
         {
-            QueryableMethods = typeof(Queryable).GetMethods().Concat(ZarfQueryable.Methods).ToArray();
+            QueryableMethods = typeof(Queryable).GetMethods().Concat(QueryableDefinition.Methods).ToArray();
             EnumerableWhere = typeof(ReflectionUtil).GetMethod(nameof(Where));
-            Join = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
-            JoinSelect = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
+            JoinMethod = typeof(JoinQuery).GetMethod("Join", BindingFlags.NonPublic | BindingFlags.Static);
+            JoinSelectMethod = typeof(JoinQuery).GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static);
         }
 
         public static IEnumerable<TEntity> Where<TEntity>(this IEnumerable<TEntity> entities, Func<TEntity, bool> predicate)
@@ -130,8 +130,6 @@ namespace Zarf
 
         public static MethodInfo FirstOrDefaultMethod = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault));
 
-        public static MethodInfo FirstOrDefaultHasParameterMethod = typeof(QueryEnumerable).GetMethod(nameof(FirstOrDefault2));
-
         public static List<TSource> ToList<TSource>(IEnumerable<TSource> source)
         {
             return source.ToList();
@@ -140,11 +138,6 @@ namespace Zarf
         public static TSource FirstOrDefault<TSource>(IEnumerable<TSource> source)
         {
             return source.FirstOrDefault();
-        }
-
-        public static TSource FirstOrDefault2<TSource>(IEnumerable<TSource> source, Func<TSource, bool> predicate)
-        {
-            return source.FirstOrDefault(predicate);
         }
     }
 }

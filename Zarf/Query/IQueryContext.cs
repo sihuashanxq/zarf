@@ -16,8 +16,6 @@ namespace Zarf.Queries
 
         ISubQueryValueCache MemberValueCache { get; }
 
-        IDbContextParts DbContextParts { get; }
-
         IQueryProjectionMapper ColumnCaching { get; }
 
         MemberBindingMapper MemberBindingMapper { get; }

@@ -124,11 +124,11 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected override Expression VisitMember(MemberExpression mem)
         {
-            var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
+            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(mem.Expression);
             if (queryModel != null)
             {
                 var property = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
-                var propertyExpression = Context.MemberBindingMapper.GetMapedExpression(property);
+                var propertyExpression = QueryContext.MemberBindingMapper.GetMapedExpression(property);
                 if (propertyExpression.NodeType != ExpressionType.Extension)
                 {
                     propertyExpression = base.Visit(propertyExpression);
