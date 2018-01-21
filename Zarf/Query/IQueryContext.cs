@@ -1,12 +1,12 @@
 ﻿using Zarf.Mapping;
 using System.Collections.Generic;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using Zarf.Core;
 using System.Linq.Expressions;
-using Zarf.Queries.Internals;
+using Zarf.Query.Internals;
 using Zarf.Entities;
 
-namespace Zarf.Queries
+namespace Zarf.Query
 {
     public interface IQueryContext
     {
@@ -29,18 +29,18 @@ namespace Zarf.Queries
 
     public class ProjectionOwnerMapper
     {
-        protected Dictionary<Expression, QueryExpression> Queries = new Dictionary<Expression, QueryExpression>();
+        protected Dictionary<Expression, SelectExpression> Selects = new Dictionary<Expression, SelectExpression>();
 
-        public void AddProjection(Expression projection, QueryExpression container)
+        public void AddSelectProjection(Expression projection, SelectExpression select)
         {
-            Queries[projection] = container;
+            Selects[projection] = select;
         }
 
-        public QueryExpression GetQuery(Expression projection)
+        public SelectExpression GetSelectExpression(Expression projection)
         {
-            return Queries.TryGetValue(projection, out var container)
+            return Selects.TryGetValue(projection, out var container)
                 ? container
-                : default(QueryExpression);
+                : default(SelectExpression);
         }
     }
 

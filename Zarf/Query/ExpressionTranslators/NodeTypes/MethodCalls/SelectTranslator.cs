@@ -5,15 +5,15 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
     /// <summary>
     /// Select Query
     /// </summary>
-    public class SelectTranslator : Translator<MethodCallExpression>
+    public class SelectTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -27,58 +27,34 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
+        public override SelectExpression Translate(SelectExpression select, Expression selector, MethodInfo method)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var modelType = methodCall.Method.ReturnType;
-            var parameter = methodCall.Arguments[1].GetParameters().FirstOrDefault();
-            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(methodCall.Arguments[1]);
-
-            Utils.CheckNull(query, "query");
-
-            query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
-
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
-
-            CreateProjection(query, modelExpression);
-
-            if (query.QueryModel.Model.Is<ConstantExpression>())
-            {
-                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, methodCall.Arguments[1]));
-            }
-
-            return query;
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression selector)
-        {
-            var modelType = selector.Type.GetModelElementType();
+            var modelType = method.ReturnType.GetModelElementType();
             var parameter = selector.GetParameters().FirstOrDefault();
-            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(selector);
+            var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameter).Visit(selector);
 
-            Utils.CheckNull(query, "query");
+            Utils.CheckNull(select, "query");
 
-            query.QueryModel = new QueryEntityModel(query, modelExpression, modelType, query.QueryModel);
+            select.QueryModel = new QueryEntityModel(select, modelExpression, modelType, select.QueryModel);
 
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
+            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
 
-            CreateProjection(query, modelExpression);
+            CreateProjection(select, modelExpression);
 
-            if (query.QueryModel.Model.Is<ConstantExpression>())
+            if (select.QueryModel.Model.Is<ConstantExpression>())
             {
-                query.AddProjection(new AliasExpression(Context.Alias.GetNewColumn(), query.QueryModel.Model, selector));
+                select.AddProjection(new AliasExpression(QueryContext.Alias.GetNewColumn(), select.QueryModel.Model, selector));
             }
 
-            return query;
+            return select;
         }
 
-        protected void CreateProjection(QueryExpression query, Expression modelExpression)
+        protected void CreateProjection(SelectExpression select, Expression modelExpression)
         {
-            modelExpression = new ProjectionExpressionVisitor(query, Context).Visit(modelExpression);
+            modelExpression = new ProjectionExpressionVisitor(select, QueryContext).Visit(modelExpression);
 
-            new ResultExpressionVisitor(Context, query).Visit(modelExpression);
+            new ResultExpressionVisitor(QueryContext, select).Visit(modelExpression);
         }
     }
 }

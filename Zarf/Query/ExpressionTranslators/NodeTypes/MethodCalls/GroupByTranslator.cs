@@ -4,12 +4,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    public class GroupByTranslator : Translator<MethodCallExpression>
+    public class GroupByTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -23,49 +23,45 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
-        {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            return Translate(query, methodCall.Arguments[1]);
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression keySelector)
+        public override SelectExpression Translate(SelectExpression select, Expression keySelector, MethodInfo method)
         {
             var parameter = keySelector.GetParameters().FirstOrDefault();
-            if (query.Sets.Count != 0)
+            if (select.Sets.Count != 0)
             {
-                query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+                select = select.PushDownSubQuery(QueryContext.Alias.GetNewTable());
             }
 
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
+            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
 
-            var keyExpression = new RelationExpressionCompiler(Context).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
-            if (keyExpression is AliasExpression alias)
+            var key = new RelationExpressionCompiler(QueryContext).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
+            if (key is AliasExpression alias)
             {
-                var keyQuery = Context.ProjectionOwner.GetQuery(alias);
-                if (!query.ConstainsQuery(keyQuery))
+                var keySelect = QueryContext.ProjectionOwner.GetSelectExpression(alias);
+
+                if (!select.ContainsSelectExpression(keySelect))
                 {
                     throw new System.Exception("");
                 }
-                else if (alias.Expression is ColumnExpression)
+
+                if (alias.Expression is ColumnExpression)
                 {
-                    keyExpression = alias.Expression.As<ColumnExpression>();
+                    key = alias.Expression.As<ColumnExpression>();
                 }
-                else if (keyQuery != query)
+                else if (keySelect != select)
                 {
-                    keyExpression = new ColumnExpression(keyQuery, new Column(alias.Alias), alias.Type);
+                    key = new ColumnExpression(keySelect, new Column(alias.Alias), alias.Type);
                 }
             }
 
-            if (!keyExpression.Is<ColumnExpression>())
+            if (!key.Is<ColumnExpression>())
             {
                 throw new System.Exception();
             }
 
-            query.Groups.Add(new GroupExpression(new[] { keyExpression.As<ColumnExpression>() }));
+            select.Groups.Add(new GroupExpression(new[] { key.As<ColumnExpression>() }));
 
-            return query;
+            return select;
         }
     }
 }

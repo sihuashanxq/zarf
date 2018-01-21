@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class WhereExperssion : Expression
     {

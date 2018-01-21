@@ -1,15 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Zarf.Core;
-using Zarf.Core.Internals;
 using Zarf.Entities;
-using Zarf.Queries;
-using Zarf.Queries.ExpressionVisitors;
-using Zarf.SqlServer;
+using Zarf.Query;
 using Zarf.SqlServer;
 
 namespace Zarf

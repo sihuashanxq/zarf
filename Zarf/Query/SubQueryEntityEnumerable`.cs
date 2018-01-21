@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using Zarf.Core;
 
-namespace Zarf.Queries
+namespace Zarf.Query
 {
     public class EntityPropertyEnumerable<TEntity> : EntityEnumerable<TEntity>
     {

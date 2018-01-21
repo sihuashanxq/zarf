@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators
+namespace Zarf.Query.ExpressionTranslators
 {
     public interface ITranslator<in T> : ITranslaor
     {

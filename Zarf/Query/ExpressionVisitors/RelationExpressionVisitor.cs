@@ -2,14 +2,14 @@
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using System.Reflection.Emit;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     internal class SubQueryModelTypeDescriptor
     {
@@ -160,9 +160,9 @@ namespace Zarf.Queries.ExpressionVisitors
                 return VisitAny(node.As<AnyExpression>());
             }
 
-            if (node.Is<QueryExpression>())
+            if (node.Is<SelectExpression>())
             {
-                node.As<QueryExpression>().IsPartOfPredicate = true;
+                node.As<SelectExpression>().IsPartOfPredicate = true;
             }
 
             if (node is AliasExpression alias)
@@ -192,20 +192,20 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitEqual(BinaryExpression binary)
         {
-            var query = null as QueryExpression;
-            if (binary.Left.Is<QueryExpression>() && binary.Right.IsNullValueConstant())
+            var select = null as SelectExpression;
+            if (binary.Left.Is<SelectExpression>() && binary.Right.IsNullValueConstant())
             {
-                query = binary.Left.As<QueryExpression>();
+                select = binary.Left.As<SelectExpression>();
             }
-            else if (binary.Right.Is<QueryExpression>() && binary.Left.IsNullValueConstant())
+            else if (binary.Right.Is<SelectExpression>() && binary.Left.IsNullValueConstant())
             {
-                query = binary.Right.As<QueryExpression>();
+                select = binary.Right.As<SelectExpression>();
             }
 
-            if (query != null)
+            if (select != null)
             {
-                query.Where = new WhereExperssion(Visit(query.Where.Predicate));
-                return Expression.Not(new ExistsExpression(query));
+                select.Where = new WhereExperssion(Visit(select.Where.Predicate));
+                return Expression.Not(new ExistsExpression(select));
             }
 
             if (!binary.Left.Type.IsPrimtiveType())
@@ -218,20 +218,20 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitNotEqual(BinaryExpression binary)
         {
-            var query = null as QueryExpression;
-            if (binary.Left.Is<QueryExpression>() && binary.Right.IsNullValueConstant())
+            var select = null as SelectExpression;
+            if (binary.Left.Is<SelectExpression>() && binary.Right.IsNullValueConstant())
             {
-                query = binary.Left.As<QueryExpression>();
+                select = binary.Left.As<SelectExpression>();
             }
-            else if (binary.Right.Is<QueryExpression>() && binary.Left.IsNullValueConstant())
+            else if (binary.Right.Is<SelectExpression>() && binary.Left.IsNullValueConstant())
             {
-                query = binary.Right.As<QueryExpression>();
+                select = binary.Right.As<SelectExpression>();
             }
 
-            if (query != null)
+            if (select != null)
             {
-                query.Where = new WhereExperssion(Visit(query.Where.Predicate));
-                return new ExistsExpression(query);
+                select.Where = new WhereExperssion(Visit(select.Where.Predicate));
+                return new ExistsExpression(select);
             }
 
             if (!ReflectionUtil.SimpleTypes.Contains(binary.Left.Type))
@@ -288,14 +288,14 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitAll(AllExpression all)
         {
-            all.Query.Where = new WhereExperssion(Visit(all.Query.Where.Predicate));
-            return Expression.Not(new ExistsExpression(all.Query));
+            all.Select.Where = new WhereExperssion(Visit(all.Select.Where.Predicate));
+            return Expression.Not(new ExistsExpression(all.Select));
         }
 
         protected virtual Expression VisitAny(AnyExpression any)
         {
-            any.Query.Where = new WhereExperssion(Visit(any.Query.Where.Predicate));
-            return new ExistsExpression(any.Query);
+            any.Select.Where = new WhereExperssion(Visit(any.Select.Where.Predicate));
+            return new ExistsExpression(any.Select);
         }
     }
 
@@ -303,15 +303,15 @@ namespace Zarf.Queries.ExpressionVisitors
     {
         public List<ColumnExpression> RefrencedOuterColumns { get; }
 
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public IQueryContext Context { get; }
 
-        public SubQueryModelRewriter(QueryExpression query, IQueryContext context)
+        public SubQueryModelRewriter(SelectExpression select, IQueryContext context)
         {
             RefrencedOuterColumns = new List<ColumnExpression>();
             Context = context;
-            Query = query;
+            Select = select;
         }
 
         public Expression ChangeQueryModel(Expression exp)
@@ -320,17 +320,17 @@ namespace Zarf.Queries.ExpressionVisitors
 
             if (RefrencedOuterColumns.Count == 0) return exp;
 
-            var modelTypeDescriptor = SubQueryModelTypeGenerator.GenRealtionType(Query.QueryModel.Model.Type, RefrencedOuterColumns);
+            var modelTypeDescriptor = SubQueryModelTypeGenerator.GenRealtionType(Select.QueryModel.Model.Type, RefrencedOuterColumns);
             var modelNewType = modelTypeDescriptor.SubModelType;
-            var model = Query.QueryModel.Model;
-            var modelNewExpression = Query.QueryModel.Model.As<NewExpression>();
+            var model = Select.QueryModel.Model;
+            var modelNewExpression = Select.QueryModel.Model.As<NewExpression>();
             List<MemberAssignment> bindings = null;
 
             if (modelNewExpression == null)
             {
-                var memberInit = Query.QueryModel.Model.As<MemberInitExpression>();
+                var memberInit = Select.QueryModel.Model.As<MemberInitExpression>();
                 bindings = memberInit.Bindings.OfType<MemberAssignment>().ToList();
-                modelNewExpression = Query.QueryModel.Model.As<MemberInitExpression>().NewExpression;
+                modelNewExpression = Select.QueryModel.Model.As<MemberInitExpression>().NewExpression;
             }
 
             if (modelNewExpression == null)
@@ -349,30 +349,30 @@ namespace Zarf.Queries.ExpressionVisitors
                 bindings.Add(Expression.Bind(field, item.Value));
             }
 
-            Query.QueryModel = new QueryEntityModel(Query, Query.QueryModel.Model, Query.QueryModel.ModelType, Query.QueryModel);
+            Select.QueryModel = new QueryEntityModel(Select, Select.QueryModel.Model, Select.QueryModel.ModelType, Select.QueryModel);
 
             modelNewExpression = CreateNewExpression(modelNewType, modelNewExpression.Arguments.ToList());
             model = Expression.MemberInit(modelNewExpression, bindings);
 
-            Query.QueryModel = new QueryEntityModel(
-                Query,
+            Select.QueryModel = new QueryEntityModel(
+                Select,
                 model,
-                Query.QueryModel.ModelType.GetGenericTypeDefinition().MakeGenericType(modelNewType),
-                Query.QueryModel);
+                Select.QueryModel.ModelType.GetGenericTypeDefinition().MakeGenericType(modelNewType),
+                Select.QueryModel);
 
             foreach (var item in modelTypeDescriptor.FieldMaps)
             {
                 var field = modelNewType.GetField(item.Key);
-                Query.QueryModel.RefrencedColumns.Add(new QueryEntityModelRefrenceOuterColumn()
+                Select.QueryModel.RefrencedColumns.Add(new QueryEntityModelRefrenceOuterColumn()
                 {
                     Member = field,
                     RefrencedColumn = item.Value
                 });
             }
 
-            Query.Groups.Add(new GroupExpression(GetAllColumns(Query)));
+            Select.Groups.Add(new GroupExpression(GetAllColumns(Select)));
 
-            Context.QueryModelMapper.MapQueryModel(model, Query.QueryModel);
+            Context.QueryModelMapper.MapQueryModel(model, Select.QueryModel);
 
             return exp;
         }
@@ -404,28 +404,28 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitColumn(ColumnExpression outer)
         {
-            if (!Query.ConstainsQuery(outer.Query))
+            if (!Select.ContainsSelectExpression(outer.Select))
             {
-                var query = outer.Query.Clone();
+                var query = outer.Select.Clone();
                 var columnExpression = outer.Clone(Context.Alias.GetNewColumn());
 
-                columnExpression.Query = query;
+                columnExpression.Select = query;
 
-                outer.Query.AddProjection(columnExpression);
+                outer.Select.AddProjection(columnExpression);
 
-                Query.AddJoin(new JoinExpression(query, null, JoinType.Cross));
+                Select.AddJoin(new JoinExpression(query, null, JoinType.Cross));
 
-                Query.AddProjection(columnExpression);
+                Select.AddProjection(columnExpression);
                 RefrencedOuterColumns.Add(columnExpression);
             }
 
             return outer;
         }
 
-        protected IEnumerable<ColumnExpression> GetAllColumns(QueryExpression query)
+        protected IEnumerable<ColumnExpression> GetAllColumns(SelectExpression select)
         {
             //Visit
-            foreach (var item in query.Projections)
+            foreach (var item in select.Projections)
             {
                 if (item is AliasExpression alias && alias.Expression is ColumnExpression)
                 {
@@ -455,15 +455,15 @@ namespace Zarf.Queries.ExpressionVisitors
             return alias;
         }
 
-        protected virtual Expression VisitQuery(QueryExpression query)
+        protected virtual Expression VisitQuery(SelectExpression select)
         {
-            var predicate = Visit(query.Where?.Predicate);
-            if (predicate != query.Where?.Predicate)
+            var predicate = Visit(select.Where?.Predicate);
+            if (predicate != select.Where?.Predicate)
             {
-                query.Where = new WhereExperssion(predicate);
+                select.Where = new WhereExperssion(predicate);
             }
 
-            return query;
+            return select;
         }
 
         protected virtual Expression VisitAggregate(AggregateExpression aggreatge)
@@ -474,13 +474,13 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitAll(AllExpression all)
         {
-            Visit(all.Query);
+            Visit(all.Select);
             return all;
         }
 
         protected virtual Expression VisitAny(AnyExpression any)
         {
-            Visit(any.Query);
+            Visit(any.Select);
             return any;
         }
     }

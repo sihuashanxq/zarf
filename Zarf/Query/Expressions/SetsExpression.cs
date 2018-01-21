@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     /// <summary>
     /// 集合表达式
     /// </summary>
     public class SetsExpression : Expression
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public override Type Type => Query.Type;
+        public override Type Type => Select.Type;
 
-        public SetsExpression(QueryExpression query)
+        public SetsExpression(SelectExpression select)
         {
-            Query = query;
+            Select = select;
         }
 
         public override int GetHashCode()
         {
-            return Query.GetHashCode();
+            return Select.GetHashCode();
         }
 
         public override bool Equals(object obj)

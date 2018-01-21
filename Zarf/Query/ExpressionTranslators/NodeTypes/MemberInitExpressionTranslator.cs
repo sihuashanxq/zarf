@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberInitExpressionTranslator : Translator<MemberInitExpression>
     {
@@ -16,26 +16,26 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberInitExpression memInit)
         {
-            var newExpression = GetCompiledExpression<NewExpression>(memInit.NewExpression);
+            var newExpression = Compile<NewExpression>(memInit.NewExpression);
             var bindings = new List<MemberBinding>();
 
             foreach (var binding in memInit.Bindings.OfType<MemberAssignment>())
             {
-                var bindExpression = GetCompiledExpression(binding.Expression);
-                if (bindExpression.Is<QueryExpression>())
+                var bindExpression = Compile(binding.Expression);
+                if (bindExpression.Is<SelectExpression>())
                 {
                     bindExpression = binding.Expression;
                 }
                 else
                 {
-                    var query = Context.ProjectionOwner.GetQuery(bindExpression);
+                    var query = QueryContext.ProjectionOwner.GetSelectExpression(bindExpression);
                     if (query == null || !query.QueryModel.ContainsModel(memInit))
                     {
-                        bindExpression = new AliasExpression(Context.Alias.GetNewColumn(), bindExpression, binding.Expression);
+                        bindExpression = new AliasExpression(QueryContext.Alias.GetNewColumn(), bindExpression, binding.Expression);
                     }
                 }
 
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(memInit, binding.Member), bindExpression);
+                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(memInit, binding.Member), bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 

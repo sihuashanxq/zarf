@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Zarf.Core;
-using Zarf.Queries;
+using Zarf.Query;
 using Zarf.Update;
 
 namespace Zarf
@@ -14,9 +14,11 @@ namespace Zarf
     {
         private int _immInsertRowsCount;
 
-        public IServiceProvider ServiceProvider => DbService.ServiceProvder;
+        public string ConnectionString => DbService.ConnectionString;
 
-        public IDbService DbService { get; protected set; }
+        public IServiceProvider ServiceProvider { get; }
+
+        public IDbService DbService { get; }
 
         public IDbModifyExecutor DbModifyExecutor => GetService<IDbModifyExecutor>();
 
@@ -28,12 +30,16 @@ namespace Zarf
 
         public IQueryExecutor QueryExecutor => GetService<IQueryExecutor>();
 
-        public string ConnectionString { get; }
-
         public DbContext(Func<IDbServiceBuilder, IDbService> serviceBuilder)
+            : this(serviceBuilder(null))
         {
-            DbService = serviceBuilder(null);
-            ConnectionString = DbService.ConnectionString;
+
+        }
+
+        public DbContext(IDbService dbService)
+        {
+            DbService = dbService;
+            ServiceProvider = DbService.ServiceProvder.CreateScope().ServiceProvider;
         }
 
         protected TService GetService<TService>()

@@ -1,43 +1,47 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators
+namespace Zarf.Query.ExpressionTranslators
 {
     public abstract class Translator<TExpression> : ITranslator<TExpression>, ITranslaor
     {
-        public IQueryContext Context { get; }
+        public IQueryContext QueryContext { get; }
 
-        public IQueryCompiler Compiler { get; }
+        public IQueryCompiler QueryCompiler { get; }
 
         public Translator(IQueryContext queryContext, IQueryCompiler queryCompiper)
         {
-            Context = queryContext;
-            Compiler = queryCompiper;
+            QueryContext = queryContext;
+            QueryCompiler = queryCompiper;
         }
 
-        public abstract Expression Translate(TExpression query);
+        public abstract Expression Translate(TExpression expression);
 
-        public Expression Translate(Expression query) => Translate(query.Cast<TExpression>());
-
-        protected TNodeType GetCompiledExpression<TNodeType>(Expression exp)
-            where TNodeType : Expression
+        public virtual SelectExpression Translate(SelectExpression select, Expression expression, MethodInfo method)
         {
-            return Compiler.Compile(exp) as TNodeType;
+            throw new NotImplementedException();
         }
 
-        protected Expression GetCompiledExpression(Expression exp)
+        public Expression Translate(Expression expression)
         {
-            return GetCompiledExpression<Expression>(exp);
+            return Translate(expression.Cast<TExpression>());
         }
 
-        protected List<ParameterExpression> GetParameteres(Expression lambda)
+        protected TNodeType Compile<TNodeType>(Expression expression) where TNodeType : Expression
         {
-            return lambda.UnWrap().As<LambdaExpression>().Parameters.ToList();
+            return QueryCompiler.Compile(expression) as TNodeType;
+        }
+
+        protected Expression Compile(Expression expression)
+        {
+            return Compile<Expression>(expression);
         }
     }
 }

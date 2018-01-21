@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using System;
 using Zarf.Entities;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     ///<summary>
     ///Represent a join query 
@@ -13,16 +13,16 @@ namespace Zarf.Queries.Expressions
 
         public Expression Predicate { get; set; }
 
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
-        public override Type Type => Query?.Type;
+        public override Type Type => Select?.Type;
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
-        public JoinExpression(QueryExpression query, Expression predicate, JoinType joinType = JoinType.Inner)
+        public JoinExpression(SelectExpression select, Expression predicate, JoinType joinType = JoinType.Inner)
         {
             Predicate = predicate;
-            Query = query;
+            Select = select;
             JoinType = joinType;
         }
 
@@ -31,7 +31,7 @@ namespace Zarf.Queries.Expressions
             unchecked
             {
                 var hashCode = Predicate.GetHashCode();
-                hashCode += (hashCode * 37) ^ (Query?.GetHashCode() ?? 0);
+                hashCode += (hashCode * 37) ^ (Select?.GetHashCode() ?? 0);
                 hashCode += (hashCode * 37) ^ JoinType.GetHashCode();
                 hashCode += (hashCode * 37) ^ (Predicate?.GetHashCode() ?? 0);
                 return hashCode;

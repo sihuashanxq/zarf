@@ -7,7 +7,7 @@ using System.Text;
 using Zarf.Generators;
 using Zarf.Extensions;
 
-namespace Zarf.SqlServer.Builders
+namespace Zarf.SqlServer.Generators
 {
     internal partial class SqlServerGenerator : SQLGenerator
     {

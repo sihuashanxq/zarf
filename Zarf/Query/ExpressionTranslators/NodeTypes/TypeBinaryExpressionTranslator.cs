@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class TypeBinaryExpressionTranslator : Translator<TypeBinaryExpression>
     {

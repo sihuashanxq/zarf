@@ -4,11 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    public class TakeTranslator : Translator<MethodCallExpression>
+    public class TakeTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -22,18 +22,11 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
+        public override SelectExpression Translate(SelectExpression select, Expression limit, MethodInfo method)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            select.Limit = Convert.ToInt32(limit.As<ConstantExpression>().Value);
 
-            return Translate(query, methodCall.Arguments[1]);
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression limit)
-        {
-            query.Limit = Convert.ToInt32(limit.As<ConstantExpression>().Value);
-
-            return query;
+            return select;
         }
     }
 }

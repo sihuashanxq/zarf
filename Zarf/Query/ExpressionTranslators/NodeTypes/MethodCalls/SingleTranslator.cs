@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
     public class SingleTranslator : WhereTranslator
     {
@@ -23,18 +22,16 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = base.Translate(methodCall).As<QueryExpression>();
+            var select = base.Translate(methodCall).As<SelectExpression>();
 
-            Utils.CheckNull(query, "query");
+            Utils.CheckNull(select, "query");
 
-            if (query.QueryModel.RefrencedColumns.Count == 0)
+            if (select.QueryModel.RefrencedColumns.Count == 0)
             {
-                query.Limit = 2;
+                select.Limit = 2;
             }
 
-            query.QueryModel.ModelType = methodCall.Method.ReturnType;
-
-            return query;
+            return select;
         }
     }
 }

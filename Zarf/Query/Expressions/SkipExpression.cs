@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Collections.Generic;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class SkipExpression : Expression
     {

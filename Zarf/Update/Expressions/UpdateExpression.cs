@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class UpdateExpression : Expression
     {

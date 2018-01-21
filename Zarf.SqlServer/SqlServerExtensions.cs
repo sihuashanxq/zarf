@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Zarf.Core;
 using Zarf.Generators;
-using Zarf.SqlServer.Builders;
+using Zarf.SqlServer.Generators;
 using Zarf.SqlServer.Core;
 
 namespace Zarf.SqlServer

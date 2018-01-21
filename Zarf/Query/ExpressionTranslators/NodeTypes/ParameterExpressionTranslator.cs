@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class ParameterExpressionTranslator : Translator<ParameterExpression>
     {
@@ -12,7 +12,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(ParameterExpression parameter)
         {
-            return Context.QueryMapper.GetMappedQuery(parameter) as Expression ?? parameter;
+            return QueryContext.QueryMapper.GetSelectExpression(parameter) as Expression ?? parameter;
         }
     }
 }

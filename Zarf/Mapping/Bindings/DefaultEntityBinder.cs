@@ -7,8 +7,8 @@ using System.Reflection;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings.Binders;
-using Zarf.Queries;
-using Zarf.Queries.Expressions;
+using Zarf.Query;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Mapping.Bindings
 {
@@ -38,7 +38,7 @@ namespace Zarf.Mapping.Bindings
 
         public ExpressionEqualityComparer ExpressionEquality { get; }
 
-        protected QueryExpression Query { get; set; }
+        protected SelectExpression Select { get; set; }
 
         protected static long VariablesCounter = 0;
 
@@ -52,26 +52,24 @@ namespace Zarf.Mapping.Bindings
 
         public Delegate Bind<TEntity>(IBindingContext bindingContext)
         {
-            var model = bindingContext.Query.As<QueryExpression>()?.QueryModel?.Model ?? bindingContext.Query;
-            var query = bindingContext.Query;
+            var model = bindingContext.Expression.As<SelectExpression>()?.QueryModel?.Model ?? bindingContext.Expression;
+            var select = bindingContext.Expression;
 
-            if (query.Is<AggregateExpression>())
+            if (select is AggregateExpression aggreate)
             {
-                Query = query.As<AggregateExpression>()
-                    ?.KeySelector?.As<ColumnExpression>()
-                    ?.Query.As<QueryExpression>();
+                Select = aggreate.KeySelector?.As<ColumnExpression>()?.Select;
             }
-            else if (query.Is<AllExpression>())
+            else if (select.Is<AllExpression>())
             {
-                Query = query.As<AllExpression>().Query.As<QueryExpression>();
+                Select = select.As<AllExpression>().Select.As<SelectExpression>();
             }
-            else if (query.Is<AnyExpression>())
+            else if (select.Is<AnyExpression>())
             {
-                Query = query.As<AnyExpression>().Query.As<QueryExpression>();
+                Select = select.As<AnyExpression>().Select.As<SelectExpression>();
             }
             else
             {
-                Query = query.As<QueryExpression>();
+                Select = select.As<SelectExpression>();
             }
 
             BindingContext = bindingContext;
@@ -85,20 +83,20 @@ namespace Zarf.Mapping.Bindings
             //子查询
             var queryModel = QueryContext.QueryModelMapper.GetQueryModel(expression);
             if (queryModel != null &&
-                queryModel != Query.QueryModel &&
+                queryModel != Select.QueryModel &&
                 queryModel.ModelType.IsCollection())
             {
                 return CreateSubQueryModel(queryModel);
             }
 
             if (queryModel != null &&
-                queryModel != Query.QueryModel &&
+                queryModel != Select.QueryModel &&
                 queryModel.RefrencedColumns.Count != 0)
             {
                 return CreateSubQueryModel(queryModel);
             }
 
-            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Query.ExpressionMapper.GetMappedExpression(expression);
+            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Select.ExpressionMapper.GetMappedExpression(expression);
             if (tryGetMaped != null)
             {
                 var bind = BindQueryProjection(tryGetMaped);
@@ -107,7 +105,7 @@ namespace Zarf.Mapping.Bindings
                     bind = BindQueryProjection(tryGetMaped);
                     if (bind == null)
                     {
-                        var mapped2 = Query.ExpressionMapper.GetMappedExpression(tryGetMaped);
+                        var mapped2 = Select.ExpressionMapper.GetMappedExpression(tryGetMaped);
                         if (mapped2 != null)
                         {
                             tryGetMaped = mapped2;
@@ -140,9 +138,9 @@ namespace Zarf.Mapping.Bindings
 
         protected override Expression VisitConstant(ConstantExpression constant)
         {
-            for (var i = 0; i < Query.Projections.Count; i++)
+            for (var i = 0; i < Select.Projections.Count; i++)
             {
-                var projection = Query.Projections[i];
+                var projection = Select.Projections[i];
                 if (projection.Is<AggregateExpression>())
                 {
                     projection = projection.As<AggregateExpression>().KeySelector;
@@ -208,12 +206,12 @@ namespace Zarf.Mapping.Bindings
 
         protected virtual Expression BindQueryProjection(Expression projection)
         {
-            for (var i = 0; i < Query.Projections.Count; i++)
+            for (var i = 0; i < Select.Projections.Count; i++)
             {
-                var mappedProjection = Query.ExpressionMapper.GetMappedExpression(projection);
+                var mappedProjection = Select.ExpressionMapper.GetMappedExpression(projection);
 
-                if (ExpressionEquality.Equals(Query.Projections[i], projection) ||
-                    ExpressionEquality.Equals(Query.Projections[i], mappedProjection))
+                if (ExpressionEquality.Equals(Select.Projections[i], projection) ||
+                    ExpressionEquality.Equals(Select.Projections[i], mappedProjection))
                 {
                     var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(projection.Type);
                     return Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
@@ -273,12 +271,12 @@ namespace Zarf.Mapping.Bindings
 
         protected virtual Expression BindMember(Expression modelTemplate, MemberInfo member, Expression memberExpression)
         {
-            var queryModel = Query.QueryModel.FindQueryModel(modelTemplate);
+            var queryModel = Select.QueryModel.FindQueryModel(modelTemplate);
             var binding = memberExpression.NodeType == ExpressionType.Extension ? memberExpression : GetMemberBindingExpression(queryModel, member);
 
             if (!memberExpression.Type.IsPrimtiveType())
             {
-                binding = binding is QueryExpression query
+                binding = binding is SelectExpression query
                        ? CreateSubQueryModel(query.QueryModel)
                        : Visit(memberExpression);
 
@@ -286,7 +284,7 @@ namespace Zarf.Mapping.Bindings
             }
 
             //此处是简单类型,应该是聚合,Select(item)
-            binding = binding is QueryExpression
+            binding = binding is SelectExpression
             ? Visit(memberExpression)
             : BindQueryProjection(binding);
 
@@ -304,7 +302,7 @@ namespace Zarf.Mapping.Bindings
             var modelType = typeof(EntityPropertyEnumerable<>).MakeGenericType(modelElementType);
             var modelEleNew = Expression.New(
                         modelType.GetConstructor(new Type[] { typeof(Expression), typeof(IQueryContext), typeof(IQueryExecutor) }),
-                        Expression.Constant(queryModel.Query),
+                        Expression.Constant(queryModel.Select),
                         Expression.Constant(QueryContext),
                         Expression.Constant(BindingContext.QueryExecutor));
 

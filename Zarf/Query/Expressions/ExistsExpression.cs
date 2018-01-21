@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class ExistsExpression : Expression
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public override Type Type => typeof(bool);
 
-        public ExistsExpression(QueryExpression existsQuery)
+        public ExistsExpression(SelectExpression select)
         {
-            Query = existsQuery;
+            Select = select;
         }
     }
 }

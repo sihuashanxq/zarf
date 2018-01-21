@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class AnyExpression : Expression
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
         public override Type Type { get; }
 
-        public AnyExpression(QueryExpression query)
+        public AnyExpression(SelectExpression select)
         {
             Type = typeof(bool);
-            Query = query;
+            Select = select;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return Query.GetHashCode();
+                return Select.GetHashCode();
             }
         }
 

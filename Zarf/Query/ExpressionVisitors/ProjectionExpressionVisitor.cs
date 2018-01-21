@@ -1,22 +1,22 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     /// <summary>
     /// 根据子查询生成Column
     /// </summary>
     public class ProjectionExpressionVisitor : QueryCompiler
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
-        public ProjectionExpressionVisitor(QueryExpression query, IQueryContext queryContext)
+        public ProjectionExpressionVisitor(SelectExpression select, IQueryContext queryContext)
             : base(queryContext)
         {
-            Query = query;
-            Query.Projections.Clear();
+            Select = select;
+            Select.Projections.Clear();
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInit)
@@ -25,7 +25,7 @@ namespace Zarf.Queries.ExpressionVisitors
 
             foreach (var binding in memberInit.Bindings.OfType<MemberAssignment>())
             {
-                if (binding.Expression.Is<QueryExpression>())
+                if (binding.Expression.Is<SelectExpression>())
                 {
                     continue;
                 }
@@ -47,8 +47,8 @@ namespace Zarf.Queries.ExpressionVisitors
                     continue;
                 }
 
-                Query.AddProjection(binding.Expression);
-                QueryContext.ProjectionOwner.AddProjection(binding.Expression, Query);
+                Select.AddProjection(binding.Expression);
+                QueryContext.ProjectionOwner.AddSelectProjection(binding.Expression, Select);
                 QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
             }
 
@@ -59,7 +59,7 @@ namespace Zarf.Queries.ExpressionVisitors
         {
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                if (newExpression.Arguments[i].Is<QueryExpression>())
+                if (newExpression.Arguments[i].Is<SelectExpression>())
                 {
                     continue;
                 }
@@ -81,8 +81,8 @@ namespace Zarf.Queries.ExpressionVisitors
                     continue;
                 }
 
-                Query.AddProjection(newExpression.Arguments[i]);
-                QueryContext.ProjectionOwner.AddProjection(newExpression.Arguments[i], Query);
+                Select.AddProjection(newExpression.Arguments[i]);
+                QueryContext.ProjectionOwner.AddSelectProjection(newExpression.Arguments[i], Select);
                 QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
             }
 
@@ -91,7 +91,7 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var query = QueryContext.QueryMapper.GetMappedQuery(parameter);
+            var query = QueryContext.QueryMapper.GetSelectExpression(parameter);
             if (query == null)
             {
                 return parameter;
@@ -99,8 +99,8 @@ namespace Zarf.Queries.ExpressionVisitors
 
             foreach (var item in query.GenQueryProjections())
             {
-                Query.AddProjection(item);
-                QueryContext.ProjectionOwner.AddProjection(item, Query);
+                Select.AddProjection(item);
+                QueryContext.ProjectionOwner.AddSelectProjection(item, Select);
             }
 
             return parameter;
@@ -122,17 +122,17 @@ namespace Zarf.Queries.ExpressionVisitors
 
             if (visitedNode is ColumnExpression)
             {
-                Query.AddProjection(visitedNode);
+                Select.AddProjection(visitedNode);
             }
 
             if(visitedNode is AggregateExpression)
             {
-                Query.AddProjection(visitedNode);
+                Select.AddProjection(visitedNode);
             }
 
             if(visitedNode is AliasExpression)
             {
-                Query.AddProjection(visitedNode);
+                Select.AddProjection(visitedNode);
             }
 
             return visitedNode;

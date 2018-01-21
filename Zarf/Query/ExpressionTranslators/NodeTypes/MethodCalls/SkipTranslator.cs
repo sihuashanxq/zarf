@@ -2,13 +2,13 @@
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using System.Linq;
 using System.Reflection;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    public class SkipTranslator : Translator<MethodCallExpression>
+    public class SkipTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -22,32 +22,25 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
-        {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-
-            return Translate(query, methodCall.Arguments[1]);
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression offSet)
+        public override SelectExpression Translate(SelectExpression select, Expression offSet, MethodInfo method)
         {
             var offset = (int)offSet.As<ConstantExpression>().Value;
-            var skip = new SkipExpression(offset, query.Orders.ToList());
+            var skip = new SkipExpression(offset, select.Orders.ToList());
 
-            Utils.CheckNull(query, "query");
+            Utils.CheckNull(select, "query");
 
-            query.AddProjection(skip);
-            query = query.PushDownSubQuery(Context.Alias.GetNewTable());
+            select.AddProjection(skip);
+            select = select.PushDownSubQuery(QueryContext.Alias.GetNewTable());
 
-            var skipColumn = new ColumnExpression(query, new Column("__rowIndex__"), typeof(int));
+            var skipColumn = new ColumnExpression(select, new Column("__rowIndex__"), typeof(int));
             var skipCondtion = Expression.MakeBinary(
                 ExpressionType.GreaterThan,
                 skipColumn,
                 Expression.Constant(offset));
 
-            query.CombineCondtion(Expression.Lambda(skipCondtion));
+            select.CombineCondtion(Expression.Lambda(skipCondtion));
 
-            return query;
+            return select;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Entities
 {
@@ -16,7 +16,7 @@ namespace Zarf.Entities
 
     public class QueryEntityModel
     {
-        public QueryExpression Query { get; set; }
+        public SelectExpression Select { get; set; }
 
         public Type ModelType { get; set; }
 
@@ -28,9 +28,9 @@ namespace Zarf.Entities
 
         public List<QueryEntityModelRefrenceOuterColumn> RefrencedColumns { get; }
 
-        public QueryEntityModel(QueryExpression query, Expression model, Type modelType, QueryEntityModel previous = null)
+        public QueryEntityModel(SelectExpression select, Expression model, Type modelType, QueryEntityModel previous = null)
         {
-            Query = query;
+            Select = select;
             Model = model.UnWrap();
             ModelType = modelType;
             Previous = previous;

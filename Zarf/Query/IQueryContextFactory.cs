@@ -1,5 +1,5 @@
 ﻿using Zarf.Core;
-namespace Zarf.Queries
+namespace Zarf.Query
 {
     public interface IQueryContextFactory
     {

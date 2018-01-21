@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using Zarf.Generators;
-using Zarf.Queries;
-using Zarf.Queries.Internals;
+using Zarf.Query;
+using Zarf.Query.Internals;
 using Zarf.Update;
 
 namespace Zarf.Core

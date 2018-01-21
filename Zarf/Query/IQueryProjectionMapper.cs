@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using System.Collections.Generic;
 
-namespace Zarf.Queries.Internals
+namespace Zarf.Query.Internals
 {
     public interface IQueryProjectionMapper
     {

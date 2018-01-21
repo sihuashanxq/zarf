@@ -13,7 +13,7 @@ namespace Zarf.SqlServer.Core
 
             return new DbService(
                 connectionString,
-                serviceCollection.BuildServiceProvider().CreateScope().ServiceProvider);
+                serviceCollection.BuildServiceProvider());
         }
 
         public override IDbService BuildService(string connectionString)

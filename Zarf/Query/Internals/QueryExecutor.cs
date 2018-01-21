@@ -3,13 +3,13 @@ using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Mapping.Bindings;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 using System.Linq;
 using Zarf.Entities;
 using Zarf.Generators;
 
-namespace Zarf.Queries.Internals
+namespace Zarf.Query.Internals
 {
     public class QueryExecutor : IQueryExecutor
     {

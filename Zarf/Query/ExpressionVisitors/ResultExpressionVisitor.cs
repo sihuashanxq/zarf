@@ -3,33 +3,33 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     public class ResultExpressionVisitor : ExpressionVisitorBase
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public IQueryContext Context { get; }
 
         public QueryModelExpressionVisitor SubQueryModelExpressionVisitor { get; }
 
-        public ResultExpressionVisitor(IQueryContext context, QueryExpression query)
+        public ResultExpressionVisitor(IQueryContext context, SelectExpression select)
         {
-            Query = query;
+            Select = select;
             Context = context;
             SubQueryModelExpressionVisitor = new QueryModelExpressionVisitor(Context);
         }
 
         public override Expression Visit(Expression node)
         {
-            if (node.Is<QueryExpression>())
+            if (node.Is<SelectExpression>())
             {
-                var query = node.As<QueryExpression>();
-                if (!Query.ConstainsQuery(query))
+                var select = node.As<SelectExpression>();
+                if (!Select.ContainsSelectExpression(select))
                 {
-                    CombineAggregateQuery(query);
+                    CombineAggregateSelect(select);
                 }
             }
 
@@ -45,28 +45,28 @@ namespace Zarf.Queries.ExpressionVisitors
         {
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var modelExpression = Query.QueryModel.GetModelExpression(newExpression.Members[i]);
+                var modelExpression = Select.QueryModel.GetModelExpression(newExpression.Members[i]);
                 if (modelExpression == null) continue;
 
                 var member = Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]);
-                var query = Context.MemberBindingMapper.GetMapedExpression(member).As<QueryExpression>();
+                var query = Context.MemberBindingMapper.GetMapedExpression(member).As<SelectExpression>();
 
-                if (query == null || Query.ConstainsQuery(query)) continue;
+                if (query == null || Select.ContainsSelectExpression(query)) continue;
 
-                if (!CombineAggregateQuery(query))
+                if (!CombineAggregateSelect(query))
                 {
                     Context.MemberBindingMapper.Map(member, query);
                 }
                 else
                 {
-                    Context.MemberBindingMapper.Map(member, Query.Projections.LastOrDefault());
+                    Context.MemberBindingMapper.Map(member, Select.Projections.LastOrDefault());
                 }
             }
 
             return newExpression;
         }
 
-        protected virtual bool CombineAggregateQuery(QueryExpression query)
+        protected virtual bool CombineAggregateSelect(SelectExpression query)
         {
             foreach (var item in query.Projections)
             {
@@ -75,15 +75,15 @@ namespace Zarf.Queries.ExpressionVisitors
                     continue;
                 }
 
-                Query.QueryModel = new QueryEntityModel(
-                    Query,
-                    SubQueryModelExpressionVisitor.Visit(Query.QueryModel.Model),
-                    Query.QueryModel.ModelType, Query.QueryModel);
+                Select.QueryModel = new QueryEntityModel(
+                    Select,
+                    SubQueryModelExpressionVisitor.Visit(Select.QueryModel.Model),
+                    Select.QueryModel.ModelType, Select.QueryModel);
 
                 //聚合列被合并到主查询中,移除对主查询的Cross Join
                 foreach (var join in query.Joins.ToList())
                 {
-                    if (join.Query == Query || join.Query.SourceQuery == Query)
+                    if (join.Select == Select || join.Select.SourceSelect == Select)
                     {
                         query.Joins.Remove(join);
                     }
@@ -91,8 +91,8 @@ namespace Zarf.Queries.ExpressionVisitors
 
                 var alias = new AliasExpression(Context.Alias.GetNewColumn(), query, null, item.Type);
 
-                Query.AddProjection(alias);
-                Query.ExpressionMapper.Map(aggreate, alias);
+                Select.AddProjection(alias);
+                Select.ExpressionMapper.Map(aggreate, alias);
 
                 return true;
             }
@@ -106,16 +106,16 @@ namespace Zarf.Queries.ExpressionVisitors
     /// </summary>
     public class SubQueryAggregateColumnRefrenceExpressionVisitor : ExpressionVisitorBase
     {
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         /// <summary>
         /// 引用的外部聚合列
         /// </summary>
         public List<ColumnExpression> RefrencedColumns { get; }
 
-        public SubQueryAggregateColumnRefrenceExpressionVisitor(QueryExpression query, AggregateExpression aggreate)
+        public SubQueryAggregateColumnRefrenceExpressionVisitor(SelectExpression select, AggregateExpression aggreate)
         {
-            Query = query;
+            Select = select;
             RefrencedColumns = new List<ColumnExpression>();
             Visit(aggreate);
         }
@@ -147,7 +147,7 @@ namespace Zarf.Queries.ExpressionVisitors
 
         protected virtual Expression VisitColumn(ColumnExpression columnExpression)
         {
-            if (!Query.ConstainsQuery(columnExpression.Query))
+            if (!Select.ContainsSelectExpression(columnExpression.Select))
             {
                 RefrencedColumns.Add(columnExpression);
             }

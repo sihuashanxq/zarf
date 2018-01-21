@@ -6,10 +6,10 @@ using System.Text;
 using Zarf.Generators;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
 
-namespace Zarf.SqlServer.Builders
+namespace Zarf.SqlServer.Generators
 {
     internal partial class SqlServerGenerator : SQLGenerator
     {
@@ -84,9 +84,9 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitColumn(ColumnExpression column)
         {
-            if (column.Query != null && !column.Query.Alias.IsNullOrEmpty())
+            if (column.Select != null && !column.Select.Alias.IsNullOrEmpty())
             {
-                SQL.Append(column.Query.Alias.Escape());
+                SQL.Append(column.Select.Alias.Escape());
                 SQL.Append('.');
             }
 
@@ -110,7 +110,7 @@ namespace Zarf.SqlServer.Builders
 
         protected override Expression VisitAlias(AliasExpression alias)
         {
-            if (alias.Expression is QueryExpression)
+            if (alias.Expression is SelectExpression)
             {
                 Append("( ");
                 BuildExpression(alias.Expression);
@@ -128,7 +128,7 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitExcept(ExceptExpression except)
         {
             Append(" Except ");
-            BuildExpression(except.Query);
+            BuildExpression(except.Select);
             return except;
         }
 
@@ -142,14 +142,14 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitIntersect(IntersectExpression intersec)
         {
             Append(" INTERSECT ");
-            BuildExpression(intersec.Query);
+            BuildExpression(intersec.Select);
             return intersec;
         }
 
         protected override Expression VisitUnion(UnionExpression union)
         {
             Append(" UNION ALL ");
-            BuildExpression(union.Query);
+            BuildExpression(union.Select);
             return union;
         }
 
@@ -174,14 +174,14 @@ namespace Zarf.SqlServer.Builders
                     break;
             }
 
-            if (join.Query.IsEmptyQuery() && join.Query.Projections.Count == 0)
+            if (join.Select.IsEmptyQuery() && join.Select.Projections.Count == 0)
             {
-                BuildFromTable(join.Query);
+                BuildFromTable(join.Select);
             }
             else
             {
-                BuildExpression(join.Query);
-                Append("  AS " + join.Query.Alias.Escape());
+                BuildExpression(join.Select);
+                Append("  AS " + join.Select.Alias.Escape());
             }
 
 
@@ -206,39 +206,39 @@ namespace Zarf.SqlServer.Builders
             return order;
         }
 
-        protected override Expression VisitQuery(QueryExpression query)
+        protected override Expression VisitQuery(SelectExpression select)
         {
-            if (query.IsPartOfPredicate || query.Outer != null)
+            if (select.IsPartOfPredicate || select.OuterSelect != null)
             {
                 Append(" ( ");
             }
 
             Append(" SELECT  ");
 
-            BuildDistinct(query);
-            BuildLimit(query);
-            BuildProjections(query);
+            BuildDistinct(select);
+            BuildLimit(select);
+            BuildProjections(select);
 
             Append(" FROM ");
 
-            BuildSubQuery(query);
-            BuildFromTable(query);
-            BuildJoins(query);
+            BuildSubQuery(select);
+            BuildFromTable(select);
+            BuildJoins(select);
 
-            BuildWhere(query);
+            BuildWhere(select);
 
-            BuildGroups(query);
+            BuildGroups(select);
 
-            BuildOrders(query);
+            BuildOrders(select);
 
-            BuildSets(query);
+            BuildSets(select);
 
-            if (query.IsPartOfPredicate || query.Outer != null)
+            if (select.IsPartOfPredicate || select.OuterSelect != null)
             {
                 Append(" ) ");
             }
 
-            return query;
+            return select;
         }
 
         protected override Expression VisitWhere(WhereExperssion where)
@@ -251,7 +251,7 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitAll(AllExpression all)
         {
             Append(" IF NOT EXISTS(");
-            BuildExpression(all.Query);
+            BuildExpression(all.Select);
             Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return all;
         }
@@ -259,7 +259,7 @@ namespace Zarf.SqlServer.Builders
         protected override Expression VisitAny(AnyExpression any)
         {
             Append(" IF EXISTS(");
-            BuildExpression(any.Query);
+            BuildExpression(any.Select);
             Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return any;
         }
@@ -390,37 +390,37 @@ namespace Zarf.SqlServer.Builders
             SQL.Length--;
         }
 
-        protected virtual void BuildLimit(QueryExpression query)
+        protected virtual void BuildLimit(SelectExpression select)
         {
-            if (query.Limit != 0)
+            if (select.Limit != 0)
             {
-                Append(" TOP  ", query.Limit, " ");
+                Append(" TOP  ", select.Limit, " ");
                 return;
             }
 
-            if (query.Outer != null && (query.Orders.Count != 0 || query.Groups.Count != 0))
+            if (select.OuterSelect != null && (select.Orders.Count != 0 || select.Groups.Count != 0))
             {
                 Append(" TOP (100) Percent ");
             }
         }
 
-        protected virtual void BuildDistinct(QueryExpression query)
+        protected virtual void BuildDistinct(SelectExpression select)
         {
-            if (query.IsDistinct)
+            if (select.IsDistinct)
             {
                 Append(" DISTINCT ");
             }
         }
 
-        protected virtual void BuildProjections(QueryExpression query)
+        protected virtual void BuildProjections(SelectExpression select)
         {
-            if (query.Projections == null || query.Projections.Count == 0)
+            if (select.Projections == null || select.Projections.Count == 0)
             {
                 Append('*');
             }
             else
             {
-                foreach (var item in query.Projections)
+                foreach (var item in select.Projections)
                 {
                     BuildExpression(item);
                     Append(',');
@@ -430,64 +430,64 @@ namespace Zarf.SqlServer.Builders
             }
         }
 
-        protected virtual void BuildSubQuery(QueryExpression query)
+        protected virtual void BuildSubQuery(SelectExpression select)
         {
-            if (query.SubQuery != null)
+            if (select.SubSelect != null)
             {
-                BuildExpression(query.SubQuery);
+                BuildExpression(select.SubSelect);
             }
         }
 
-        protected virtual void BuildFromTable(QueryExpression query)
+        protected virtual void BuildFromTable(SelectExpression select)
         {
-            if (query.SubQuery == null)
+            if (select.SubSelect == null)
             {
-                Utils.CheckNull(query.Table, "query.Table is null");
-                Append(query.Table.Schema.Escape(), '.', query.Table.Name.Escape());
+                Utils.CheckNull(select.Table, "query.Table is null");
+                Append(select.Table.Schema.Escape(), '.', select.Table.Name.Escape());
             }
 
-            if (!query.Alias.IsNullOrEmpty())
+            if (!select.Alias.IsNullOrEmpty())
             {
-                Append(" AS ", query.Alias.Escape());
+                Append(" AS ", select.Alias.Escape());
             }
         }
 
-        protected virtual void BuildJoins(QueryExpression query)
+        protected virtual void BuildJoins(SelectExpression select)
         {
-            if (query.Joins == null || query.Joins.Count == 0)
+            if (select.Joins == null || select.Joins.Count == 0)
             {
                 return;
             }
 
-            foreach (var join in query.Joins)
+            foreach (var join in select.Joins)
             {
                 BuildExpression(join);
             }
         }
 
-        protected virtual void BuildSets(QueryExpression query)
+        protected virtual void BuildSets(SelectExpression select)
         {
-            if (query.Sets == null || query.Sets.Count == 0)
+            if (select.Sets == null || select.Sets.Count == 0)
             {
                 return;
             }
 
-            foreach (var set in query.Sets)
+            foreach (var set in select.Sets)
             {
                 BuildExpression(set);
             }
         }
 
-        protected virtual void BuildOrders(QueryExpression query)
+        protected virtual void BuildOrders(SelectExpression select)
         {
-            if (query.Orders == null || query.Orders.Count == 0)
+            if (select.Orders == null || select.Orders.Count == 0)
             {
                 return;
             }
 
             Append(" ORDER BY ");
 
-            foreach (var order in query.Orders)
+            foreach (var order in select.Orders)
             {
                 BuildExpression(order);
                 Append(',');
@@ -496,16 +496,16 @@ namespace Zarf.SqlServer.Builders
             SQL.Length--;
         }
 
-        protected virtual void BuildGroups(QueryExpression query)
+        protected virtual void BuildGroups(SelectExpression select)
         {
-            if (query.Groups == null || query.Groups.Count == 0)
+            if (select.Groups == null || select.Groups.Count == 0)
             {
                 return;
             }
 
             Append(" GROUP BY ");
 
-            foreach (var group in query.Groups)
+            foreach (var group in select.Groups)
             {
                 BuildExpression(group);
                 Append(',');
@@ -514,11 +514,11 @@ namespace Zarf.SqlServer.Builders
             SQL.Length--;
         }
 
-        protected virtual void BuildWhere(QueryExpression query)
+        protected virtual void BuildWhere(SelectExpression select)
         {
-            if (query.Where != null)
+            if (select.Where != null)
             {
-                VisitWhere(query.Where);
+                VisitWhere(select.Where);
             }
         }
 
@@ -681,7 +681,7 @@ namespace Zarf.SqlServer.Builders
             //}
 
             Append(" EXISTS (");
-            BuildExpression(exists.Query);
+            BuildExpression(exists.Select);
             Append(") ");
             return exists;
         }

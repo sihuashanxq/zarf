@@ -2,9 +2,9 @@
 using System.Linq.Expressions;
 
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class NewExpressionTranslator : Translator<NewExpression>
     {
@@ -24,23 +24,23 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
             var arguments = new List<Expression>();
             for (var i = 0; i < newExpression.Arguments.Count; i++)
             {
-                var argument = GetCompiledExpression(newExpression.Arguments[i]);
-                if (argument.Is<QueryExpression>())
+                var argument = Compile(newExpression.Arguments[i]);
+                if (argument.Is<SelectExpression>())
                 {
                     arguments.Add(newExpression.Arguments[i]);
                 }
                 else
                 {
-                    var query = Context.ProjectionOwner.GetQuery(argument);
+                    var query = QueryContext.ProjectionOwner.GetSelectExpression(argument);
                     if (query == null || !query.QueryModel.ContainsModel(newExpression))
                     {
-                        argument = new AliasExpression(Context.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
+                        argument = new AliasExpression(QueryContext.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
                     }
 
                     arguments.Add(argument);
                 }
 
-                Context.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
+                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
             }
 
             return newExpression.Update(arguments);

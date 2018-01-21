@@ -1,4 +1,4 @@
-﻿namespace Zarf.Queries.Internals
+﻿namespace Zarf.Query.Internals
 {
     public class QueryContextFacotry : IQueryContextFactory
     {

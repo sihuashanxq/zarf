@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    internal class DistinctTranslator : Translator<MethodCallExpression>
+    internal class DistinctTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -22,20 +20,13 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
+        public override SelectExpression Translate(SelectExpression select, Expression exp, MethodInfo method)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            Utils.CheckNull(select, "query");
 
-            Utils.CheckNull(query, "query");
+            select.IsDistinct = true;
 
-            return Translate(query, null);
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression exp)
-        {
-            query.IsDistinct = true;
-
-            return query;
+            return select;
         }
     }
 }

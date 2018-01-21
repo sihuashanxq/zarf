@@ -3,23 +3,23 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     public class AggreateExpressionVisitor : QueryCompiler
     {
         /// <summary>
         /// 已被处理的查询
         /// </summary>
-        protected List<QueryExpression> HandledQueries { get; }
+        protected List<SelectExpression> HandledSelects { get; }
 
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
-        public AggreateExpressionVisitor(IQueryContext context, QueryExpression query) : base(context)
+        public AggreateExpressionVisitor(IQueryContext context, SelectExpression select) : base(context)
         {
-            Query = query;
-            HandledQueries = new List<QueryExpression>();
+            Select = select;
+            HandledSelects = new List<SelectExpression>();
         }
 
         public override Expression Visit(Expression exp)
@@ -41,7 +41,7 @@ namespace Zarf.Queries.ExpressionVisitors
 
             if (queryModel != null)
             {
-                if (!Query.ConstainsQuery(queryModel.Query))
+                if (!Select.ContainsSelectExpression(queryModel.Select))
                 {
                     throw new NotImplementedException("can not aggregate a column from outer refrence!");
                 }
@@ -64,13 +64,13 @@ namespace Zarf.Queries.ExpressionVisitors
 
                     if (binding is AliasExpression alis)
                     {
-                        if (!(alis.Expression is QueryExpression))
+                        if (!(alis.Expression is SelectExpression))
                         {
                             return alis.Expression;
                         }
 
                         //引用为表,则说明这是子查询中的聚合
-                        return new ColumnExpression(Query, new Column(alis.Alias), alis.Type);
+                        return new ColumnExpression(Select, new Column(alis.Alias), alis.Type);
                     }
                     else
                     {

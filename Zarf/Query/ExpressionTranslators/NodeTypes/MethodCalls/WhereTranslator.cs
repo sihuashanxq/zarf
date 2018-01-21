@@ -3,12 +3,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    public class WhereTranslator : Translator<MethodCallExpression>
+    public class WhereTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -23,41 +23,35 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
 
         }
 
-        public override Expression Translate(MethodCallExpression methodCall)
-        {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-
-            return Translate(query, methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1]);
-        }
-
-        public virtual QueryExpression Translate(QueryExpression query, Expression predicate)
+        public override SelectExpression Translate(SelectExpression select, Expression predicate, MethodInfo method)
         {
             if (predicate == null)
             {
-                return query;
+                return select;
             }
 
             var parameter = predicate.GetParameters().FirstOrDefault();
 
-            Utils.CheckNull(query, "query");
+            Utils.CheckNull(select, "query");
 
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
+            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
 
-            predicate = CreateRealtionCompiler(query).Compile(predicate);
+            predicate = CreateRealtionCompiler(select).Compile(predicate);
             predicate = new RelationExpressionVisitor().Visit(predicate);
 
-            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+            predicate = new SubQueryModelRewriter(select, QueryContext).ChangeQueryModel(predicate);
 
-            query.DefaultIfEmpty = false;
-            query.CombineCondtion(predicate);
+            select.DefaultIfEmpty = false;
+            select.CombineCondtion(predicate);
+            select.QueryModel.ModelType = method.ReturnType;
 
-            return query;
+            return select;
         }
 
-        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
+        protected RelationExpressionCompiler CreateRealtionCompiler(SelectExpression select)
         {
-            return new RelationExpressionCompiler(Context);
+            return new RelationExpressionCompiler(QueryContext);
         }
     }
 }

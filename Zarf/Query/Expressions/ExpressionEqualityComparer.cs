@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     /// <summary>
     /// 表达式比较

@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Core.Internals;
-using Zarf.Queries;
+using Zarf.Query;
 
 namespace Zarf
 {

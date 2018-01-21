@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class SourceExpression : Expression
     {

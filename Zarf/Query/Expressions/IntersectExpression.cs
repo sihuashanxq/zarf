@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class IntersectExpression : SetsExpression
     {
-        public IntersectExpression(QueryExpression query)
-            : base(query)
+        public IntersectExpression(SelectExpression select)
+            : base(select)
         {
 
         }

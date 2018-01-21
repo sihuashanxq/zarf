@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
 
-namespace Zarf.Queries.ExpressionTranslators.Methods
+namespace Zarf.Query.ExpressionTranslators.Methods
 {
-    public class UnionTranslator : Translator<MethodCallExpression>
+    public class UnionTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -22,24 +20,17 @@ namespace Zarf.Queries.ExpressionTranslators.Methods
         {
 
         }
-       
-        public override Expression Translate(MethodCallExpression methodCall)
+  
+        public override SelectExpression Translate(SelectExpression select, Expression sets,MethodInfo method)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
+            var setsSelect = Compile<SelectExpression>(sets);
 
-            return Translate(query, methodCall.Arguments[1]);
-        }
+            Utils.CheckNull(select, "Query Expression");
+            Utils.CheckNull(setsSelect, "Except Query Expression");
 
-        public virtual QueryExpression Translate(QueryExpression query, Expression sets)
-        {
-            var setsQuery = GetCompiledExpression<QueryExpression>(sets);
+            select.Sets.Add(new UnionExpression(setsSelect));
 
-            Utils.CheckNull(query, "Query Expression");
-            Utils.CheckNull(setsQuery, "Except Query Expression");
-
-            query.Sets.Add(new UnionExpression(setsQuery));
-
-            return query;
+            return select;
         }
     }
 }

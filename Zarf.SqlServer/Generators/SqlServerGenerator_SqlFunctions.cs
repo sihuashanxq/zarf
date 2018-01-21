@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using Zarf.Generators;
 
-namespace Zarf.SqlServer.Builders
+namespace Zarf.SqlServer.Generators
 {
     internal partial class SqlServerGenerator : SQLGenerator
     {

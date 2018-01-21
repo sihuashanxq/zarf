@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Zarf.Generators;
-using Zarf.Queries;
-using Zarf.Queries.Internals;
+using Zarf.Query;
+using Zarf.Query.Internals;
 using Zarf.Update;
 using Zarf.Update.Executors;
 

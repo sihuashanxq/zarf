@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     public class QueryModelExpressionVisitor : ExpressionVisitorBase
     {

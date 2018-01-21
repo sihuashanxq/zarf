@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 using Zarf.Entities;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Queries.Internals;
+using Zarf.Query.Internals;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
-    public class QueryExpression : Expression
+    public class SelectExpression : Expression
     {
         public Type TypeOfExpression { get; set; }
 
@@ -41,11 +41,11 @@ namespace Zarf.Queries.Expressions
 
         public bool DefaultIfEmpty { get; set; }
 
-        public QueryExpression SubQuery { get; protected set; }
+        public SelectExpression SubSelect { get; protected set; }
 
-        public QueryExpression SourceQuery { get; set; }
+        public SelectExpression SourceSelect { get; set; }
 
-        public QueryExpression Outer { get; protected set; }
+        public SelectExpression OuterSelect { get; protected set; }
 
         public QueryEntityModel QueryModel { get; set; }
 
@@ -56,7 +56,7 @@ namespace Zarf.Queries.Expressions
         /// </summary>
         public bool IsPartOfPredicate { get; internal set; }
 
-        public QueryExpression(Type typeOfEntity, IQueryProjectionMapper mapper, string alias = "")
+        public SelectExpression(Type typeOfEntity, IQueryProjectionMapper mapper, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
@@ -69,29 +69,29 @@ namespace Zarf.Queries.Expressions
             Alias = alias;
         }
 
-        public QueryExpression PushDownSubQuery(string alias)
+        public SelectExpression PushDownSubQuery(string alias)
         {
-            var query = new QueryExpression(Type, ExpressionMapper, alias)
+            var select = new SelectExpression(Type, ExpressionMapper, alias)
             {
-                SubQuery = this,
+                SubSelect = this,
                 Table = null,
                 DefaultIfEmpty = DefaultIfEmpty,
                 QueryModel = QueryModel
             };
 
-            query.AddProjectionRange(query.GenQueryProjections());
-            query.QueryModel.Query = query;
+            select.AddProjectionRange(select.GenQueryProjections());
+            select.QueryModel.Select = select;
 
             DefaultIfEmpty = false;
-            Outer = query;
-            SourceQuery = query;
+            OuterSelect = select;
+            SourceSelect = select;
 
-            return query;
+            return select;
         }
 
         public void AddJoin(JoinExpression joinQuery)
         {
-            joinQuery.Query.Outer = this;
+            joinQuery.Select.OuterSelect = this;
             Joins.Add(joinQuery);
         }
 
@@ -143,7 +143,7 @@ namespace Zarf.Queries.Expressions
                 !IsDistinct &&
                 Where == null &&
                 Offset == null &&
-                (SubQuery?.IsEmptyQuery() ?? true) &&
+                (SubSelect?.IsEmptyQuery() ?? true) &&
                 Orders.Count == 0 &&
                 Groups.Count == 0 &&
                 Sets.Count == 0 &&
@@ -153,7 +153,7 @@ namespace Zarf.Queries.Expressions
             {
                 foreach (var item in Joins)
                 {
-                    if (!item.Query.IsEmptyQuery())
+                    if (!item.Select.IsEmptyQuery())
                     {
                         return false;
                     }
@@ -166,7 +166,7 @@ namespace Zarf.Queries.Expressions
         public IEnumerable<Expression> GenQueryProjections()
         {
             var cols = new List<Expression>();
-            if (SubQuery == null)
+            if (SubSelect == null)
             {
                 var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(TypeOfExpression);
 
@@ -175,7 +175,7 @@ namespace Zarf.Queries.Expressions
                     cols.Add(new ColumnExpression(this, memberDescriptor.Member));
                 }
 
-                foreach (var item in Joins.Select(item => item.Query))
+                foreach (var item in Joins.Select(item => item.Select))
                 {
                     cols.AddRange(item.GenQueryProjections());
                 }
@@ -183,7 +183,7 @@ namespace Zarf.Queries.Expressions
                 return cols;
             }
 
-            foreach (var item in SubQuery.Projections)
+            foreach (var item in SubSelect.Projections)
             {
                 ColumnExpression col = null;
                 if (item.Is<AliasExpression>())
@@ -194,7 +194,7 @@ namespace Zarf.Queries.Expressions
                 else if (item.Is<ColumnExpression>())
                 {
                     col = item.As<ColumnExpression>().Clone();
-                    col.Query = this;
+                    col.Select = this;
                 }
 
                 if (item.Is<AggregateExpression>())
@@ -215,40 +215,40 @@ namespace Zarf.Queries.Expressions
             return cols;
         }
 
-        public QueryExpression Clone()
+        public SelectExpression Clone()
         {
-            var query = new QueryExpression(TypeOfExpression, ExpressionMapper, Alias);
-            query.Orders.AddRange(Orders.ToList());
-            query.Groups.AddRange(Groups.ToList());
-            query.Joins.AddRange(Joins.ToList());
-            query.Sets.AddRange(Sets.ToList());
+            var select = new SelectExpression(TypeOfExpression, ExpressionMapper, Alias);
+            select.Orders.AddRange(Orders.ToList());
+            select.Groups.AddRange(Groups.ToList());
+            select.Joins.AddRange(Joins.ToList());
+            select.Sets.AddRange(Sets.ToList());
 
-            query.SourceQuery = this;
-            query.Limit = Limit;
-            query.IsDistinct = IsDistinct;
-            query.SubQuery = SubQuery?.Clone();
-            query.QueryModel = QueryModel;
+            select.SourceSelect = this;
+            select.Limit = Limit;
+            select.IsDistinct = IsDistinct;
+            select.SubSelect = SubSelect?.Clone();
+            select.QueryModel = QueryModel;
 
-            query.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
-            return query;
+            select.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
+            return select;
         }
 
-        public bool ConstainsQuery(QueryExpression subQuery)
+        public bool ContainsSelectExpression(SelectExpression select)
         {
-            if (subQuery == this)
+            if (select == this)
             {
                 return true;
             }
 
-            foreach (var item in Joins.Select(_ => _.Query))
+            foreach (var item in Joins.Select(_ => _.Select))
             {
-                if (item.ConstainsQuery(subQuery))
+                if (item.ContainsSelectExpression(select))
                 {
                     return true;
                 }
             }
 
-            return SubQuery?.ConstainsQuery(subQuery) ?? false;
+            return SubSelect?.ContainsSelectExpression(select) ?? false;
         }
     }
 }

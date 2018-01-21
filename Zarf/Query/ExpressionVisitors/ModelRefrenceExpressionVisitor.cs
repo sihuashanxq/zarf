@@ -5,32 +5,32 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionVisitors
+namespace Zarf.Query.ExpressionVisitors
 {
     public class ModelRefrenceExpressionVisitor : ExpressionVisitorBase
     {
         public IQueryContext Context { get; }
 
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public ParameterExpression QueryParameter { get; }
 
         public ModelRefrenceExpressionVisitor(
             IQueryContext context,
-            QueryExpression query,
+            SelectExpression select,
             ParameterExpression queryParameter)
         {
             Context = context;
-            Query = query;
+            Select = select;
             QueryParameter = queryParameter;
         }
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
             var modelElementType = parameter.Type.GetModelElementType();
-            var query = parameter == QueryParameter ? Query : Context.QueryMapper.GetMappedQuery(parameter);
+            var query = parameter == QueryParameter ? Select : Context.QueryMapper.GetSelectExpression(parameter);
 
             if (query != null)
             {

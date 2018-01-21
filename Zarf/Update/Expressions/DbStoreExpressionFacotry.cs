@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
 namespace Zarf.Update.Expressions
 {
@@ -12,6 +12,7 @@ namespace Zarf.Update.Expressions
 
         private DbStoreExpressionFacotry()
         {
+
         }
 
         public DbStoreExpression Create(DbModificationCommandGroup group)

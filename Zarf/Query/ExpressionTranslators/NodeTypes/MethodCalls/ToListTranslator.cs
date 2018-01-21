@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Core.Internals;
 using Zarf.Entities;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class ToListTranslator : Translator<MethodCallExpression>
     {
@@ -34,10 +34,10 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                 return methodCall;
             }
 
-            var compildNode = GetCompiledExpression(obj);
-            if (compildNode is QueryExpression query)
+            var compildNode = Compile(obj);
+            if (compildNode is SelectExpression select)
             {
-                query.QueryModel.ModelType = methodCall.Method.ReturnType;
+                select.QueryModel.ModelType = methodCall.Method.ReturnType;
             }
 
             return compildNode;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class SqlFunctionExpression : Expression
     {

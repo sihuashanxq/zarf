@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Zarf.Entities;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
 
 namespace Zarf.Generators
@@ -35,8 +35,8 @@ namespace Zarf.Generators
         {
             switch (node)
             {
-                case QueryExpression query:
-                    VisitQuery(query);
+                case SelectExpression select:
+                    VisitQuery(select);
                     break;
                 case WhereExperssion where:
                     VisitWhere(where);
@@ -93,7 +93,7 @@ namespace Zarf.Generators
 
         protected abstract Expression VisitAlias(AliasExpression alias);
 
-        protected abstract Expression VisitQuery(QueryExpression query);
+        protected abstract Expression VisitQuery(SelectExpression select);
 
         protected abstract Expression VisitWhere(WhereExperssion where);
 

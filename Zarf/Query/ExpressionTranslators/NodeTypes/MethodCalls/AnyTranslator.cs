@@ -3,14 +3,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 using Zarf.Mapping;
 using Zarf.Entities;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.ExpressionVisitors;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls
+namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
-    public class AnyTranslator : Translator<MethodCallExpression>
+    public class AnyTranslator : MethodTranslator
     {
         public static IEnumerable<MethodInfo> SupprotedMethods { get; }
 
@@ -26,39 +26,39 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls
 
         public override Expression Translate(MethodCallExpression methodCall)
         {
-            var query = GetCompiledExpression<QueryExpression>(methodCall.Arguments[0]);
-            var anyExpression = new AnyExpression(Translate(query, methodCall.Arguments[1]));
+            var select = Compile<SelectExpression>(methodCall.Arguments[0]);
+            var anyExpression = new AnyExpression(Translate(select, methodCall.Arguments[1], methodCall.Method));
 
-            Context.ExpressionMapper.Map(anyExpression, Utils.ExpressionConstantTrue);
+            QueryContext.ExpressionMapper.Map(anyExpression, Utils.ExpressionConstantTrue);
 
             return anyExpression;
         }
 
-        public virtual QueryExpression Translate(QueryExpression query, Expression predicate)
+        public override SelectExpression Translate(SelectExpression select, Expression predicate, MethodInfo method)
         {
             var parameter = predicate.GetParameters().FirstOrDefault();
 
-            Utils.CheckNull(query, "query");
+            Utils.CheckNull(select, "query");
 
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
+            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
+            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
 
-            predicate = CreateRealtionCompiler(query).Compile(predicate);
+            predicate = CreateRealtionCompiler(select).Compile(predicate);
             predicate = new RelationExpressionVisitor().Visit(predicate);
-            predicate = new SubQueryModelRewriter(query, Context).ChangeQueryModel(predicate);
+            predicate = new SubQueryModelRewriter(select, QueryContext).ChangeQueryModel(predicate);
 
-            query.Projections.Clear();
-            query.AddProjection(Utils.ExpressionConstantTrue);
-            query.CombineCondtion(predicate);
+            select.Projections.Clear();
+            select.AddProjection(Utils.ExpressionConstantTrue);
+            select.CombineCondtion(predicate);
 
-            query.QueryModel = new QueryEntityModel(query, predicate, typeof(bool), query.QueryModel);
+            select.QueryModel = new QueryEntityModel(select, predicate, typeof(bool), select.QueryModel);
 
-            return query;
+            return select;
         }
 
-        protected RelationExpressionCompiler CreateRealtionCompiler(QueryExpression query)
+        protected RelationExpressionCompiler CreateRealtionCompiler(SelectExpression select)
         {
-            return new RelationExpressionCompiler(Context);
+            return new RelationExpressionCompiler(QueryContext);
         }
     }
 }

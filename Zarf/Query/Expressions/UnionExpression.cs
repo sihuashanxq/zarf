@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class UnionExpression : SetsExpression
     {
-        public UnionExpression(QueryExpression query) 
-            : base(query)
+        public UnionExpression(SelectExpression select) 
+            : base(select)
         {
 
         }

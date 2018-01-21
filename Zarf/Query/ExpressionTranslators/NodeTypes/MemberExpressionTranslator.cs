@@ -2,9 +2,9 @@
 using Zarf.Core.Internals;
 using Zarf.Entities;
 using Zarf.Extensions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MemberExpressionTranslator : Translator<MemberExpression>
     {
@@ -15,28 +15,28 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberExpression mem)
         {
-            var queryModel = Context.QueryModelMapper.GetQueryModel(mem.Expression);
+            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(mem.Expression);
             var modelExpression = queryModel?.GetModelExpression(mem.Member.DeclaringType);
 
             if (modelExpression != null)
             {
                 var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
-                var propertyExpression = Context.MemberBindingMapper.GetMapedExpression(property);
+                var propertyExpression = QueryContext.MemberBindingMapper.GetMapedExpression(property);
                 if (propertyExpression != null)
                 {
                     if (propertyExpression.NodeType != ExpressionType.Extension)
                     {
-                        propertyExpression = GetCompiledExpression(propertyExpression);
+                        propertyExpression = Compile(propertyExpression);
                     }
 
                     if (propertyExpression.Is<AliasExpression>())
                     {
                         var alias = propertyExpression.As<AliasExpression>();
-                        var owner = Context.ProjectionOwner.GetQuery(alias);
+                        var owner = QueryContext.ProjectionOwner.GetSelectExpression(alias);
 
-                        if (owner.Outer?.SubQuery == owner)
+                        if (owner.OuterSelect?.SubSelect == owner)
                         {
-                            owner = owner.Outer;
+                            owner = owner.OuterSelect;
                         }
 
                         if (owner.QueryModel == queryModel)
@@ -52,12 +52,12 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                         return new ColumnExpression(owner, new Column(alias.Alias), alias.Type);
                     }
 
-                    if (propertyExpression.Is<QueryExpression>())
+                    if (propertyExpression.Is<SelectExpression>())
                     {
-                        var refQuery = propertyExpression.As<QueryExpression>();
-                        if (refQuery.Outer != null && refQuery.Outer.SubQuery == refQuery)
+                        var refQuery = propertyExpression.As<SelectExpression>();
+                        if (refQuery.OuterSelect != null && refQuery.OuterSelect.SubSelect == refQuery)
                         {
-                            return refQuery.Outer;
+                            return refQuery.OuterSelect;
                         }
                     }
 
@@ -68,12 +68,12 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
             var typeOfProperty = mem.Member.GetPropertyType();
             if (typeof(IInternalQuery).IsAssignableFrom(typeOfProperty))
             {
-                return new QueryExpression(typeOfProperty, Context.ColumnCaching, Context.Alias.GetNewTable());
+                return new SelectExpression(typeOfProperty, QueryContext.ColumnCaching, QueryContext.Alias.GetNewTable());
             }
 
-            var obj = GetCompiledExpression(mem.Expression);
-            var query = obj.As<QueryExpression>();
-            if (query == null)
+            var obj = Compile(mem.Expression);
+            var select = obj.As<SelectExpression>();
+            if (select == null)
             {
                 if (Utils.TryEvaluateObjectMemberValue(mem.Member, obj, out var evalValue))
                 {
@@ -83,7 +83,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                 return mem;
             }
 
-            return new ColumnExpression(query, mem.Member);
+            return new ColumnExpression(select, mem.Member);
         }
     }
 }

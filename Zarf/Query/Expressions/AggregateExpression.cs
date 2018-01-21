@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     /// <summary>
     /// 聚合表达式   COUNT SUM  AVG etc..
@@ -13,7 +13,7 @@ namespace Zarf.Queries.Expressions
 
         public Expression KeySelector { get; }
 
-        public QueryExpression Query { get; }
+        public SelectExpression Select { get; }
 
         public string Alias { get; }
 
@@ -21,11 +21,11 @@ namespace Zarf.Queries.Expressions
 
         public override Type Type => Method.ReturnType;
 
-        public AggregateExpression(MethodInfo method, Expression keySelector, QueryExpression query, string alias = "")
+        public AggregateExpression(MethodInfo method, Expression keySelector, SelectExpression select, string alias = "")
         {
             Method = method;
             KeySelector = keySelector;
-            Query = query;
+            Select = select;
             Alias = alias;
         }
 

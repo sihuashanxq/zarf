@@ -1,15 +1,15 @@
 ﻿using System.Linq.Expressions;
-using Zarf.Queries.Expressions;
+using Zarf.Query.Expressions;
 
-namespace Zarf.Queries
+namespace Zarf.Query
 {
     /// <summary>
     /// Map (x)=>   Expression
     /// </summary>
     public interface IQueryMapper
     {
-        QueryExpression GetMappedQuery(ParameterExpression parameter);
+        SelectExpression GetSelectExpression(ParameterExpression parameter);
 
-        void MapQuery(ParameterExpression parameter, QueryExpression query);
+        void AddSelectExpression(ParameterExpression parameter, SelectExpression select);
     }
 }

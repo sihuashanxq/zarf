@@ -6,11 +6,11 @@ using System.Collections;
 using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Mapping;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionTranslators.Methods;
-using Zarf.Queries.ExpressionTranslators.NodeTypes.MethodCalls;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators.Methods;
+using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class MethodCallExpressionTranslator : Translator<MethodCallExpression>
     {
@@ -45,7 +45,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                 return translator.Translate(methodCall);
             }
 
-            var trySubQuery = new SubQueryTranslator(Context, Compiler).Translate(methodCall);
+            var trySubQuery = new SubQueryTranslator(QueryContext, QueryCompiler).Translate(methodCall);
             if (trySubQuery != null)
             {
                 return trySubQuery;
@@ -95,12 +95,12 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
         /// <param name="methodCall"></param>
         protected virtual Expression TryInvokeConstantMethodCall(MethodCallExpression methodCall)
         {
-            var methodObj = GetCompiledExpression(methodCall.Object);
+            var methodObj = Compile(methodCall.Object);
             var methodArguments = new List<Expression>();
 
             foreach (var item in methodCall.Arguments)
             {
-                methodArguments.Add(GetCompiledExpression(item));
+                methodArguments.Add(Compile(item));
             }
 
             if (methodObj == null || methodObj.NodeType == ExpressionType.Constant)
@@ -122,7 +122,7 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
 
                 if (canInvoke)
                 {
-                    return GetCompiledExpression(Expression.Constant(methodCall.Method.Invoke(obj, parameters)));
+                    return Compile(Expression.Constant(methodCall.Method.Invoke(obj, parameters)));
                 }
             }
 

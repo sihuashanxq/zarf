@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace Zarf.Queries
+namespace Zarf.Query
 {
     public interface IQueryCompiler
     {

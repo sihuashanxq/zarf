@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using Zarf.Core.Internals;
-using Zarf.Queries.Expressions;
-using Zarf.Queries.ExpressionVisitors;
+using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionVisitors;
 using Zarf.Entities;
 
-namespace Zarf.Queries.ExpressionTranslators.NodeTypes
+namespace Zarf.Query.ExpressionTranslators.NodeTypes
 {
     public class ConstantExpressionTranslator : Translator<ConstantExpression>
     {
@@ -28,29 +28,29 @@ namespace Zarf.Queries.ExpressionTranslators.NodeTypes
                 throw new NotImplementedException("using IDataQuery<T>");
             }
 
-            return CreateQueryExpression(typeOfEntity, constant);
+            return CreateSelectExpression(typeOfEntity, constant);
         }
 
-        protected virtual QueryExpression CreateQueryExpression(Type typeOfEntity, Expression constant)
+        protected virtual SelectExpression CreateSelectExpression(Type typeOfEntity, Expression constant)
         {
-            var parameter = Expression.Parameter(typeOfEntity, Context.Alias.GetNewParameter());
-            var query = new QueryExpression(typeOfEntity, Context.ExpressionMapper, Context.Alias.GetNewTable());
-            var modelExpression = new ModelRefrenceExpressionVisitor(Context, query, parameter).Visit(parameter);
+            var parameter = Expression.Parameter(typeOfEntity, QueryContext.Alias.GetNewParameter());
+            var select = new SelectExpression(typeOfEntity, QueryContext.ExpressionMapper, QueryContext.Alias.GetNewTable());
+            var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameter).Visit(parameter);
 
-            query.QueryModel = new QueryEntityModel(query, modelExpression, constant.Type);
+            select.QueryModel = new QueryEntityModel(select, modelExpression, constant.Type);
 
-            Context.QueryMapper.MapQuery(parameter, query);
-            Context.QueryModelMapper.MapQueryModel(parameter, query.QueryModel);
-            Context.QueryModelMapper.MapQueryModel(constant, query.QueryModel);
+            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
+            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
+            QueryContext.QueryModelMapper.MapQueryModel(constant, select.QueryModel);
 
-            CreateProjectionVisitor(query).Visit(modelExpression);
+            CreateProjectionVisitor(select).Visit(modelExpression);
 
-            return query;
+            return select;
         }
 
-        protected ProjectionExpressionVisitor CreateProjectionVisitor(QueryExpression query)
+        protected ProjectionExpressionVisitor CreateProjectionVisitor(SelectExpression select)
         {
-            return new ProjectionExpressionVisitor(query, Context);
+            return new ProjectionExpressionVisitor(select, QueryContext);
         }
     }
 }

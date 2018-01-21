@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using Zarf.Entities;
 using System.Collections.Generic;
 
-namespace Zarf.Queries.Expressions
+namespace Zarf.Query.Expressions
 {
     public class DeleteExpression : Expression
     {
