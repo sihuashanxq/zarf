@@ -9,7 +9,11 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class ModelRefrenceExpressionVisitor : ExpressionVisitorBase
+    /// <summary>
+    /// 引用的模型参数展开
+    /// item=>item -> item=> new{item.Id,Item.Name}
+    /// </summary>
+    public class QueryModelExpandExpressionVisitor : ExpressionVisitorBase
     {
         public IQueryContext Context { get; }
 
@@ -17,7 +21,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         public ParameterExpression QueryParameter { get; }
 
-        public ModelRefrenceExpressionVisitor(
+        public QueryModelExpandExpressionVisitor(
             IQueryContext context,
             SelectExpression select,
             ParameterExpression queryParameter)

@@ -44,7 +44,7 @@ namespace Zarf.Query.Internals
         {
             var compiledQuery = expression.NodeType == ExpressionType.Extension
                 ? expression
-                : new QueryCompiler(queryContext).Compile(expression);
+                : new QueryExpressionVisitor(queryContext).Compile(expression);
 
             var binder = new ModelBinder(queryContext);
             var modelActivator = binder.Bind<TEntity>(new BindingContext(compiledQuery, this));

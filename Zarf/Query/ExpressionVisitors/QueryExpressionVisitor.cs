@@ -1,20 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using Zarf.Extensions;
-using Zarf.Query.Expressions;
+﻿using System.Linq.Expressions;
 using Zarf.Query.ExpressionTranslators;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class QueryCompiler : ExpressionVisitorBase, IQueryCompiler
+    public class QueryExpressionVisitor : ExpressionVisitorBase, IQueryCompiler
     {
         protected IQueryContext QueryContext { get; }
 
         protected ITransaltorProvider Provider { get; }
 
-        public QueryCompiler(IQueryContext queryContext)
+        public QueryExpressionVisitor(IQueryContext queryContext)
         {
             QueryContext = queryContext;
             Provider = new NodeTypeTranslatorProvider(queryContext, this);

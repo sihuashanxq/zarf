@@ -6,9 +6,9 @@ using Zarf.Query.Expressions;
 namespace Zarf.Query.ExpressionVisitors
 {
     /// <summary>
-    /// 根据子查询生成Column
+    /// 生成查询投影
     /// </summary>
-    public class ProjectionExpressionVisitor : QueryCompiler
+    public class ProjectionExpressionVisitor : QueryExpressionVisitor
     {
         public SelectExpression Select { get; }
 
@@ -125,12 +125,12 @@ namespace Zarf.Query.ExpressionVisitors
                 Select.AddProjection(visitedNode);
             }
 
-            if(visitedNode is AggregateExpression)
+            if (visitedNode is AggregateExpression)
             {
                 Select.AddProjection(visitedNode);
             }
 
-            if(visitedNode is AliasExpression)
+            if (visitedNode is AliasExpression)
             {
                 Select.AddProjection(visitedNode);
             }

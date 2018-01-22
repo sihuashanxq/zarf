@@ -25,10 +25,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         public override SelectExpression Translate(SelectExpression select, Expression predicate, MethodInfo method)
         {
-            if (predicate == null)
-            {
-                return select;
-            }
+            if (predicate == null) return select;
 
             var parameter = predicate.GetParameters().FirstOrDefault();
 
@@ -37,10 +34,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             QueryContext.SelectMapper.Map(parameter, select);
             QueryContext.ModelMapper.Map(parameter, select.QueryModel);
 
-            predicate = CreateRealtionCompiler(select).Compile(predicate);
-            predicate = new RelationExpressionVisitor().Visit(predicate);
-
-            predicate = new SubQueryModelRewriter(select, QueryContext).ChangeQueryModel(predicate);
+            predicate = HandlePredicate(select, predicate);
 
             select.DefaultIfEmpty = method.Name.Contains("Default");
             select.CombineCondtion(predicate);
@@ -49,9 +43,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             return select;
         }
 
-        protected RelationExpressionCompiler CreateRealtionCompiler(SelectExpression select)
+        protected Expression HandlePredicate(SelectExpression select, Expression predicate)
         {
-            return new RelationExpressionCompiler(QueryContext);
+            predicate = new RelationExpressionVisitor(QueryContext).Compile(predicate);
+            predicate = new RelationExpressionConvertVisitor().Visit(predicate);
+            predicate = new QueryModelRewriterExpressionVisitor(select, QueryContext).ChangeQueryModel(predicate);
+
+            return predicate;
         }
     }
 }

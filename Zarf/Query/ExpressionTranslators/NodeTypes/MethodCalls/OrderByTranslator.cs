@@ -41,8 +41,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             QueryContext.SelectMapper.Map(parameter, select);
             QueryContext.ModelMapper.Map(parameter, select.QueryModel);
-
-            var key = new RelationExpressionCompiler(QueryContext).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
+         
+            var key = new RelationExpressionVisitor(QueryContext).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
             if (key is AliasExpression alias)
             {
                 var keySelect = QueryContext.SelectMapper.GetValue(alias);

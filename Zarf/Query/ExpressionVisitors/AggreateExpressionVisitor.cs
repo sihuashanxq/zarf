@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-
 using Zarf.Extensions;
 using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
+using Zarf.Query.Internals;
 
 namespace Zarf.Query.ExpressionVisitors
 {
-    public class AggreateExpressionVisitor : QueryCompiler
+    /// <summary>
+    /// 聚合Visitor
+    /// </summary>
+    public class AggreateExpressionVisitor : QueryExpressionVisitor
     {
         /// <summary>
         /// 已被处理的查询
@@ -39,7 +42,6 @@ namespace Zarf.Query.ExpressionVisitors
         protected override Expression VisitMember(MemberExpression mem)
         {
             var queryModel = QueryContext.ModelMapper.GetValue(mem.Expression);
-
             if (queryModel != null)
             {
                 if (!Select.ContainsSelectExpression(queryModel.Select))

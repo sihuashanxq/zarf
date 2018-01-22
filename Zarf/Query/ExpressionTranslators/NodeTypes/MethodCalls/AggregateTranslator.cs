@@ -67,7 +67,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             var parameter = keySelector.GetParameters().FirstOrDefault();
-            var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameter)
+            var modelExpression = new QueryModelExpandExpressionVisitor(QueryContext, select, parameter)
                 .Visit(keySelector)
                 .UnWrap()
                 .As<LambdaExpression>()

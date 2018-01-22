@@ -5,16 +5,16 @@ namespace Zarf.SqlServer
 {
     internal class SqlServerDbEntityConnectionFacotry : IDbEntityConnectionFacotry
     {
-        private SqlServerDbEntityConnection _dbConnection;
+        private string _connectionString;
 
         internal SqlServerDbEntityConnectionFacotry(string connectionString)
         {
-            _dbConnection = new SqlServerDbEntityConnection(new SqlConnection(connectionString));
+            _connectionString = connectionString;
         }
 
         public IDbEntityConnection Create()
         {
-            return _dbConnection;
+            return Create(_connectionString);
         }
 
         public IDbEntityConnection Create(string connectionString)

@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         {
             var modelType = method.ReturnType.GetModelElementType();
             var parameter = selector.GetParameters().FirstOrDefault();
-            var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameter).Visit(selector);
+            var modelExpression = new QueryModelExpandExpressionVisitor(QueryContext, select, parameter).Visit(selector);
 
             Utils.CheckNull(select, "query");
 

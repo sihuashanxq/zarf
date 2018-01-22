@@ -62,11 +62,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                     QueryContext.ModelMapper.Map(item.Predicate.Parameters[i], Selects[i].QueryModel);
                 }
 
-                var predicate = CreateRealtionCompiler(select).Compile(item.Predicate);
-                predicate = new RelationExpressionVisitor().Visit(predicate);
-                predicate = new SubQueryModelRewriter(select, QueryContext).ChangeQueryModel(predicate);
-
-                select.Joins.LastOrDefault().Predicate = predicate;
+                select.Joins.LastOrDefault().Predicate = HandlePredicate(select, item.Predicate);
             }
 
             return select;
@@ -83,9 +79,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             return Compile<SelectExpression>(expression);
         }
 
-        protected RelationExpressionCompiler CreateRealtionCompiler(SelectExpression select)
+        protected Expression HandlePredicate(SelectExpression select, Expression predicate)
         {
-            return new RelationExpressionCompiler(QueryContext);
+            predicate = new RelationExpressionVisitor(QueryContext).Compile(predicate);
+            predicate = new RelationExpressionConvertVisitor().Visit(predicate);
+            predicate = new QueryModelRewriterExpressionVisitor(select, QueryContext).ChangeQueryModel(predicate);
+
+            return predicate;
         }
     }
 }

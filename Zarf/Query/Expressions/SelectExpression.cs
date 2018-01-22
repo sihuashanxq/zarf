@@ -208,7 +208,7 @@ namespace Zarf.Query.Expressions
                 }
 
                 Mapper.Map(item, col);
-                //Mapper.Map(col, item);
+                Mapper.Map(col, item);
                 cols.Add(col);
             }
 

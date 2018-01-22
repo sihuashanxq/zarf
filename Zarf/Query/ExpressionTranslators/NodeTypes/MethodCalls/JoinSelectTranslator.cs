@@ -28,7 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         {
             var modelType = selector.Type;
             var parameters = selector.GetParameters().ToList();
-            var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameters[0]).Visit(selector);
+            var modelExpression = new QueryModelExpandExpressionVisitor(QueryContext, select, parameters[0]).Visit(selector);
 
             select.QueryModel = new QueryEntityModel(select, modelExpression, modelType, select.QueryModel);
 

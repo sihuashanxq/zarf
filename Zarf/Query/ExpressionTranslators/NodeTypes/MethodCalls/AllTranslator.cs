@@ -5,6 +5,7 @@ using System.Reflection;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using Zarf.Query.ExpressionVisitors;
+using Zarf.Query.Internals;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 {
@@ -42,25 +43,25 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             QueryContext.SelectMapper.Map(parameter, select);
             QueryContext.ModelMapper.Map(parameter, select.QueryModel);
 
-            predicate = CreateRealtionCompiler(select).Compile(predicate);
-            predicate = new RelationExpressionVisitor().Visit(predicate);
-            predicate = new SubQueryModelRewriter(select, QueryContext).ChangeQueryModel(predicate);
-            predicate = predicate.UnWrap();
+            predicate = HandlePredicate(select, predicate).UnWrap();
 
             select.Projections.Clear();
             select.AddProjection(Utils.ExpressionConstantTrue);
             select.CombineCondtion(predicate.NodeType == ExpressionType.Lambda
                 ? Expression.Not(predicate.As<LambdaExpression>().Body)
                 : Expression.Not(predicate));
-
             select.QueryModel = new QueryEntityModel(select, predicate, typeof(bool), select.QueryModel);
 
             return select;
         }
 
-        protected RelationExpressionCompiler CreateRealtionCompiler(SelectExpression select)
+        protected Expression HandlePredicate(SelectExpression select, Expression predicate)
         {
-            return new RelationExpressionCompiler(QueryContext);
+            predicate = new RelationExpressionVisitor(QueryContext).Compile(predicate);
+            predicate = new RelationExpressionConvertVisitor().Visit(predicate);
+            predicate = new QueryModelRewriterExpressionVisitor(select, QueryContext).ChangeQueryModel(predicate);
+
+            return predicate;
         }
     }
 }
