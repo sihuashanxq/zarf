@@ -37,14 +37,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             select.QueryModel = new QueryEntityModel(select, modelExpression, modelType, select.QueryModel);
 
-            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
-            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
+            QueryContext.SelectMapper.Map(parameter, select);
+            QueryContext.ModelMapper.Map(parameter, select.QueryModel);
 
             CreateProjection(select, modelExpression);
 
             if (select.QueryModel.Model.Is<ConstantExpression>())
             {
-                select.AddProjection(new AliasExpression(QueryContext.Alias.GetNewColumn(), select.QueryModel.Model, selector));
+                select.AddProjection(new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), select.QueryModel.Model, selector));
             }
 
             return select;

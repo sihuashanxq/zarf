@@ -44,7 +44,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (select.Where != null)
             {
-                select = select.PushDownSubQuery(QueryContext.Alias.GetNewTable());
+                select = select.PushDownSubQuery(QueryContext.AliasGenerator.GetNewTable());
             }
 
             Selects = new List<SelectExpression> { select };
@@ -58,8 +58,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
                 for (var i = 0; i < item.Predicate.Parameters.Count; i++)
                 {
-                    QueryContext.QueryMapper.AddSelectExpression(item.Predicate.Parameters[i], Selects[i]);
-                    QueryContext.QueryModelMapper.MapQueryModel(item.Predicate.Parameters[i], Selects[i].QueryModel);
+                    QueryContext.SelectMapper.Map(item.Predicate.Parameters[i], Selects[i]);
+                    QueryContext.ModelMapper.Map(item.Predicate.Parameters[i], Selects[i].QueryModel);
                 }
 
                 var predicate = CreateRealtionCompiler(select).Compile(item.Predicate);

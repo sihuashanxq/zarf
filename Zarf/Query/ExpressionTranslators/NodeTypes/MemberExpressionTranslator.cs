@@ -15,13 +15,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         public override Expression Translate(MemberExpression mem)
         {
-            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(mem.Expression);
+            var queryModel = QueryContext.ModelMapper.GetValue(mem.Expression);
             var modelExpression = queryModel?.GetModelExpression(mem.Member.DeclaringType);
 
             if (modelExpression != null)
             {
                 var property = Expression.MakeMemberAccess(modelExpression, mem.Member);
-                var propertyExpression = QueryContext.MemberBindingMapper.GetMapedExpression(property);
+                var propertyExpression = QueryContext.BindingMaper.GetValue(property);
                 if (propertyExpression != null)
                 {
                     if (propertyExpression.NodeType != ExpressionType.Extension)
@@ -32,7 +32,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                     if (propertyExpression.Is<AliasExpression>())
                     {
                         var alias = propertyExpression.As<AliasExpression>();
-                        var owner = QueryContext.ProjectionOwner.GetSelectExpression(alias);
+                        var owner = QueryContext.SelectMapper.GetValue(alias);
 
                         if (owner.OuterSelect?.SubSelect == owner)
                         {
@@ -68,7 +68,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             var typeOfProperty = mem.Member.GetPropertyType();
             if (typeof(IInternalQuery).IsAssignableFrom(typeOfProperty))
             {
-                return new SelectExpression(typeOfProperty, QueryContext.ColumnCaching, QueryContext.Alias.GetNewTable());
+                return new SelectExpression(typeOfProperty, QueryContext.ExpressionMapper, QueryContext.AliasGenerator.GetNewTable());
             }
 
             var obj = Compile(mem.Expression);

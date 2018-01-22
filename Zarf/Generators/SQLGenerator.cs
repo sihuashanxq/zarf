@@ -39,9 +39,6 @@ namespace Zarf.Generators
                 case IntersectExpression intersect:
                     VisitIntersect(intersect);
                     break;
-                case SqlFunctionExpression function:
-                    VisitSqlFunction(function);
-                    break;
                 case AggregateExpression aggregate:
                     VisitAggregate(aggregate);
                     break;
@@ -87,8 +84,6 @@ namespace Zarf.Generators
         protected abstract Expression VisitExcept(ExceptExpression except);
 
         protected abstract Expression VisitIntersect(IntersectExpression intersec);
-
-        protected abstract Expression VisitSqlFunction(SqlFunctionExpression function);
 
         protected abstract Expression VisitAggregate(AggregateExpression aggregate);
 

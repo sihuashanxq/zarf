@@ -50,15 +50,15 @@ namespace Zarf.SqlServer.Generators
                 return methodCall;
             }
 
-            if (methodCall.Method.DeclaringType == StringType)
+            if (methodCall.Method.DeclaringType == ReflectionUtil.StringType)
             {
                 BuildStringMethods(methodCall);
             }
-            else if (methodCall.Method.DeclaringType == DateType)
+            else if (methodCall.Method.DeclaringType == ReflectionUtil.DateTimeType || methodCall.Method.DeclaringType == ReflectionUtil.DateTimeNullableType)
             {
                 BuildDateTimeMethods(methodCall);
             }
-            else if (methodCall.Method.DeclaringType == MathType)
+            else if (methodCall.Method.DeclaringType == typeof(Math))
             {
                 BuildMathFunction(methodCall);
             }

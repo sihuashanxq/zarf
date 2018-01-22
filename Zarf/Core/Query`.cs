@@ -95,26 +95,6 @@ namespace Zarf
             return EntityInternalQuery.SingleOrDefault(predicate);
         }
 
-        public TEntity Last(Expression<Func<TEntity, bool>> predicate)
-        {
-            return EntityInternalQuery.Last(predicate);
-        }
-
-        public TEntity Last()
-        {
-            return EntityInternalQuery.Last();
-        }
-
-        public TEntity LastOrDefault(Expression<Func<TEntity, bool>> predicate)
-        {
-            return EntityInternalQuery.LastOrDefault(predicate);
-        }
-
-        public TEntity LastOrDefault()
-        {
-            return EntityInternalQuery.LastOrDefault();
-        }
-
         public IQuery<TEntity> Skip(int count)
         {
             return new Query<TEntity>(EntityInternalQuery.Skip(count) as IInternalQuery<TEntity>);

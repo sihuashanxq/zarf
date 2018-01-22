@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Zarf.Metadata;
@@ -33,8 +34,6 @@ namespace Zarf
             {
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-                Console.WriteLine(a == b);
-                BasicTest(db);
                 Console.ReadKey();
             }
         }

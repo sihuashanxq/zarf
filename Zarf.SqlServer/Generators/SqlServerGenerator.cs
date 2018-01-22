@@ -207,7 +207,7 @@ namespace Zarf.SqlServer.Generators
 
         protected override Expression VisitQuery(SelectExpression select)
         {
-            if (select.IsPartOfPredicate || select.OuterSelect != null)
+            if (select.IsInPredicate || select.OuterSelect != null)
             {
                 Append(" ( ");
             }
@@ -232,7 +232,7 @@ namespace Zarf.SqlServer.Generators
 
             BuildSets(select);
 
-            if (select.IsPartOfPredicate || select.OuterSelect != null)
+            if (select.IsInPredicate || select.OuterSelect != null)
             {
                 Append(" ) ");
             }

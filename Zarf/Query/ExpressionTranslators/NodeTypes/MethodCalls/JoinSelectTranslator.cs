@@ -36,13 +36,13 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             {
                 if (i != 0)
                 {
-                    QueryContext.QueryMapper.AddSelectExpression(parameters[i], select.Joins[i - 1].Select);
-                    QueryContext.QueryModelMapper.MapQueryModel(parameters[i], select.Joins[i - 1].Select.QueryModel);
+                    QueryContext.SelectMapper.Map(parameters[i], select.Joins[i - 1].Select);
+                    QueryContext.ModelMapper.Map(parameters[i], select.Joins[i - 1].Select.QueryModel);
                     continue;
                 }
 
-                QueryContext.QueryMapper.AddSelectExpression(parameters[i], select);
-                QueryContext.QueryModelMapper.MapQueryModel(parameters[i], select.QueryModel);
+                QueryContext.SelectMapper.Map(parameters[i], select);
+                QueryContext.ModelMapper.Map(parameters[i], select.QueryModel);
             }
 
             Utils.CheckNull(select, "query");
@@ -51,7 +51,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (select.QueryModel.Model.Is<ConstantExpression>())
             {
-                select.AddProjection(new AliasExpression(QueryContext.Alias.GetNewColumn(), select.QueryModel.Model, selector));
+                select.AddProjection(new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), select.QueryModel.Model, selector));
             }
 
             return select;

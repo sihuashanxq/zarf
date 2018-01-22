@@ -31,16 +31,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
                 else
                 {
-                    var query = QueryContext.ProjectionOwner.GetSelectExpression(argument);
+                    var query = QueryContext.SelectMapper.GetValue(argument);
                     if (query == null || !query.QueryModel.ContainsModel(newExpression))
                     {
-                        argument = new AliasExpression(QueryContext.Alias.GetNewColumn(), argument, newExpression.Arguments[i]);
+                        argument = new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), argument, newExpression.Arguments[i]);
                     }
 
                     arguments.Add(argument);
                 }
 
-                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
+                QueryContext.BindingMaper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), argument);
             }
 
             return newExpression.Update(arguments);

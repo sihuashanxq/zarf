@@ -31,7 +31,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             Utils.CheckNull(select, "query");
 
             select.AddProjection(skip);
-            select = select.PushDownSubQuery(QueryContext.Alias.GetNewTable());
+            select = select.PushDownSubQuery(QueryContext.AliasGenerator.GetNewTable());
 
             var skipColumn = new ColumnExpression(select, new Column("__rowIndex__"), typeof(int));
             var skipCondtion = Expression.MakeBinary(

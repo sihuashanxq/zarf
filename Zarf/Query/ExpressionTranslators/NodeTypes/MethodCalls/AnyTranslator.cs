@@ -38,8 +38,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             Utils.CheckNull(select, "query");
 
-            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
-            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
+            QueryContext.SelectMapper.Map(parameter, select);
+            QueryContext.ModelMapper.Map(parameter, select.QueryModel);
 
             predicate = CreateRealtionCompiler(select).Compile(predicate);
             predicate = new RelationExpressionVisitor().Visit(predicate);

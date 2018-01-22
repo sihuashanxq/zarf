@@ -1,7 +1,7 @@
 ﻿using System;
 using Zarf.Core;
 
-namespace Zarf.SqlServer.Core
+namespace Zarf.SqlServer
 {
     internal class SqlServerDbEntityTransaction : IDbEntityTransaction
     {

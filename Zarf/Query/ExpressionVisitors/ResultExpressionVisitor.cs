@@ -49,17 +49,17 @@ namespace Zarf.Query.ExpressionVisitors
                 if (modelExpression == null) continue;
 
                 var member = Expression.MakeMemberAccess(modelExpression, newExpression.Members[i]);
-                var query = Context.MemberBindingMapper.GetMapedExpression(member).As<SelectExpression>();
+                var query = Context.BindingMaper.GetValue(member).As<SelectExpression>();
 
                 if (query == null || Select.ContainsSelectExpression(query)) continue;
 
                 if (!CombineAggregateSelect(query))
                 {
-                    Context.MemberBindingMapper.Map(member, query);
+                    Context.BindingMaper.Map(member, query);
                 }
                 else
                 {
-                    Context.MemberBindingMapper.Map(member, Select.Projections.LastOrDefault());
+                    Context.BindingMaper.Map(member, Select.Projections.LastOrDefault());
                 }
             }
 
@@ -89,10 +89,10 @@ namespace Zarf.Query.ExpressionVisitors
                     }
                 }
 
-                var alias = new AliasExpression(Context.Alias.GetNewColumn(), query, null, item.Type);
+                var alias = new AliasExpression(Context.AliasGenerator.GetNewColumn(), query, null, item.Type);
 
                 Select.AddProjection(alias);
-                Select.ExpressionMapper.Map(aggreate, alias);
+                Select.Mapper.Map(aggreate, alias);
 
                 return true;
             }

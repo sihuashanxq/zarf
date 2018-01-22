@@ -33,14 +33,6 @@ namespace Zarf
 
         TEntity SingleOrDefault(Expression<Func<TEntity, bool>> predicate);
 
-        TEntity Last(Expression<Func<TEntity, bool>> predicate);
-
-        TEntity Last();
-
-        TEntity LastOrDefault(Expression<Func<TEntity, bool>> predicate);
-
-        TEntity LastOrDefault();
-
         IQuery<TEntity> Skip(int count);
 
         IQuery<TEntity> Take(int count);

@@ -132,7 +132,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
             select.QueryModel.ModelType = methodCall.Method.ReturnType;
 
-            QueryContext.QueryModelMapper.MapQueryModel(methodCall, select.QueryModel);
+            QueryContext.ModelMapper.Map(methodCall, select.QueryModel);
 
             return select;
         }

@@ -5,17 +5,17 @@ using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Metadata.Descriptors;
 using Zarf.Metadata.Entities;
-using Zarf.Query.Internals;
+using Zarf.Query.Mappers;
 
 namespace Zarf.Query.Expressions
 {
     public class SelectExpression : Expression
     {
-        public Type TypeOfExpression { get; set; }
+        public string Alias { get; set; }
 
         public Table Table { get; set; }
 
-        public string Alias { get; set; }
+        public Type EntityModelType { get; set; }
 
         public override Type Type => typeof(object);
 
@@ -41,37 +41,37 @@ namespace Zarf.Query.Expressions
 
         public bool DefaultIfEmpty { get; set; }
 
-        public SelectExpression SubSelect { get; protected set; }
+        public SelectExpression SubSelect { get; set; }
 
         public SelectExpression SourceSelect { get; set; }
 
-        public SelectExpression OuterSelect { get; protected set; }
+        public SelectExpression OuterSelect { get; set; }
 
         public QueryEntityModel QueryModel { get; set; }
 
-        public IQueryProjectionMapper ExpressionMapper { get; }
+        public IMapper<Expression, Expression> Mapper { get; }
 
         /// <summary>
-        /// is part of a prediacte ,such as where (select top 1 1 id from [user])=1
+        /// is in of a prediacte ,such as where (select top 1 1 id from [user])=1
         /// </summary>
-        public bool IsPartOfPredicate { get; internal set; }
+        public bool IsInPredicate { get; internal set; }
 
-        public SelectExpression(Type typeOfEntity, IQueryProjectionMapper mapper, string alias = "")
+        public SelectExpression(Type typeOfEntity, IMapper<Expression, Expression> mapper, string alias = "")
         {
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
             Projections = new List<Expression>();
-            TypeOfExpression = typeOfEntity;
+            EntityModelType = typeOfEntity;
             Table = typeOfEntity.ToTable();
-            ExpressionMapper = mapper;
+            Mapper = mapper;
             Alias = alias;
         }
 
         public SelectExpression PushDownSubQuery(string alias)
         {
-            var select = new SelectExpression(Type, ExpressionMapper, alias)
+            var select = new SelectExpression(Type, Mapper, alias)
             {
                 SubSelect = this,
                 Table = null,
@@ -168,7 +168,7 @@ namespace Zarf.Query.Expressions
             var cols = new List<Expression>();
             if (SubSelect == null)
             {
-                var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(TypeOfExpression);
+                var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(EntityModelType);
 
                 foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
                 {
@@ -206,9 +206,9 @@ namespace Zarf.Query.Expressions
                 {
                     continue;
                 }
-                //²ð·Ö
-                ExpressionMapper.Map(item, col);
-                ExpressionMapper.Map(col, item);
+
+                Mapper.Map(item, col);
+                //Mapper.Map(col, item);
                 cols.Add(col);
             }
 
@@ -217,19 +217,19 @@ namespace Zarf.Query.Expressions
 
         public SelectExpression Clone()
         {
-            var select = new SelectExpression(TypeOfExpression, ExpressionMapper, Alias);
+            var select = new SelectExpression(EntityModelType, Mapper, Alias);
+
             select.Orders.AddRange(Orders.ToList());
             select.Groups.AddRange(Groups.ToList());
             select.Joins.AddRange(Joins.ToList());
             select.Sets.AddRange(Sets.ToList());
-
             select.SourceSelect = this;
             select.Limit = Limit;
             select.IsDistinct = IsDistinct;
             select.SubSelect = SubSelect?.Clone();
             select.QueryModel = QueryModel;
-
             select.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
+
             return select;
         }
 

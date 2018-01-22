@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Zarf.Core;
 using Zarf.Metadata.Entities;
 
-namespace Zarf.SqlServer.Core
+namespace Zarf.SqlServer
 {
     internal class SqlServerDbEntityCommand : DbEntityCommand
     {

@@ -1,68 +1,38 @@
-﻿using System.Collections.Generic;
-using Zarf.Query.Internals;
-
+﻿using System.Linq.Expressions;
+using Zarf.Query.Expressions;
+using Zarf.Query.Mappers;
 
 namespace Zarf.Query
 {
-    public interface ISubQueryValueCache
-    {
-        void SetValue(QueryEntityModel queryModel, object value);
-
-        object GetValue(QueryEntityModel queryModel);
-    }
-
-    public class SubQueryValueCache : ISubQueryValueCache
-    {
-        private Dictionary<QueryEntityModel, object> _memValues = new Dictionary<QueryEntityModel, object>();
-
-        public object GetValue(QueryEntityModel queryModel)
-        {
-            if (_memValues.TryGetValue(queryModel, out object value))
-            {
-                return value;
-            }
-
-            return null;
-        }
-
-        public void SetValue(QueryEntityModel queryModel, object value)
-        {
-            _memValues[queryModel] = value;
-        }
-    }
-
     public class QueryContext : IQueryContext
     {
-        public IQueryMapper QueryMapper { get; }
+        public IAliasGenerator AliasGenerator { get; }
 
-        public IAliasGenerator Alias { get; }
+        public IQueryValueCache QueryValueCache { get; }
 
-        public ISubQueryValueCache MemberValueCache { get; }
+        public IMapper<Expression, SelectExpression> SelectMapper { get; }
 
-        public IQueryProjectionMapper ColumnCaching { get; }
+        public IMapper<Expression, QueryEntityModel> ModelMapper { get; }
 
-        public MemberBindingMapper MemberBindingMapper { get; }
+        public IMapper<Expression, Expression> ExpressionMapper { get; }
 
-        public ProjectionOwnerMapper ProjectionOwner { get; }
-
-        public QueryModelMapper QueryModelMapper { get; }
-
-        public IQueryProjectionMapper ExpressionMapper { get; }
+        public IMapper<MemberExpression, Expression> BindingMaper { get; }
 
         public QueryContext(
-            IQueryMapper sourceProvider,
+            IMapper<Expression, SelectExpression> sMapper,
+            IMapper<Expression, QueryEntityModel> mMapper,
+            IMapper<MemberExpression, Expression> bMapper,
+            IMapper<Expression, Expression> eMapper,
             IAliasGenerator aliasGenerator,
-            ISubQueryValueCache memValueCache
-            )
+            IQueryValueCache queryValueCache
+        )
         {
-            QueryMapper = sourceProvider;
-            Alias = aliasGenerator;
-            MemberValueCache = memValueCache;
-            ColumnCaching = new QueryProjectionMapper();
-            MemberBindingMapper = new MemberBindingMapper();
-            ProjectionOwner = new ProjectionOwnerMapper();
-            QueryModelMapper = new QueryModelMapper();
-            ExpressionMapper = new QueryProjectionMapper();
+            BindingMaper = bMapper;
+            ModelMapper = mMapper;
+            SelectMapper = sMapper;
+            ExpressionMapper = eMapper;
+            AliasGenerator = aliasGenerator;
+            QueryValueCache = queryValueCache;
         }
     }
 }

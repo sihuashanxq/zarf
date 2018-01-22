@@ -66,7 +66,7 @@ namespace Zarf.Bindings
         public override Expression Visit(Expression expression)
         {
             //子查询
-            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(expression);
+            var queryModel = QueryContext.ModelMapper.GetValue(expression);
             if (queryModel != null &&
                 queryModel != Select.QueryModel &&
                 queryModel.ModelType.IsCollection())
@@ -81,7 +81,7 @@ namespace Zarf.Bindings
                 return CreateSubQueryModel(queryModel);
             }
 
-            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Select.ExpressionMapper.GetMappedExpression(expression);
+            var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Select.Mapper.GetValue(expression);
             if (tryGetMaped != null)
             {
                 var bind = BindQueryProjection(tryGetMaped);
@@ -90,7 +90,7 @@ namespace Zarf.Bindings
                     bind = BindQueryProjection(tryGetMaped);
                     if (bind == null)
                     {
-                        var mapped2 = Select.ExpressionMapper.GetMappedExpression(tryGetMaped);
+                        var mapped2 = Select.Mapper.GetValue(tryGetMaped);
                         if (mapped2 != null)
                         {
                             tryGetMaped = mapped2;
@@ -148,7 +148,7 @@ namespace Zarf.Bindings
 
         protected override Expression VisitMember(MemberExpression member)
         {
-            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(member.Expression) ?? QueryContext.QueryModelMapper.GetQueryModel(member);
+            var queryModel = QueryContext.ModelMapper.GetValue(member.Expression) ?? QueryContext.ModelMapper.GetValue(member);
             var bind = GetMemberBindingExpression(queryModel, member.Member);
             if (bind == null)
             {
@@ -193,7 +193,7 @@ namespace Zarf.Bindings
         {
             for (var i = 0; i < Select.Projections.Count; i++)
             {
-                var mappedProjection = Select.ExpressionMapper.GetMappedExpression(projection);
+                var mappedProjection = Select.Mapper.GetValue(projection);
 
                 if (ExpressionEquality.Equals(Select.Projections[i], projection) ||
                     ExpressionEquality.Equals(Select.Projections[i], mappedProjection))
@@ -216,7 +216,7 @@ namespace Zarf.Bindings
                 }
 
                 var memberExpression = Expression.MakeMemberAccess(queryModel.Model, member);
-                var projection = QueryContext.MemberBindingMapper.GetMapedExpression(memberExpression);
+                var projection = QueryContext.BindingMaper.GetValue(memberExpression);
 
                 if (projection == null)
                 {
@@ -294,7 +294,7 @@ namespace Zarf.Bindings
             Expression model = Expression.Convert(Expression.Call(
                     null,
                     GetOrSetMemberValueMethod,
-                    Expression.Constant(QueryContext.MemberValueCache),
+                    Expression.Constant(QueryContext.QueryValueCache),
                     Expression.Constant(queryModel),
                     modelEleNew),
                     typeof(IEnumerable<>).MakeGenericType(modelElementType)
@@ -413,7 +413,7 @@ namespace Zarf.Bindings
             return Expression.Block(propertyDeclares, propertyValues.ToArray());
         }
 
-        public static object GetOrAddSubQueryValue(ISubQueryValueCache valueCache, QueryEntityModel queryModel, object value)
+        public static object GetOrAddSubQueryValue(IQueryValueCache valueCache, QueryEntityModel queryModel, object value)
         {
             var v = valueCache.GetValue(queryModel);
             if (v == null)

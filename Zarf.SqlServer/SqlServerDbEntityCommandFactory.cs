@@ -1,7 +1,7 @@
 ﻿using System.Data.SqlClient;
 using Zarf.Core;
 
-namespace Zarf.SqlServer.Core
+namespace Zarf.SqlServer
 {
     internal class SqlServerDbEntityCommandFactory : IDbEntityCommandFacotry
     {

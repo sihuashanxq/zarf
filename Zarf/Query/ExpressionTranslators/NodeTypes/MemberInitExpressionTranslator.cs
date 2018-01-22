@@ -28,14 +28,14 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
                 }
                 else
                 {
-                    var query = QueryContext.ProjectionOwner.GetSelectExpression(bindExpression);
+                    var query = QueryContext.SelectMapper.GetValue(bindExpression);
                     if (query == null || !query.QueryModel.ContainsModel(memInit))
                     {
-                        bindExpression = new AliasExpression(QueryContext.Alias.GetNewColumn(), bindExpression, binding.Expression);
+                        bindExpression = new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), bindExpression, binding.Expression);
                     }
                 }
 
-                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(memInit, binding.Member), bindExpression);
+                QueryContext.BindingMaper.Map(Expression.MakeMemberAccess(memInit, binding.Member), bindExpression);
                 bindings.Add(Expression.Bind(binding.Member, bindExpression));
             }
 

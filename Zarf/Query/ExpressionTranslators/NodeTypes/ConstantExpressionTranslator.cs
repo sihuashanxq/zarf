@@ -32,15 +32,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
 
         protected virtual SelectExpression CreateSelectExpression(Type typeOfEntity, Expression constant)
         {
-            var parameter = Expression.Parameter(typeOfEntity, QueryContext.Alias.GetNewParameter());
-            var select = new SelectExpression(typeOfEntity, QueryContext.ExpressionMapper, QueryContext.Alias.GetNewTable());
+            var parameter = Expression.Parameter(typeOfEntity, QueryContext.AliasGenerator.GetNewParameter());
+            var select = new SelectExpression(typeOfEntity, QueryContext.ExpressionMapper, QueryContext.AliasGenerator.GetNewTable());
             var modelExpression = new ModelRefrenceExpressionVisitor(QueryContext, select, parameter).Visit(parameter);
 
             select.QueryModel = new QueryEntityModel(select, modelExpression, constant.Type);
 
-            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
-            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
-            QueryContext.QueryModelMapper.MapQueryModel(constant, select.QueryModel);
+            QueryContext.SelectMapper.Map(parameter, select);
+            QueryContext.ModelMapper.Map(parameter, select.QueryModel);
+            QueryContext.ModelMapper.Map(constant, select.QueryModel);
 
             CreateProjectionVisitor(select).Visit(modelExpression);
 

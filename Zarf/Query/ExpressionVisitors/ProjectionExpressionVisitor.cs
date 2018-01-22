@@ -48,8 +48,8 @@ namespace Zarf.Query.ExpressionVisitors
                 }
 
                 Select.AddProjection(binding.Expression);
-                QueryContext.ProjectionOwner.AddSelectProjection(binding.Expression, Select);
-                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
+                QueryContext.SelectMapper.Map(binding.Expression, Select);
+                QueryContext.BindingMaper.Map(Expression.MakeMemberAccess(memberInit, binding.Member), binding.Expression);
             }
 
             return memberInit;
@@ -82,8 +82,8 @@ namespace Zarf.Query.ExpressionVisitors
                 }
 
                 Select.AddProjection(newExpression.Arguments[i]);
-                QueryContext.ProjectionOwner.AddSelectProjection(newExpression.Arguments[i], Select);
-                QueryContext.MemberBindingMapper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
+                QueryContext.SelectMapper.Map(newExpression.Arguments[i], Select);
+                QueryContext.BindingMaper.Map(Expression.MakeMemberAccess(newExpression, newExpression.Members[i]), newExpression.Arguments[i]);
             }
 
             return newExpression;
@@ -91,7 +91,7 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
-            var query = QueryContext.QueryMapper.GetSelectExpression(parameter);
+            var query = QueryContext.SelectMapper.GetValue(parameter);
             if (query == null)
             {
                 return parameter;
@@ -100,7 +100,7 @@ namespace Zarf.Query.ExpressionVisitors
             foreach (var item in query.GenQueryProjections())
             {
                 Select.AddProjection(item);
-                QueryContext.ProjectionOwner.AddSelectProjection(item, Select);
+                QueryContext.SelectMapper.Map(item, Select);
             }
 
             return parameter;

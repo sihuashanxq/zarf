@@ -30,7 +30,7 @@ namespace Zarf.Query.ExpressionVisitors
         protected override Expression VisitParameter(ParameterExpression parameter)
         {
             var modelElementType = parameter.Type.GetModelElementType();
-            var query = parameter == QueryParameter ? Select : Context.QueryMapper.GetSelectExpression(parameter);
+            var query = parameter == QueryParameter ? Select : Context.SelectMapper.GetValue(parameter);
 
             if (query != null)
             {

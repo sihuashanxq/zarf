@@ -125,11 +125,11 @@ namespace Zarf.Query.ExpressionVisitors
 
         protected override Expression VisitMember(MemberExpression mem)
         {
-            var queryModel = QueryContext.QueryModelMapper.GetQueryModel(mem.Expression);
+            var queryModel = QueryContext.ModelMapper.GetValue(mem.Expression);
             if (queryModel != null)
             {
                 var property = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
-                var propertyExpression = QueryContext.MemberBindingMapper.GetMapedExpression(property);
+                var propertyExpression = QueryContext.BindingMaper.GetValue(property);
                 if (propertyExpression.NodeType != ExpressionType.Extension)
                 {
                     propertyExpression = base.Visit(propertyExpression);
@@ -163,7 +163,7 @@ namespace Zarf.Query.ExpressionVisitors
 
             if (node.Is<SelectExpression>())
             {
-                node.As<SelectExpression>().IsPartOfPredicate = true;
+                node.As<SelectExpression>().IsInPredicate = true;
             }
 
             if (node is AliasExpression alias)
@@ -373,7 +373,7 @@ namespace Zarf.Query.ExpressionVisitors
 
             Select.Groups.Add(new GroupExpression(GetAllColumns(Select)));
 
-            Context.QueryModelMapper.MapQueryModel(model, Select.QueryModel);
+            Context.ModelMapper.Map(model, Select.QueryModel);
 
             return exp;
         }
@@ -408,7 +408,7 @@ namespace Zarf.Query.ExpressionVisitors
             if (!Select.ContainsSelectExpression(outer.Select))
             {
                 var query = outer.Select.Clone();
-                var columnExpression = outer.Clone(Context.Alias.GetNewColumn());
+                var columnExpression = outer.Clone(Context.AliasGenerator.GetNewColumn());
 
                 columnExpression.Select = query;
 

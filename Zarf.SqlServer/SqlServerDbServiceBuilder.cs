@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Zarf.Core;
-using Zarf.SqlServer;
 
-namespace Zarf.SqlServer.Core
+namespace Zarf.SqlServer
 {
     public class SqlServerDbServiceBuilder : DbServiceBuilder
     {

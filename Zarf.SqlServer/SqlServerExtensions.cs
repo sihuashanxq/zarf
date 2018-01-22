@@ -2,7 +2,6 @@
 using Zarf.Core;
 using Zarf.Generators;
 using Zarf.SqlServer.Generators;
-using Zarf.SqlServer.Core;
 
 namespace Zarf.SqlServer
 {

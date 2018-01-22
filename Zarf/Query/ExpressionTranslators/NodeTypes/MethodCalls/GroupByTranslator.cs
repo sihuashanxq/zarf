@@ -29,16 +29,16 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             var parameter = keySelector.GetParameters().FirstOrDefault();
             if (select.Sets.Count != 0)
             {
-                select = select.PushDownSubQuery(QueryContext.Alias.GetNewTable());
+                select = select.PushDownSubQuery(QueryContext.AliasGenerator.GetNewTable());
             }
 
-            QueryContext.QueryMapper.AddSelectExpression(parameter, select);
-            QueryContext.QueryModelMapper.MapQueryModel(parameter, select.QueryModel);
+            QueryContext.SelectMapper.Map(parameter, select);
+            QueryContext.ModelMapper.Map(parameter, select.QueryModel);
 
             var key = new RelationExpressionCompiler(QueryContext).Visit(keySelector.UnWrap().As<LambdaExpression>().Body);
             if (key is AliasExpression alias)
             {
-                var keySelect = QueryContext.ProjectionOwner.GetSelectExpression(alias);
+                var keySelect = QueryContext.SelectMapper.GetValue(alias);
 
                 if (!select.ContainsSelectExpression(keySelect))
                 {
