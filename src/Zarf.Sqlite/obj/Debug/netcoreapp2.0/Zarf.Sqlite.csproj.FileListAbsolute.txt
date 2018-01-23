@@ -1,0 +1,11 @@
+E:\src\zarf\src\Zarf.Sqlite\bin\Debug\netcoreapp2.0\Zarf.Sqlite.deps.json
+E:\src\zarf\src\Zarf.Sqlite\bin\Debug\netcoreapp2.0\Zarf.Sqlite.dll
+E:\src\zarf\src\Zarf.Sqlite\bin\Debug\netcoreapp2.0\Zarf.Sqlite.pdb
+E:\src\zarf\src\Zarf.Sqlite\bin\Debug\netcoreapp2.0\Zarf.dll
+E:\src\zarf\src\Zarf.Sqlite\bin\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.csprojResolveAssemblyReference.cache
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.csproj.CoreCompileInputs.cache
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.AssemblyInfoInputs.cache
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.AssemblyInfo.cs
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.dll
+E:\src\zarf\src\Zarf.Sqlite\obj\Debug\netcoreapp2.0\Zarf.Sqlite.pdb
