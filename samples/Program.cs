@@ -50,14 +50,17 @@ namespace Zarf
             {
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-                var x = db.Users.ToList();
+                var y = db.Users.Select(i => new
+                {
+                    D = db.Users.Select(n => n).Skip(1).ToList()
+                }).ToList();
             }
 
             using (var db = new SqliteDbContext())
             {
                 var y = db.Users.Select(i => new
                 {
-                    D = db.Users.Select(n => n).Where(jj => jj.Id > 1).ToList()
+                    D = db.Users.Select(n => n).Skip(1).ToList()
                 }).ToList();
 
                 Console.ReadKey();

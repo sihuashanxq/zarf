@@ -13,6 +13,7 @@ namespace Zarf.SqlServer.Query.ExpressionTranslators.NodeTypes.MethodCalls
     {
         public SqlServerSkipTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override SelectExpression Translate(SelectExpression select, Expression offSet, MethodInfo method)
@@ -32,6 +33,7 @@ namespace Zarf.SqlServer.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 Expression.Constant(offset));
 
             select.CombineCondtion(Expression.Lambda(skipCondtion));
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

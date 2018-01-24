@@ -5,6 +5,7 @@ using System.Reflection;
 using Zarf.Core;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using Zarf.Query.ExpressionTranslators.Methods;
 using Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls;
 
 namespace Zarf.Query.ExpressionTranslators.NodeTypes
@@ -16,6 +17,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
     {
         public SubQueryTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+
         }
 
         public override Expression Translate(MethodCallExpression methodCall)
@@ -59,15 +61,90 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             return select;
         }
 
+        public override SelectExpression Translate(SelectExpression select, Expression expression, MethodInfo method)
+        {
+            if (method.Name == "All")
+            {
+                return new AllTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Any")
+            {
+                return new AnyTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Select")
+            {
+                if (typeof(IJoinQuery).IsAssignableFrom(method.DeclaringType))
+                {
+                    return new JoinSelectTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+                }
+
+                return new SelectTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Where")
+            {
+                return new WhereTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (new[] { "Count", "LongCount", "Sum", "Max", "Min", "Average" }.Contains(method.Name))
+            {
+                return new AggregateTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (new[] { "First", "FirstOrDefault", "Single", "SingleOrDefault" }.Contains(method.Name))
+            {
+                return new FirstTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Skip")
+            {
+                return new SkipTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Take")
+            {
+                return new TakeTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "OrderBy")
+            {
+                return new OrderByTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "GroupBy")
+            {
+                return new GroupByTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Union" || method.Name == "Concat")
+            {
+                return new UnionTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Except")
+            {
+                return new ExceptTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            if (method.Name == "Intersect")
+            {
+                return new IntersectTranslator(QueryContext, QueryCompiler).Translate(select, expression, method);
+            }
+
+            return select;
+        }
+
         /// <summary>
         /// </summary>
-        /// <param methodCall.Method.Name="obj"><see cref="IQuery"/></param>
-        /// <param methodCall.Method.Name="methodCall"></param>
+        /// <param method.Name="obj"><see cref="IQuery"/></param>
+        /// <param method.Name="methodCall"></param>
         /// <returns></returns>
         protected Expression TranslateQueryMethodCall(Expression obj, MethodCallExpression methodCall)
         {
             //join 特殊处理,不支持外部参数引用
-            if (typeof(IQuery).IsAssignableFrom(methodCall.Method.DeclaringType) && methodCall.Method.Name == "Join")
+            if (methodCall.Method.Name == "Join" && typeof(IQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
             {
                 var joinBody = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
                 var joinQuery = Expression.Lambda(joinBody).Compile().DynamicInvoke();

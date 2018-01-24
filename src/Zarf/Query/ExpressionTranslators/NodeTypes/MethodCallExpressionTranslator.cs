@@ -35,6 +35,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes
             RegisterTranslator(AnyTranslator.SupprotedMethods, new AnyTranslator(queryContext, queryCompiper));
             RegisterTranslator(JoinSelectTranslator.SupprotedMethods, new JoinSelectTranslator(queryContext, queryCompiper));
             RegisterTranslator(ToListTranslator.SupprotedMethods, new ToListTranslator(queryContext, queryCompiper));
+
+            SubQueryTranslator = new SubQueryTranslator(queryContext, queryCompiper);
         }
 
         public override Expression Translate(MethodCallExpression methodCall)

@@ -8,6 +8,7 @@ namespace Zarf.SqlServer.Query.ExpressionTranslators.NodeTypes
     {
         public SqlServerMethodCallTranslator(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
         {
+            SubQueryTranslator = new SqlserverSubQueryTranslator(queryContext, queryCompiper);
             RegisterTranslator(SqlServerSkipTranslator.SupprotedMethods, new SqlServerSkipTranslator(queryContext, queryCompiper));
         }
     }
