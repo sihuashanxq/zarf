@@ -42,6 +42,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             }
 
             select.Groups.Add(new GroupExpression(new[] { groupKey }));
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

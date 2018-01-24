@@ -28,6 +28,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
             Utils.CheckNull(setsSelect, "Except Query Expression");
 
             select.Sets.Add(new ExceptExpression(setsSelect));
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

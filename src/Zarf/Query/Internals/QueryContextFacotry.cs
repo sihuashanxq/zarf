@@ -6,7 +6,7 @@ namespace Zarf.Query.Internals
 {
     public class QueryContextFacotry : IQueryContextFactory
     {
-        public IQueryContext CreateContext()
+        public IQueryContext CreateContext(DbContext dbContext)
         {
             return new QueryContext(
                     new Mapper<Expression, SelectExpression>(),
@@ -14,7 +14,8 @@ namespace Zarf.Query.Internals
                     new Mapper<MemberExpression, Expression>(),
                     new Mapper<Expression, Expression>(),
                     new AliasGenerator(),
-                    new QueryValueCache()
+                    new QueryValueCache(),
+                    dbContext
                 );
         }
     }

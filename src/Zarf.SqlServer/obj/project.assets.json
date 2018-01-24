@@ -2165,11 +2165,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "E:\\src\\zarf\\src\\Zarf.SqlServer\\Zarf.SqlServer.csproj",
+      "projectUniqueName": "E:\\src\\Zarf\\src\\Zarf.SqlServer\\Zarf.SqlServer.csproj",
       "projectName": "Zarf.SqlServer",
-      "projectPath": "E:\\src\\zarf\\src\\Zarf.SqlServer\\Zarf.SqlServer.csproj",
+      "projectPath": "E:\\src\\Zarf\\src\\Zarf.SqlServer\\Zarf.SqlServer.csproj",
       "packagesPath": "C:\\Users\\root\\.nuget\\packages\\",
-      "outputPath": "E:\\src\\zarf\\src\\Zarf.SqlServer\\obj\\",
+      "outputPath": "E:\\src\\Zarf\\src\\Zarf.SqlServer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -2188,8 +2188,8 @@
       "frameworks": {
         "netcoreapp2.0": {
           "projectReferences": {
-            "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj": {
-              "projectPath": "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj"
+            "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj": {
+              "projectPath": "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj"
             }
           }
         }

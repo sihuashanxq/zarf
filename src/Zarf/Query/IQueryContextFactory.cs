@@ -3,6 +3,6 @@ namespace Zarf.Query
 {
     public interface IQueryContextFactory
     {
-        IQueryContext CreateContext();
+        IQueryContext CreateContext(DbContext dbContext);
     }
 }

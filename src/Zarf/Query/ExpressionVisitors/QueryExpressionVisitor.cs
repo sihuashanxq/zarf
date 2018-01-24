@@ -12,7 +12,7 @@ namespace Zarf.Query.ExpressionVisitors
         public QueryExpressionVisitor(IQueryContext queryContext)
         {
             QueryContext = queryContext;
-            Provider = new NodeTypeTranslatorProvider(queryContext, this);
+            Provider = (ITransaltorProvider)QueryContext.DbContext.ServiceProvider.GetService(typeof(ITransaltorProvider));
         }
 
         public override Expression Visit(Expression node)
@@ -22,7 +22,7 @@ namespace Zarf.Query.ExpressionVisitors
                 return node;
             }
 
-            return Provider.GetTranslator(node)?.Translate(node) ?? base.Visit(node);
+            return Provider.GetTranslator(QueryContext,this,node)?.Translate(node) ?? base.Visit(node);
         }
 
         public virtual Expression Compile(Expression query)

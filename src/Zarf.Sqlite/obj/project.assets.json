@@ -1788,11 +1788,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "E:\\src\\zarf\\src\\Zarf.Sqlite\\Zarf.Sqlite.csproj",
+      "projectUniqueName": "E:\\src\\Zarf\\src\\Zarf.Sqlite\\Zarf.Sqlite.csproj",
       "projectName": "Zarf.Sqlite",
-      "projectPath": "E:\\src\\zarf\\src\\Zarf.Sqlite\\Zarf.Sqlite.csproj",
+      "projectPath": "E:\\src\\Zarf\\src\\Zarf.Sqlite\\Zarf.Sqlite.csproj",
       "packagesPath": "C:\\Users\\root\\.nuget\\packages\\",
-      "outputPath": "E:\\src\\zarf\\src\\Zarf.Sqlite\\obj\\",
+      "outputPath": "E:\\src\\Zarf\\src\\Zarf.Sqlite\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -1811,8 +1811,8 @@
       "frameworks": {
         "netcoreapp2.0": {
           "projectReferences": {
-            "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj": {
-              "projectPath": "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj"
+            "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj": {
+              "projectPath": "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj"
             }
           }
         }

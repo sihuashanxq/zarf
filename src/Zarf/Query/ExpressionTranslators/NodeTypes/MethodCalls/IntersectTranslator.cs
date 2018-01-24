@@ -20,14 +20,15 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
         }
 
-        public override SelectExpression Translate(SelectExpression select, Expression sets,MethodInfo method)
+        public override SelectExpression Translate(SelectExpression select, Expression sets, MethodInfo method)
         {
-            var setsSelect= Compile<SelectExpression>(sets);
+            var setsSelect = Compile<SelectExpression>(sets);
 
             Utils.CheckNull(select, "Query Expression");
             Utils.CheckNull(setsSelect, "Except Query Expression");
 
             select.Sets.Add(new IntersectExpression(setsSelect));
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

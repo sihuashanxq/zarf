@@ -25,7 +25,10 @@ namespace Zarf.Core.Internals
             {
                 if (_entities == null)
                 {
-                    _entities = new EntityEnumerable<TEntity>(Expression, Context.QueryExecutor, Context.QueryContextFactory.CreateContext());
+                    _entities = new EntityEnumerable<TEntity>(
+                        Expression,
+                        Context.QueryExecutor,
+                        Context.QueryContextFactory.CreateContext(Context));
                 }
 
                 return _entities;

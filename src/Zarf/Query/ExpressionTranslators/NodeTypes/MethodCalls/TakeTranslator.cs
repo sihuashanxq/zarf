@@ -25,6 +25,7 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
         public override SelectExpression Translate(SelectExpression select, Expression limit, MethodInfo method)
         {
             select.Limit = Convert.ToInt32(limit.As<ConstantExpression>().Value);
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

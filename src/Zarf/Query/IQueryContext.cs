@@ -17,5 +17,7 @@ namespace Zarf.Query
         IMapper<Expression, Expression> ExpressionMapper { get; }
 
         IMapper<MemberExpression, Expression> BindingMaper { get; }
+
+        DbContext DbContext { get; }
     }
 }

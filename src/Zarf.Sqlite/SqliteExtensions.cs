@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Zarf.Core;
 using Zarf.Generators;
+using Zarf.Query.ExpressionTranslators;
 using Zarf.Sqlite.Generators;
+using Zarf.Sqlite.Query.ExpressionTranslators;
 
 namespace Zarf.Sqlite
 {
@@ -26,6 +28,8 @@ namespace Zarf.Sqlite
 
             serviceCollection.AddSingleton<IDbServiceBuilder, SqliteDbServiceBuilder>();
 
+            serviceCollection.AddScoped<ITransaltorProvider, SqliteNodeTypeTranslatorProvider>();
+    
             return serviceCollection.AddZarf();
         }
     }

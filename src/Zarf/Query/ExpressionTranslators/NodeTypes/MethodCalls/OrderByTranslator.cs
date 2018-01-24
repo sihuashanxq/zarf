@@ -52,6 +52,8 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
                 new OrderExpression(new[] { sortKey },
                 method.Name.EndsWith("Descending") ? OrderDirection.Desc : OrderDirection.Asc));
 
+            select.QueryModel.ModelType = method.ReturnType;
+
             return select;
         }
 

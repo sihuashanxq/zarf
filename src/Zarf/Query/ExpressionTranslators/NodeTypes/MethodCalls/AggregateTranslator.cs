@@ -55,12 +55,10 @@ namespace Zarf.Query.ExpressionTranslators.NodeTypes.MethodCalls
 
             if (keySelector == null)
             {
-                var columnExpression = new ColumnExpression(select, new Column(QueryContext.AliasGenerator.GetNewColumn()), method.ReturnType);
-                var aggregateExpression = new AggregateExpression(method, columnExpression, select, columnExpression.Column.Name);
+                var aggregateExpression = new AggregateExpression(method, null, select, QueryContext.AliasGenerator.GetNewColumn());
 
                 select.AddProjection(aggregateExpression);
                 select.QueryModel = new QueryEntityModel(select, aggregateExpression, method.ReturnType, select.QueryModel);
-
                 QueryContext.ModelMapper.Map(aggregateExpression, select.QueryModel);
 
                 return select;

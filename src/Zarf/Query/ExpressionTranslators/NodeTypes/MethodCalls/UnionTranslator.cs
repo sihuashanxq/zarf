@@ -29,6 +29,7 @@ namespace Zarf.Query.ExpressionTranslators.Methods
             Utils.CheckNull(setsSelect, "Except Query Expression");
 
             select.Sets.Add(new UnionExpression(setsSelect));
+            select.QueryModel.ModelType = method.ReturnType;
 
             return select;
         }

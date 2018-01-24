@@ -1718,11 +1718,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj",
+      "projectUniqueName": "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj",
       "projectName": "Zarf",
-      "projectPath": "E:\\src\\zarf\\src\\Zarf\\Zarf.csproj",
+      "projectPath": "E:\\src\\Zarf\\src\\Zarf\\Zarf.csproj",
       "packagesPath": "C:\\Users\\root\\.nuget\\packages\\",
-      "outputPath": "E:\\src\\zarf\\src\\Zarf\\obj\\",
+      "outputPath": "E:\\src\\Zarf\\src\\Zarf\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

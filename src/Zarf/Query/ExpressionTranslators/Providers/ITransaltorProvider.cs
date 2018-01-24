@@ -4,6 +4,6 @@ namespace Zarf.Query.ExpressionTranslators
 {
     public interface ITransaltorProvider
     {
-        ITranslaor GetTranslator(Expression node);
+        ITranslator GetTranslator(IQueryContext queryContext, IQueryCompiler queryCompiler, Expression node);
     }
 }

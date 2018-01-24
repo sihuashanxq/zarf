@@ -34,7 +34,7 @@ namespace Zarf
 
         public TResult Execute<TResult>(Expression query)
         {
-            return Executor.ExecuteSingle<TResult>(query, Context.QueryContextFactory.CreateContext());
+            return Executor.ExecuteSingle<TResult>(query, Context.QueryContextFactory.CreateContext(Context));
         }
     }
 }

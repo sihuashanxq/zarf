@@ -7,7 +7,7 @@ using Zarf.Query.Expressions;
 
 namespace Zarf.Query.ExpressionTranslators
 {
-    public abstract class Translator<TExpression> : ITranslator<TExpression>, ITranslaor
+    public abstract class Translator<TExpression> : ITranslator<TExpression>, ITranslator
     {
         public IQueryContext QueryContext { get; }
 

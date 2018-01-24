@@ -55,7 +55,11 @@ namespace Zarf
 
             using (var db = new SqliteDbContext())
             {
-                var y = db.Users.Where(i => i.Id == 1).ToList();
+                var y = db.Users.Select(i => new
+                {
+                    D = db.Users.Select(n => n).Where(jj => jj.Id > 1).ToList()
+                }).ToList();
+
                 Console.ReadKey();
             }
         }

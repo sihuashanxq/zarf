@@ -18,13 +18,16 @@ namespace Zarf.Query
 
         public IMapper<MemberExpression, Expression> BindingMaper { get; }
 
+        public DbContext DbContext { get; }
+
         public QueryContext(
             IMapper<Expression, SelectExpression> sMapper,
             IMapper<Expression, QueryEntityModel> mMapper,
             IMapper<MemberExpression, Expression> bMapper,
             IMapper<Expression, Expression> eMapper,
             IAliasGenerator aliasGenerator,
-            IQueryValueCache queryValueCache
+            IQueryValueCache queryValueCache,
+            DbContext dbContext
         )
         {
             BindingMaper = bMapper;
@@ -33,6 +36,7 @@ namespace Zarf.Query
             ExpressionMapper = eMapper;
             AliasGenerator = aliasGenerator;
             QueryValueCache = queryValueCache;
+            DbContext = dbContext;
         }
     }
 }

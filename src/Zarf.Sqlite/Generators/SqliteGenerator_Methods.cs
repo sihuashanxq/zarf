@@ -54,7 +54,9 @@ namespace Zarf.Sqlite.Generators
             {
                 BuildStringMethods(methodCall);
             }
-            else if (methodCall.Method.DeclaringType == ReflectionUtil.DateTimeType || methodCall.Method.DeclaringType == ReflectionUtil.DateTimeNullableType)
+            else if (
+                methodCall.Method.DeclaringType == ReflectionUtil.DateTimeType 
+                || methodCall.Method.DeclaringType == ReflectionUtil.DateTimeNullableType)
             {
                 BuildDateTimeMethods(methodCall);
             }
