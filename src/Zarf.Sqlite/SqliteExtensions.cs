@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Zarf.Core;
 using Zarf.Generators;
-using Zarf.Query.ExpressionTranslators;
+using Zarf.Query.Handlers;
 using Zarf.Sqlite.Generators;
-using Zarf.Sqlite.Query.ExpressionTranslators;
+using Zarf.Sqlite.Query.Handlers;
+using Zarf.Sqlite.Query.Handlers.Providers;
 
 namespace Zarf.Sqlite
 {
@@ -26,9 +27,9 @@ namespace Zarf.Sqlite
             serviceCollection.AddScoped<IDbEntityCommandFacotry>(
                 p => new SqliteDbEntityCommandFactory(p.GetService<IDbEntityConnectionFacotry>()));
 
-            serviceCollection.AddSingleton<IDbServiceBuilder, SqliteDbServiceBuilder>();
+            serviceCollection.AddScoped<IDbServiceBuilder, SqliteDbServiceBuilder>();
 
-            serviceCollection.AddScoped<ITransaltorProvider, SqliteNodeTypeTranslatorProvider>();
+            serviceCollection.AddScoped<IQueryNodeHandlerProvider, SqliteNodeTypeTranslatorProvider>();
     
             return serviceCollection.AddZarf();
         }

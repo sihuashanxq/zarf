@@ -79,7 +79,7 @@ namespace Zarf.Query.Expressions
                 QueryModel = QueryModel
             };
 
-            select.AddProjectionRange(select.GenQueryProjections());
+            select.AddProjectionRange(select.GenSelectProjections());
             select.QueryModel.Select = select;
 
             DefaultIfEmpty = false;
@@ -163,21 +163,21 @@ namespace Zarf.Query.Expressions
             return isEmpty;
         }
 
-        public IEnumerable<Expression> GenQueryProjections()
+        public IEnumerable<Expression> GenSelectProjections()
         {
             var cols = new List<Expression>();
             if (SubSelect == null)
             {
-                var typeOfEntity = TypeDescriptorCacheFactory.Factory.Create(EntityModelType);
+                var modeTypeDescriptor = TypeDescriptorCacheFactory.Factory.Create(EntityModelType);
 
-                foreach (var memberDescriptor in typeOfEntity.MemberDescriptors)
+                foreach (var memberDescriptor in modeTypeDescriptor.MemberDescriptors)
                 {
                     cols.Add(new ColumnExpression(this, memberDescriptor.Member));
                 }
 
                 foreach (var item in Joins.Select(item => item.Select))
                 {
-                    cols.AddRange(item.GenQueryProjections());
+                    cols.AddRange(item.GenSelectProjections());
                 }
 
                 return cols;
@@ -208,7 +208,7 @@ namespace Zarf.Query.Expressions
                 }
 
                 Mapper.Map(item, col);
-                Mapper.Map(col, item);
+                //Mapper.Map(col, item);
                 cols.Add(col);
             }
 

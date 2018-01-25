@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Zarf.Core;
 using Zarf.Generators;
-using Zarf.Query.ExpressionTranslators;
+using Zarf.Query.Handlers;
 using Zarf.SqlServer.Generators;
-using Zarf.SqlServer.Query.ExpressionTranslators;
+using Zarf.SqlServer.Query.Handlers;
 
 namespace Zarf.SqlServer
 {
@@ -28,7 +28,7 @@ namespace Zarf.SqlServer
 
             serviceCollection.AddSingleton<IDbServiceBuilder, SqlServerDbServiceBuilder>();
 
-            serviceCollection.AddScoped<ITransaltorProvider, SqlServerNodeTypeTranslatorProvider>();
+            serviceCollection.AddScoped<IQueryNodeHandlerProvider, SqlServerQueryNodeHandlerProvider>();
 
             return serviceCollection.AddZarf();
         }

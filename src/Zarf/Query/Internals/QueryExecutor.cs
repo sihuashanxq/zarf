@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using Zarf.Core;
 using Zarf.Extensions;
-using Zarf.Query.ExpressionVisitors;
+using Zarf.Query.Visitors;
 using System.Linq;
 using Zarf.Generators;
 using Zarf.Metadata.Entities;
