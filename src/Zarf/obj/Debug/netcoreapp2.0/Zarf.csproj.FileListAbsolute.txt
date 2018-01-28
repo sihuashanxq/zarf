@@ -18,7 +18,6 @@ E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfo.cs
 E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.dll
 E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.pdb
 E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache
-E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache
 E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.csproj.CoreCompileInputs.cache
 E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfoInputs.cache
 E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfo.cs
@@ -27,3 +26,4 @@ E:\src\zarf\src\Zarf\bin\Debug\netcoreapp2.0\Zarf.dll
 E:\src\zarf\src\Zarf\bin\Debug\netcoreapp2.0\Zarf.pdb
 E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.dll
 E:\src\zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache

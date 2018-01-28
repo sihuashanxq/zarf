@@ -12,8 +12,4 @@
     <ProjectReference Include="..\Zarf\Zarf.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Query\Functions\" />
-  </ItemGroup>
-
 </Project>

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Zarf.Generators;
 using Zarf.Core;
 using Zarf.Update.Expressions;
-
+using Zarf.Metadata.Entities;
 
 namespace Zarf.Update.Executors
 {
@@ -13,15 +13,18 @@ namespace Zarf.Update.Executors
     {
         public IDbEntityCommandFacotry CommandFacotry { get; }
 
+        public IDbEntityConnectionFacotry ConnectionFacotry { get; }
+
         public ISQLGenerator SQLGenerator { get; }
 
-        public DbModificationCommandGroupBuilder CommandGroupBuilder { get; }
+        public IDbModificationCommandGroupBuilder CommandGroupBuilder { get; }
 
-        public DbModifyExecutor(IDbEntityCommandFacotry commandFacotry, ISQLGenerator sqlBuilder, IEntityTracker tracker)
+        public DbModifyExecutor(IDbEntityCommandFacotry commandFacotry, IDbEntityConnectionFacotry connectionFacotry, ISQLGenerator sqlBuilder, IDbModificationCommandGroupBuilder groupBuilder)
         {
             CommandFacotry = commandFacotry;
+            ConnectionFacotry = connectionFacotry;
             SQLGenerator = sqlBuilder;
-            CommandGroupBuilder = new DbModificationCommandGroupBuilder(tracker);
+            CommandGroupBuilder = groupBuilder;
         }
 
         public virtual int Execute(IEnumerable<EntityEntry> entries)
@@ -32,7 +35,7 @@ namespace Zarf.Update.Executors
         public async Task<int> ExecuteAsync(IEnumerable<EntityEntry> entries)
         {
             var commandGroups = CommandGroupBuilder.Build(entries);
-            var dbCommand = CommandFacotry.Create();
+            var dbCommand = CommandFacotry.Create(ConnectionFacotry.CreateDbContextScopedConnection());
             var modifyRowcount = 0;
 
             foreach (var commandGroup in commandGroups)
@@ -61,7 +64,7 @@ namespace Zarf.Update.Executors
 
         public string BuildCommandText(DbModificationCommandGroup commandGroup)
         {
-            return SQLGenerator.Generate(DbStoreExpressionFacotry.Default.Create(commandGroup));
+            return SQLGenerator.Generate(DbStoreExpressionFacotry.Default.Create(commandGroup), new List<DbParameter>());
         }
     }
 }

@@ -7,6 +7,8 @@ namespace Zarf.SqlServer
     {
         private string _connectionString;
 
+        private IDbEntityConnection _scopedConnection;
+
         internal SqlServerDbEntityConnectionFacotry(string connectionString)
         {
             _connectionString = connectionString;
@@ -20,6 +22,19 @@ namespace Zarf.SqlServer
         public IDbEntityConnection Create(string connectionString)
         {
             return new SqlServerDbEntityConnection(new SqlConnection(connectionString));
+        }
+
+        public IDbEntityConnection CreateDbContextScopedConnection()
+        {
+            lock (this)
+            {
+                if (_scopedConnection == null)
+                {
+                    _scopedConnection = Create();
+                }
+
+                return _scopedConnection;
+            }
         }
     }
 }

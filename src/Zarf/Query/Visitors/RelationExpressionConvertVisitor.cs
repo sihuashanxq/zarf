@@ -32,7 +32,7 @@ namespace Zarf.Query.Visitors
                 return alias.Expression;
             }
 
-            if (node.NodeType == ExpressionType.Extension)
+            if (node==null||node.NodeType == ExpressionType.Extension)
             {
                 return node;
             }

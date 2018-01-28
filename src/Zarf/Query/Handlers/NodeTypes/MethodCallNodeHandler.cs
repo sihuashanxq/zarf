@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
+using Zarf.Query.Expressions;
 using Zarf.Query.Handlers.Methods;
 using Zarf.Query.Handlers.NodeTypes.MethodCalls;
 
@@ -41,7 +42,9 @@ namespace Zarf.Query.Handlers.NodeTypes
             }
 
             var handledNode = GetNameNodeHanlder()?.HandleNode(methodCall);
-            if (handledNode != null)
+            if (handledNode.Is<SelectExpression>() ||
+                handledNode.Is<AllExpression>() ||
+                handledNode.Is<AnyExpression>())
             {
                 return handledNode;
             }
@@ -71,11 +74,6 @@ namespace Zarf.Query.Handlers.NodeTypes
             {
                 return translator;
             }
-
-            //if (typeof(IQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
-            //{
-            //    return _methodCallTranslators.FirstOrDefault(i => i.Key.Name == methodCall.Method.Name).Value;
-            //}
 
             return null;
         }

@@ -7,6 +7,8 @@ namespace Zarf.Sqlite
     {
         private string _connectionString;
 
+        private IDbEntityConnection _scopedConnection;
+
         internal SqliteDbEntityConnectionFacotry(string connectionString)
         {
             _connectionString = connectionString;
@@ -20,6 +22,19 @@ namespace Zarf.Sqlite
         public IDbEntityConnection Create(string connectionString)
         {
             return new SqliteDbEntityConnection(new SQLiteConnection(connectionString));
+        }
+
+        public IDbEntityConnection CreateDbContextScopedConnection()
+        {
+            lock (this)
+            {
+                if (_scopedConnection == null)
+                {
+                    _scopedConnection = Create();
+                }
+
+                return _scopedConnection;
+            }
         }
     }
 }

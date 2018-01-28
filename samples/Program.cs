@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using Zarf.Generators;
+using Zarf.Generators.Functions;
+using Zarf.Generators.Functions.Registrars;
 using Zarf.Metadata;
 using Zarf.Metadata.DataAnnotations;
 using Zarf.Query;
@@ -42,27 +45,49 @@ namespace Zarf
         public IQuery<User> Users { get; }
     }
 
+    public static class IntExtension
+    {
+        [SQLFunctionHandler(typeof(IntFunHandler))]
+        public static int AddTowInt(this int i, int n)
+        {
+            return i + n;
+        }
+    }
+
+    public class IntFunHandler : ISQLFunctionHandler
+    {
+        public Type SoupportedType => typeof(int);
+
+        public bool HandleFunction(ISQLGenerator generator, MethodCallExpression methodCall)
+        {
+            if (methodCall.Method.Name == "AddTowInt")
+            {
+                generator.Attach(methodCall.Arguments[0]);
+                generator.Attach(" + ");
+                generator.Attach(methodCall.Arguments[1]);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             using (var db = new SqlServerDbContext())
             {
+                var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
+
+                var yy = db.Users.Where(n => n.Id.AddTowInt(2) < 10).ToList();
                 //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
                 //Order
-                var y = db.Users.Select(i => new
-                {
-                    D = db.Users.Select(n => n).Skip(1).ToList()
-                }).ToList();
             }
 
             using (var db = new SqliteDbContext())
             {
-                var y = db.Users.Select(i => new
-                {
-                    D = db.Users.Select(n => n).Skip(1).ToList()
-                }).ToList();
-
+                var xx = db.Users.ToList();
                 Console.ReadKey();
             }
         }

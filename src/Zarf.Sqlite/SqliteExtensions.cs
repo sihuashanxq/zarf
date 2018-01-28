@@ -1,28 +1,60 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.Data.SQLite;
+using System.Reflection;
 using Zarf.Core;
 using Zarf.Generators;
+using Zarf.Generators.Functions.Providers;
 using Zarf.Query.Handlers;
 using Zarf.Sqlite.Generators;
-using Zarf.Sqlite.Query.Handlers;
 using Zarf.Sqlite.Query.Handlers.Providers;
+using System.Collections.Concurrent;
+using System;
+using Zarf.Update;
+using Zarf.Sqlite.Update;
 
 namespace Zarf.Sqlite
 {
     public static class SqliteExtensions
     {
-        public static IDbService UseSqlite(this IServiceCollection serviceCollection, string connectionString)
+        private static ConcurrentDictionary<string, IServiceProvider> _serviceProviderCaches;
+
+        static SqliteExtensions()
         {
-            return new SqliteDbServiceBuilder().BuildService(connectionString, serviceCollection);
+            //注册自定义函数
+            foreach (var item in Assembly
+                    .GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => typeof(SQLiteFunction).IsAssignableFrom(t)))
+            {
+                SQLiteFunction.RegisterFunction(item);
+            }
+
+            _serviceProviderCaches = new ConcurrentDictionary<string, IServiceProvider>();
         }
 
         public static IDbService UseSqlite(this IDbServiceBuilder serviceBuilder, string connectionString)
         {
-            return new ServiceCollection().AddSqlite().UseSqlite(connectionString);
+            if (_serviceProviderCaches.TryGetValue(connectionString, out var serviceProviderCache))
+            {
+                return new DbService(connectionString, serviceProviderCache);
+            }
+
+            var dbService = new ServiceCollection().UseSqliteCore().UseSqlite(connectionString);
+
+            _serviceProviderCaches.AddOrUpdate(connectionString, dbService.ServiceProvder, (k, v) => v);
+
+            return dbService;
         }
 
-        internal static IServiceCollection AddSqlite(this IServiceCollection serviceCollection)
+        private static IDbService UseSqlite(this IServiceCollection serviceCollection, string connectionString)
         {
-            serviceCollection.AddScoped<ISQLGenerator, SqliteGenerator>();
+            return new SqliteDbServiceBuilder().BuildService(connectionString, serviceCollection);
+        }
+
+        internal static IServiceCollection UseSqliteCore(this IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddScoped<ISQLGenerator>(
+               p => new SqliteGenerator(p.GetService<ISQLFunctionHandlerProvider>()));
 
             serviceCollection.AddScoped<IDbEntityCommandFacotry>(
                 p => new SqliteDbEntityCommandFactory(p.GetService<IDbEntityConnectionFacotry>()));
@@ -30,8 +62,10 @@ namespace Zarf.Sqlite
             serviceCollection.AddScoped<IDbServiceBuilder, SqliteDbServiceBuilder>();
 
             serviceCollection.AddScoped<IQueryNodeHandlerProvider, SqliteNodeTypeTranslatorProvider>();
-    
-            return serviceCollection.AddZarf();
+
+            serviceCollection.AddSingleton<IDbModificationCommandGroupBuilder, SqliteDbModifycationCommandGroupBuilder>();
+
+            return serviceCollection.UseZarfCore();
         }
     }
 }

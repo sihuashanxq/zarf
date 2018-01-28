@@ -14,8 +14,8 @@ namespace Zarf.Core
         public DbService(string connectionString, IServiceProvider serviceProvider)
         {
             ConnectionString = connectionString;
-            ServiceProvder = serviceProvider;
-            EntityConnection = serviceProvider.GetService<IDbEntityConnectionFacotry>().Create();
+            ServiceProvder = serviceProvider.CreateScope().ServiceProvider;
+            EntityConnection = ServiceProvder.GetService<IDbEntityConnectionFacotry>().CreateDbContextScopedConnection();
         }
     }
 }

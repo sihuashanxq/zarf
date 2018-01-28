@@ -39,7 +39,7 @@ namespace Zarf
         public DbContext(IDbService dbService)
         {
             DbService = dbService;
-            ServiceProvider = DbService.ServiceProvder.CreateScope().ServiceProvider;
+            ServiceProvider = DbService.ServiceProvder;
         }
 
         protected TService GetService<TService>()

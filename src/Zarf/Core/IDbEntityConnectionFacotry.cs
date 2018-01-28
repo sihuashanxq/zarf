@@ -5,5 +5,7 @@
         IDbEntityConnection Create();
 
         IDbEntityConnection Create(string connectionString);
+
+        IDbEntityConnection CreateDbContextScopedConnection();
     }
 }

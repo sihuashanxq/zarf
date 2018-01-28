@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Generators;
+using Zarf.Generators.Functions.Providers;
 using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
 
@@ -10,27 +11,33 @@ namespace Zarf.SqlServer.Generators
 {
     internal partial class SqlServerGenerator : SQLGenerator
     {
+        public SqlServerGenerator(ISQLFunctionHandlerProvider provider)
+            : base(provider)
+        {
+
+        }
+
         protected override Expression VisitAggregate(AggregateExpression exp)
         {
             switch (exp.Method.Name)
             {
                 case "Min":
-                    Append("MIN", '(');
+                    AttachSQL("MIN", '(');
                     break;
                 case "Max":
-                    Append("Max", '(');
+                    AttachSQL("Max", '(');
                     break;
                 case "Sum":
-                    Append("Sum", '(');
+                    AttachSQL("Sum", '(');
                     break;
                 case "Average":
-                    Append("AVG", '(');
+                    AttachSQL("AVG", '(');
                     break;
                 case "Count":
-                    Append("Count", "(");
+                    AttachSQL("Count", "(");
                     break;
                 case "LongCount":
-                    Append("Count_Big", "(");
+                    AttachSQL("Count_Big", "(");
                     break;
                 default:
                     throw new NotImplementedException($"method {exp.Method.Name} is not supported!");
@@ -38,17 +45,17 @@ namespace Zarf.SqlServer.Generators
 
             if (exp.KeySelector == null)
             {
-                Append("1");
+                AttachSQL("1");
             }
             else
             {
-                BuildExpression(exp.KeySelector);
+                Attach(exp.KeySelector);
             }
-            Append(')');
+            AttachSQL(')');
 
             if (!exp.Alias.IsNullOrEmpty())
             {
-                Append(" AS ", exp.Alias);
+                AttachSQL(" AS ", exp.Alias);
             }
 
             return exp;
@@ -58,22 +65,22 @@ namespace Zarf.SqlServer.Generators
         {
             if (select.IsInPredicate || select.OuterSelect != null)
             {
-                Append(" ( ");
+                AttachSQL(" ( ");
             }
 
-            Append(" SELECT  ");
+            AttachSQL(" SELECT  ");
 
             BuildDistinct(select);
             BuildLimit(select);
             BuildProjections(select);
 
-            Append(" FROM ");
+            AttachSQL(" FROM ");
 
             BuildSubQuery(select);
             BuildFromTable(select);
             BuildJoins(select);
 
-            BuildExpression(select.Where);
+            Attach(select.Where);
 
             BuildGroups(select);
 
@@ -83,7 +90,7 @@ namespace Zarf.SqlServer.Generators
 
             if (select.IsInPredicate || select.OuterSelect != null)
             {
-                Append(" ) ");
+                AttachSQL(" ) ");
             }
 
             return select;
@@ -91,37 +98,37 @@ namespace Zarf.SqlServer.Generators
 
         protected override Expression VisitAll(AllExpression all)
         {
-            Append(" IF NOT EXISTS(");
-            BuildExpression(all.Select);
-            Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
+            AttachSQL(" IF NOT EXISTS(");
+            Attach(all.Select);
+            AttachSQL(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return all;
         }
 
         protected override Expression VisitAny(AnyExpression any)
         {
-            Append(" IF EXISTS(");
-            BuildExpression(any.Select);
-            Append(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
+            AttachSQL(" IF EXISTS(");
+            Attach(any.Select);
+            AttachSQL(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
             return any;
         }
 
         protected override Expression VisitSkip(SkipExpression skip)
         {
-            Append(" ROW_NUMBER() OVER ( ");
+            AttachSQL(" ROW_NUMBER() OVER ( ");
             if (skip.Orders == null || skip.Orders.Count == 0)
             {
-                Append("ORDER BY GETDATE()) AS __ROWINDEX__");
+                AttachSQL("ORDER BY GETDATE()) AS __ROWINDEX__");
             }
             else
             {
                 foreach (var order in skip.Orders)
                 {
-                    BuildExpression(order);
-                    Append(',');
+                    Attach(order);
+                    AttachSQL(',');
                 }
 
                 SQL.Length--;
-                Append(")  AS __ROWINDEX__");
+                AttachSQL(")  AS __ROWINDEX__");
             }
 
             return skip;
@@ -131,19 +138,19 @@ namespace Zarf.SqlServer.Generators
         {
             if (select.Limit != 0)
             {
-                Append(" TOP  ", select.Limit, " ");
+                AttachSQL(" TOP  ", select.Limit, " ");
                 return;
             }
 
             if (select.OuterSelect != null && (select.Orders.Count != 0 || select.Groups.Count != 0))
             {
-                Append(" TOP (100) Percent ");
+                AttachSQL(" TOP (100) Percent ");
             }
         }
 
         protected override Expression VisitStore(DbStoreExpression store)
         {
-            Append("DECLARE @__ROWCOUNT__ INT=0;");
+            AttachSQL("DECLARE @__ROWCOUNT__ INT=0;");
             foreach (var persist in store.Persists)
             {
                 switch (persist)
@@ -159,17 +166,17 @@ namespace Zarf.SqlServer.Generators
                         break;
                 }
 
-                Append(";SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();");
+                AttachSQL(";SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();");
             }
 
             if (store.Persists.Count == 1 && (
                 store.Persists.First().As<InsertExpression>()?.GenerateIdentity ?? false))
             {
-                Append("SELECT @__ROWCOUNT__ AS ROWSCOUNT,SCOPE_IDENTITY() AS ID;");
+                AttachSQL("SELECT @__ROWCOUNT__ AS ROWSCOUNT,SCOPE_IDENTITY() AS ID;");
             }
             else
             {
-                Append("SELECT @__ROWCOUNT__ AS ROWSCOUNT;");
+                AttachSQL("SELECT @__ROWCOUNT__ AS ROWSCOUNT;");
             }
 
             return store;
@@ -177,19 +184,19 @@ namespace Zarf.SqlServer.Generators
 
         protected void BuildInsert(InsertExpression insert)
         {
-            Append(Environment.NewLine).
-            Append(";INSERT INTO ").
-            Append(insert.Table.Schema.Escape()).
-            Append('.').
-            Append(insert.Table.Name.Escape()).
-            Append("(");
+            AttachSQL(Environment.NewLine).
+            AttachSQL(";INSERT INTO ").
+            AttachSQL(insert.Table.Schema.Escape()).
+            AttachSQL('.').
+            AttachSQL(insert.Table.Name.Escape()).
+            AttachSQL("(");
 
             foreach (var col in insert.Columns)
             {
-                Append(col.Escape()).Append(',');
+                AttachSQL(col.Escape()).AttachSQL(',');
             }
             SQL.Length--;
-            Append(") VALUES ");
+            AttachSQL(") VALUES ");
 
             var parameters = insert.DbParams.ToList();
             var colCount = insert.Columns.Count();
@@ -200,30 +207,30 @@ namespace Zarf.SqlServer.Generators
                 var mod = (i % colCount);
                 if (mod == 0)
                 {
-                    Append(i != 0 ? ',' : ' ').
-                    Append('(').
-                    Append(parameter.Name);
+                    AttachSQL(i != 0 ? ',' : ' ').
+                    AttachSQL('(').
+                    AttachSQL(parameter.Name);
                 }
                 else
                 {
-                    Append(',').Append(parameter.Name);
+                    AttachSQL(',').AttachSQL(parameter.Name);
                 }
 
                 if ((i + 1) % colCount == 0)
                 {
-                    Append(')');
+                    AttachSQL(')');
                 }
             }
         }
 
         protected void BuildUpdate(UpdateExpression update)
         {
-            Append(Environment.NewLine).
-            Append(";UPDATE ").
-            Append(update.Table.Schema.Escape()).
-            Append('.').
-            Append(update.Table.Name.Escape()).
-            Append("SET ");
+            AttachSQL(Environment.NewLine).
+            AttachSQL(";UPDATE ").
+            AttachSQL(update.Table.Schema.Escape()).
+            AttachSQL('.').
+            AttachSQL(update.Table.Name.Escape()).
+            AttachSQL("SET ");
 
             var columns = update.Columns.ToList();
             var parameters = update.DbParams.ToList();
@@ -231,62 +238,57 @@ namespace Zarf.SqlServer.Generators
             {
                 var col = columns[i];
                 var dbParam = parameters[i];
-                Append(col.Escape()).
-                Append('=').
-                Append(dbParam.Name).
-                Append(',');
+                AttachSQL(col.Escape()).
+                AttachSQL('=').
+                AttachSQL(dbParam.Name).
+                AttachSQL(',');
             }
 
             SQL.Length--;
 
-            Append(" WHERE ").
-            Append(update.Identity).
-            Append('=').
-            Append(update.IdentityValue.Name).
-            Append(";");
+            AttachSQL(" WHERE ").
+            AttachSQL(update.Identity).
+            AttachSQL('=').
+            AttachSQL(update.IdentityValue.Name).
+            AttachSQL(";");
         }
 
         protected void BuildDelete(DeleteExpression delete)
         {
-            Append(Environment.NewLine).
-            Append(";DELETE FROM  ").
-            Append(delete.Table.Schema.Escape()).
-            Append('.').
-            Append(delete.Table.Name.Escape()).
-            Append(" WHERE ").
-            Append(delete.PrimaryKey);
+            AttachSQL(Environment.NewLine).
+            AttachSQL(";DELETE FROM  ").
+            AttachSQL(delete.Table.Schema.Escape()).
+            AttachSQL('.').
+            AttachSQL(delete.Table.Name.Escape()).
+            AttachSQL(" WHERE ").
+            AttachSQL(delete.PrimaryKey);
 
             var primaryKeyValues = delete.PrimaryKeyValues.ToList();
             if (primaryKeyValues.Count == 1)
             {
-                Append('=');
-                Append(delete.PrimaryKeyValues.FirstOrDefault().Name);
+                AttachSQL('=');
+                AttachSQL(delete.PrimaryKeyValues.FirstOrDefault().Name);
             }
             else
             {
-                Append("IN (");
+                AttachSQL("IN (");
                 foreach (var primaryKeyValue in primaryKeyValues)
                 {
-                    Append(primaryKeyValue.Name + ',');
+                    AttachSQL(primaryKeyValue.Name + ',');
                 }
 
                 SQL.Length--;
-                Append(')');
+                AttachSQL(')');
             }
 
-            Append(";");
+            AttachSQL(";");
         }
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
-            //if (exists.Query.Columns.Count == 0)
-            //{
-            //    exists.Query.Columns.Add(new Mapping.ColumnDescriptor() { Expression = Expression.Constant(1) });
-            //}
-
-            Append(" EXISTS (");
-            BuildExpression(exists.Select);
-            Append(") ");
+            AttachSQL(" EXISTS (");
+            Attach(exists.Select);
+            AttachSQL(") ");
             return exists;
         }
     }

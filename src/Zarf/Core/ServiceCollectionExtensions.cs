@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Zarf.Generators;
+using Zarf.Generators.Functions;
+using Zarf.Generators.Functions.Providers;
+using Zarf.Generators.Functions.Registrars;
 using Zarf.Query;
 using Zarf.Query.Internals;
 using Zarf.Update;
@@ -12,25 +12,21 @@ namespace Zarf.Core
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddZarf(this IServiceCollection serviceCollection)
+        public static IServiceCollection UseZarfCore(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddScoped<IEntityTracker, EntityTracker>();
             serviceCollection.AddScoped<IEntityEntryCache, EntityEntryCache>();
+            serviceCollection.AddScoped<IQueryExecutor,QueryExecutor>();
+            serviceCollection.AddScoped<IDbModifyExecutor,DbModifyExecutor>();
+            serviceCollection.AddSingleton<ISQLFunctionHandlerManager, SQLFunctionHandlerManager>();
+            serviceCollection.AddSingleton<IDbModificationCommandGroupBuilder, DbModificationCommandGroupBuilder>();
 
-            serviceCollection.AddScoped<IQueryExecutor>(
-                (p) => new QueryExecutor(
-                    p.GetService<ISQLGenerator>(),
-                    p.GetService<IDbEntityCommandFacotry>(),
-                    p.GetService<IDbEntityConnectionFacotry>()));
+            serviceCollection.AddSingleton<ISQLFunctionHandlerProvider>(
+                p => p.GetService<ISQLFunctionHandlerManager>());
+            serviceCollection.AddSingleton<ISQLFunctionHandlerRegistrar>(
+                p => p.GetService<ISQLFunctionHandlerManager>());
 
-            serviceCollection.AddScoped<IDbModifyExecutor>(
-                (p) => new DbModifyExecutor(
-                    p.GetService<IDbEntityCommandFacotry>(),
-                    p.GetService<ISQLGenerator>(),
-                    p.GetService<IEntityTracker>()
-                ));
-
-            serviceCollection.AddSingleton<IQueryContextFactory, QueryContextFacotry>();
+            serviceCollection.AddScoped<IQueryContextFactory, QueryContextFacotry>();
 
             return serviceCollection;
         }
