@@ -2,6 +2,8 @@
 using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Query.Expressions;
+using System.Reflection;
+using Zarf.Metadata.DataAnnotations;
 
 namespace Zarf.Query.Visitors
 {
@@ -120,22 +122,37 @@ namespace Zarf.Query.Visitors
                 return VisitMemberInit(visitedNode.As<MemberInitExpression>());
             }
 
-            if (visitedNode is ColumnExpression)
+            if (visitedNode is ColumnExpression ||
+                visitedNode is AggregateExpression ||
+                visitedNode is AliasExpression)
             {
                 Select.AddProjection(visitedNode);
             }
 
-            if (visitedNode is AggregateExpression)
+            else if (visitedNode is CaseWhenExpression)
             {
                 Select.AddProjection(visitedNode);
+                QueryContext.ExpressionMapper.Map(node, visitedNode);
             }
 
-            if (visitedNode is AliasExpression)
+            else if (visitedNode.Is<MethodCallExpression>() &&
+                 IsSQLFunction(visitedNode.As<MethodCallExpression>()))
             {
                 Select.AddProjection(visitedNode);
+                QueryContext.ExpressionMapper.Map(node, visitedNode);
             }
 
             return visitedNode;
+        }
+
+        protected virtual bool IsSQLFunction(MethodCallExpression methodCall)
+        {
+            if (methodCall.Method.GetCustomAttribute<SQLFunctionHandlerAttribute>() != null)
+            {
+                return true;
+            }
+
+            return methodCall.Method.DeclaringType.IsPrimtiveType();
         }
     }
 }

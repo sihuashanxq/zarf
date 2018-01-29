@@ -30,6 +30,15 @@ namespace Zarf.Query.Visitors
             return base.Compile(query);
         }
 
+        /// <summary>
+        /// 条件语句中不需要转换为CaseWhenExpression
+        /// </summary>
+        /// <returns></returns>
+        protected override Expression ConvertBoolMethodCallToCaseWhen(MethodCallExpression methodCall)
+        {
+            return methodCall;
+        }
+
         protected override Expression VisitMember(MemberExpression mem)
         {
             var queryModel = QueryContext.ModelMapper.GetValue(mem.Expression);

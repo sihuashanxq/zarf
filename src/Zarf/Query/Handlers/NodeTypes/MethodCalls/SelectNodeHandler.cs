@@ -29,13 +29,12 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
 
         public override SelectExpression HandleNode(SelectExpression select, Expression selector, MethodInfo method)
         {
-            var modelType = method.ReturnType.GetModelElementType();
             var parameter = selector.GetParameters().FirstOrDefault();
             var modelExpression = new QueryModelExpandExpressionVisitor(QueryContext, select, parameter).Visit(selector);
 
             Utils.CheckNull(select, "query");
 
-            select.QueryModel = new QueryEntityModel(select, modelExpression, modelType, select.QueryModel);
+            select.QueryModel = new QueryEntityModel(select, modelExpression, method.DeclaringType, select.QueryModel);
 
             QueryContext.SelectMapper.Map(parameter, select);
             QueryContext.ModelMapper.Map(parameter, select.QueryModel);
@@ -53,8 +52,7 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
         protected void CreateProjection(SelectExpression select, Expression modelExpression)
         {
             modelExpression = new ProjectionExpressionVisitor(select, QueryContext).Visit(modelExpression);
-
-            new ResultExpressionVisitor(QueryContext, select).Visit(modelExpression);
+            modelExpression = new ResultExpressionVisitor(QueryContext, select).Visit(modelExpression);
         }
     }
 }

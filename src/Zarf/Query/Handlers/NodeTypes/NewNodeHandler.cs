@@ -33,7 +33,10 @@ namespace Zarf.Query.Handlers.NodeTypes
                     var query = QueryContext.SelectMapper.GetValue(argument);
                     if (query == null || !query.QueryModel.ContainsModel(newExpression))
                     {
-                        argument = new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), argument, newExpression.Arguments[i]);
+                        if (!(argument is ColumnExpression col && !string.IsNullOrEmpty(col.Alias)))
+                        {
+                            argument = new AliasExpression(QueryContext.AliasGenerator.GetNewColumn(), argument, newExpression.Arguments[i]);
+                        }
                     }
 
                     arguments.Add(argument);

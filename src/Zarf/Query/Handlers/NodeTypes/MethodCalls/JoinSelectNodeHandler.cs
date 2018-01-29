@@ -60,8 +60,7 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
         protected void CreateProjection(SelectExpression select, Expression modelExpression)
         {
             modelExpression = new ProjectionExpressionVisitor(select, QueryContext).Visit(modelExpression);
-
-            new ResultExpressionVisitor(QueryContext, select).Visit(modelExpression);
+            modelExpression = new ResultExpressionVisitor(QueryContext, select).Visit(modelExpression);
         }
     }
 }

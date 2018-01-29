@@ -22,6 +22,8 @@ namespace Zarf.Generators
         /// </summary>
         private List<DbParameter> _parameters;
 
+        protected List<DbParameter> Parameters => _parameters;
+
         /// <summary>
         /// SQL
         /// </summary>
@@ -215,23 +217,18 @@ namespace Zarf.Generators
 
         protected override Expression VisitConstant(ConstantExpression constant)
         {
-            DbParameter parameter = null;
-
-            if (constant.Type == typeof(bool))
+            if (constant.Type.IsPrimtiveType())
             {
-                parameter = CreateParameter(constant.Value.Cast<bool>() ? 1 : 0);
-            }
-            else if (constant.Type.IsPrimtiveType())
-            {
-                parameter = CreateParameter(constant.Value);
+                var parameter = CreateParameter(constant.Value);
+                Attach(parameter.Name);
+                Parameters.Add(parameter);
             }
             else
             {
-                parameter = CreateParameter(constant.Value.ToString());
+                var parameter = CreateParameter(constant.Value.ToString());
+                Attach(parameter.Name);
+                Parameters.Add(parameter);
             }
-
-            _parameters.Add(parameter);
-            AttachSQL(parameter.Name);
 
             return constant;
         }
@@ -510,9 +507,25 @@ namespace Zarf.Generators
                 case AliasExpression alias:
                     VisitAlias(alias);
                     break;
+                case CaseWhenExpression caseWhen:
+                    VisitCaseWhen(caseWhen);
+                    break;
             }
 
             return node;
+        }
+
+        protected virtual Expression VisitCaseWhen(CaseWhenExpression caseWhen)
+        {
+            Attach(" ( CASE WHEN  ");
+            Attach(caseWhen.CaseWhen);
+            Attach(" THEN ");
+            Attach(caseWhen.Then);
+            Attach(" ELSE ");
+            Attach(caseWhen.Else);
+            Attach(" END ) ");
+
+            return caseWhen;
         }
 
         protected abstract Expression VisitQuery(SelectExpression select);

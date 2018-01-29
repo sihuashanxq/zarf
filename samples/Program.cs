@@ -80,9 +80,13 @@ namespace Zarf
             {
                 var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
 
-                var yy = db.Users.Where(n => n.Id.AddTowInt(2) < 10).ToList();
-                //SELECT Take Where Skip First FirstOrDefault Single SingleOrDefault Sum Count Avg
-                //Order
+                var yy = db.Users.Where(i => i.Id < 10).Select(n =>
+                new
+                {
+                    Id = n.Id,
+                    Name = n.Name,
+                    N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
+                }).ToList();
             }
 
             using (var db = new SqliteDbContext())

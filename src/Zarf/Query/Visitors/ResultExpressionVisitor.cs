@@ -23,9 +23,13 @@ namespace Zarf.Query.Visitors
 
         public override Expression Visit(Expression node)
         {
-            if (node.Is<SelectExpression>())
+            if (node == null)
             {
-                var select = node.As<SelectExpression>();
+                return node;
+            }
+
+            if (node is SelectExpression select)
+            {
                 if (!Select.ContainsSelectExpression(select))
                 {
                     CombineAggregateSelect(select);

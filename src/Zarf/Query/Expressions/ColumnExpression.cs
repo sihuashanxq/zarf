@@ -40,21 +40,12 @@ namespace Zarf.Query.Expressions
             _type = valueType;
         }
 
-        public ColumnExpression Clone(string alias)
+        public ColumnExpression Clone(string alias = "")
         {
             return new ColumnExpression(Select, Member, Alias)
             {
                 _type = _type,
                 Alias = alias,
-                Column = Column
-            };
-        }
-
-        public ColumnExpression Clone()
-        {
-            return new ColumnExpression(Select, Member, Alias)
-            {
-                _type = _type,
                 Column = Column
             };
         }

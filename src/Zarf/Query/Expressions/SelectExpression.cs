@@ -56,17 +56,20 @@ namespace Zarf.Query.Expressions
         /// </summary>
         public bool IsInPredicate { get; internal set; }
 
-        public SelectExpression(Type typeOfEntity, IMapper<Expression, Expression> mapper, string alias = "")
+        protected IEqualityComparer<Expression> ExpressionComparer { get; }
+
+        public SelectExpression(Type entityModelType, IMapper<Expression, Expression> mapper, string alias = "")
         {
+            EntityModelType = entityModelType;
+            Table = entityModelType.ToTable();
+            Mapper = mapper;
+            Alias = alias;
             Sets = new List<SetsExpression>();
             Joins = new List<JoinExpression>();
             Orders = new List<OrderExpression>();
             Groups = new List<GroupExpression>();
             Projections = new List<Expression>();
-            EntityModelType = typeOfEntity;
-            Table = typeOfEntity.ToTable();
-            Mapper = mapper;
-            Alias = alias;
+            ExpressionComparer = new ExpressionEqualityComparer();
         }
 
         public SelectExpression PushDownSubQuery(string alias)
@@ -105,15 +108,49 @@ namespace Zarf.Query.Expressions
 
         public void AddProjection(Expression exp)
         {
-            foreach (var item in Projections)
+            var exists = FindExistsProjection(exp);
+            if (exists != null)
             {
-                if (new ExpressionEqualityComparer().Equals(item, exp))
+                if (exists != exp || !ExpressionComparer.Equals(exp, exists))
                 {
-                    return;
+                    Mapper.Map(exp, exists);
                 }
+
+                return;
             }
 
             Projections.Add(exp);
+        }
+
+        protected Expression FindExistsProjection(Expression exp)
+        {
+            var aliasExpresion = exp.As<AliasExpression>()?.Expression;
+
+            foreach (var item in Projections)
+            {
+                if (item == exp || ExpressionComparer.Equals(item, exp))
+                {
+                    return item;
+                }
+
+                if (item is AliasExpression alias)
+                {
+                    if (alias.Expression == exp || ExpressionComparer.Equals(alias.Expression, exp))
+                    {
+                        return alias;
+                    }
+
+                    if (aliasExpresion != null)
+                    {
+                        if (alias.Expression == aliasExpresion || ExpressionComparer.Equals(alias.Expression, aliasExpresion))
+                        {
+                            return alias;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         public void CombineCondtion(Expression predicate)

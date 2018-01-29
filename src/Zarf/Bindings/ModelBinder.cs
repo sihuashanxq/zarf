@@ -303,11 +303,6 @@ namespace Zarf.Bindings
 
             model = FilterSubQuery(queryModel, model);
 
-            model = Expression.Call(
-                null,
-                QueryEnumerable.ToListMethod.MakeGenericMethod(modelElementType),
-                model);
-
             if (modelElementType == queryModel.ModelType)
             {
                 return Expression.Call(
@@ -315,6 +310,11 @@ namespace Zarf.Bindings
                     QueryEnumerable.FirstOrDefaultMethod.MakeGenericMethod(modelElementType),
                     model);
             }
+
+            model = Expression.Call(
+                null,
+                QueryEnumerable.ToListMethod.MakeGenericMethod(modelElementType),
+                model);
 
             return model;
         }

@@ -16,7 +16,7 @@ namespace Zarf.Query.Handlers.NodeTypes
 
         static ToListNodeHandler()
         {
-            SupprotedMethods = typeof(IQuery<>).GetMethods().Where(item => item.Name == "ToList");
+            SupprotedMethods = typeof(IQuery<>).GetMethods().Where(item => item.Name == "ToList" || item.Name == "AsEnumerable");
         }
 
         public ToListNodeHandler(IQueryContext queryContext, IQueryCompiler queryCompiper) : base(queryContext, queryCompiper)
