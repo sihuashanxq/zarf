@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using Zarf.Bindings;
 using Zarf.Core;
 using Zarf.Extensions;
-using Zarf.Query.Visitors;
-using System.Linq;
 using Zarf.Generators;
 using Zarf.Metadata.Entities;
-using Zarf.Bindings;
 using Zarf.Query.Expressions;
-using System;
+using Zarf.Query.Visitors;
 
 namespace Zarf.Query.Internals
 {

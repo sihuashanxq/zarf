@@ -10,7 +10,7 @@ namespace Zarf.Query.Handlers
 
         public IQueryNodeHandler GetHandler(IQueryContext queryContext, IQueryCompiler queryCompiler, Expression node)
         {
-            if (_handlers == null)
+            if (_handlers == null || _handlers[ExpressionType.Call].QueryContext != queryContext)
             {
                 Initialize(queryContext, queryCompiler);
             }

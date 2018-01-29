@@ -28,10 +28,9 @@ namespace Zarf
         public SqlServerDbContext() : base(
             builder => builder.UseSqlServer(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True"))
         {
-            Users = Query<User>();
         }
 
-        public IQuery<User> Users { get; }
+        public IQuery<User> Users => Query<User>();
     }
 
     public class SqliteDbContext : DbContext
@@ -39,10 +38,10 @@ namespace Zarf
         public SqliteDbContext() : base(
             builder => builder.UseSqlite(@"Data Source=E:\src\zarf\db.db;Version=3"))
         {
-            Users = Query<User>();
+
         }
 
-        public IQuery<User> Users { get; }
+        public IQuery<User> Users => Query<User>();
     }
 
     public static class IntExtension
@@ -79,14 +78,27 @@ namespace Zarf
             using (var db = new SqlServerDbContext())
             {
                 var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
+                System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+                var y = db.Users.Where(i => i.Id < 1000).Select(n =>
+                      new
+                      {
+                          Id = n.Id,
+                          Name = n.Name,
+                          N = db.Users.Where(i => i.Id == n.Id).ToList()
+                      }).ToList();
 
-                var yy = db.Users.Where(i => i.Id < 10).Select(n =>
-                new
-                {
-                    Id = n.Id,
-                    Name = n.Name,
-                    N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
-                }).ToList();
+                st.Start();
+                var yy = db.Users.Where(i => i.Id < 500).Select(n =>
+                    new
+                    {
+                        Id = n.Id,
+                        Name = n.Name,
+                        N = db.Users.Where(i => i.Id == n.Id).ToList()
+                    }).ToList();
+                st.Stop();
+                Console.WriteLine(st.ElapsedMilliseconds);
+
+                var n1 = 1;
             }
 
             using (var db = new SqliteDbContext())

@@ -9,8 +9,6 @@ namespace Zarf.Core.Internals
 {
     public class InternalQuery<TEntity> : IInternalQuery<TEntity>
     {
-        private EntityEnumerable<TEntity> _entities;
-
         public DbContext Context => (Provider as QueryProvider)?.Context;
 
         public Type ElementType => typeof(TEntity);
@@ -23,26 +21,16 @@ namespace Zarf.Core.Internals
         {
             get
             {
-                if (_entities == null)
-                {
-                    _entities = new EntityEnumerable<TEntity>(
+                return new EntityEnumerable<TEntity>(
                         Expression,
                         Context.QueryExecutor,
                         Context.QueryContextFactory.CreateContext(Context));
-                }
-
-                return _entities;
             }
         }
 
         public Expression GetExpression()
         {
             return Expression;
-        }
-
-        public Type GetTypeOfEntity()
-        {
-            return typeof(TEntity);
         }
 
         public InternalQuery(IQueryProvider provider)
