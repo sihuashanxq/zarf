@@ -115,9 +115,9 @@ namespace Zarf
 
         TResult Min<TResult>(Expression<Func<TEntity, TResult>> selector);
 
-        IEnumerable<TEntity> AsEnumerable();
-
         List<TEntity> ToList();
+
+        IEnumerable<TEntity> AsEnumerable();
 
         IEnumerator<TEntity> GetEnumerator();
     }

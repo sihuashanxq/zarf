@@ -79,7 +79,6 @@ namespace Zarf.Query
             }
 
             var may = Model.Type.GetProperty(memberInfo.Name);
-
             if (may != null && may.GetPropertyType() == memberInfo.GetPropertyType())
             {
                 return Model;

@@ -56,6 +56,7 @@ namespace Zarf.Query.Handlers.NodeTypes
                 return exp;
             }
 
+            select.QueryModel.ModelType = methodCall.Type;
             QueryContext.ModelMapper.Map(methodCall, select.QueryModel);
 
             return select;

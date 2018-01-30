@@ -311,10 +311,13 @@ namespace Zarf.Bindings
                     model);
             }
 
-            model = Expression.Call(
-                null,
-                QueryEnumerable.ToListMethod.MakeGenericMethod(modelElementType),
-                model);
+            if (!queryModel.ModelType.IsGenericType || typeof(IEnumerable<>) != queryModel.ModelType.GetGenericTypeDefinition())
+            {
+                model = Expression.Call(
+                    null,
+                    QueryEnumerable.ToListMethod.MakeGenericMethod(modelElementType),
+                    model);
+            }
 
             return model;
         }
@@ -329,6 +332,9 @@ namespace Zarf.Bindings
             var propertyModel = Expression.Parameter(subQueryModel.RefrencedColumns.FirstOrDefault().Member.DeclaringType);
             var predicate = null as Expression;
 
+            var varies = new List<ParameterExpression>();
+            var blocks = new List<Expression>();
+
             foreach (var item in subQueryModel.RefrencedColumns)
             {
                 var projection = BindQueryProjection(item.RefrencedColumn);
@@ -337,15 +343,14 @@ namespace Zarf.Bindings
                     continue;
                 }
 
-                var relation = Expression.Equal(projection, Expression.MakeMemberAccess(propertyModel, item.Member));
-                if (predicate == null)
-                {
-                    predicate = relation;
-                }
-                else
-                {
-                    predicate = Expression.AndAlso(relation, predicate);
-                }
+                //关联字段值预求值,放入局部变量,避免主查询连接失效后,子查询过滤失败
+                var relationVar = Expression.Variable(projection.Type, VarPrefix + VariablesCounter++);
+                var realtionFieldValue = Expression.Assign(relationVar, projection);
+                var relation = Expression.Equal(relationVar, Expression.MakeMemberAccess(propertyModel, item.Member));
+
+                varies.Add(relationVar);
+                blocks.Add(realtionFieldValue);
+                predicate = predicate == null ? relation : Expression.AndAlso(relation, predicate);
             }
 
             if (predicate == null)
@@ -354,12 +359,23 @@ namespace Zarf.Bindings
             }
 
             var convert = typeof(Enumerable).GetMethod("OfType").MakeGenericMethod(propertyModel.Type);
+            var model = Expression.Call(
+               null,
+               ReflectionUtil.EnumerableWhere.MakeGenericMethod(propertyModel.Type),
+               Expression.Call(null, convert, subQueryObj),
+               Expression.Lambda(predicate, propertyModel));
 
-            return Expression.Call(
-                null,
-                ReflectionUtil.EnumerableWhere.MakeGenericMethod(propertyModel.Type),
-                Expression.Call(null, convert, subQueryObj),
-                Expression.Lambda(predicate, propertyModel));
+            //关联字段值预求值,放入局部变量,避免主查询连接失效后,子查询过滤失败
+            var label = Expression.Label(subQueryObj.Type, VarPrefix + VariablesCounter++);
+            var modelVar = Expression.Variable(subQueryObj.Type, VarPrefix + VariablesCounter++);
+            var modelValue = Expression.Assign(modelVar, model);
+            var ret = Expression.Return(label, modelVar);
+            var end = Expression.Label(label, modelVar);
+
+            varies.Insert(0, modelVar);
+            blocks.AddRange(new Expression[] { modelValue, ret, end });
+
+            return Expression.Block(varies.ToArray(), blocks.ToArray());
         }
 
         /// <summary>
@@ -381,37 +397,37 @@ namespace Zarf.Bindings
                 throw new NotImplementedException($"Type:{modelType.FullName} need a conscrutor which is none of parameters!");
             }
 
-            var ctorArgs = new List<Expression>();
-            var propertyValues = new List<Expression>();
-            var propertyDeclares = new List<ParameterExpression>();
+            var args = new List<Expression>();
+            var values = new List<Expression>();            //赋值语句,return
+            var varies = new List<ParameterExpression>();   //变量定义
 
-            foreach (var argument in constructorArguments ?? new List<Expression>())
+            foreach (var item in constructorArguments ?? new List<Expression>())
             {
-                if (argument.NodeType != ExpressionType.Block)
+                if (item.NodeType != ExpressionType.Block)
                 {
-                    ctorArgs.Add(argument);
+                    args.Add(item);
                     continue;
                 }
 
-                var block = argument.As<BlockExpression>();
-                ctorArgs.Add(block.Variables[0]);
-                propertyDeclares.Add(block.Variables[0]);
-                propertyValues.AddRange(block.Expressions.Take(block.Expressions.Count - 2));
+                var block = item.As<BlockExpression>();
+                args.Add(block.Variables[0]);
+                varies.AddRange(block.Variables.ToList());
+                values.AddRange(block.Expressions.Take(block.Expressions.Count - 2));
             }
 
-            var beginOfBlock = Expression.Label(modelType, VarPrefix + VariablesCounter++);
-            var varOfEntity = Expression.Variable(modelType, VarPrefix + VariablesCounter++);
-            var valueOfEntity = Expression.New(constructor, constructorArguments == null ? null : ctorArgs);
-            var setVarOfEntityValue = Expression.Assign(varOfEntity, valueOfEntity);
-            var returnVarOfEntity = Expression.Return(beginOfBlock, varOfEntity);
-            var endOfBlock = Expression.Label(beginOfBlock, varOfEntity);
+            var label = Expression.Label(modelType, VarPrefix + VariablesCounter++);
+            var modelVar = Expression.Variable(modelType, VarPrefix + VariablesCounter++);
+            var modelValue = Expression.New(constructor, constructorArguments == null ? null : args);
+            var setModelVar = Expression.Assign(modelVar, modelValue);
+            var ret = Expression.Return(label, modelVar);
+            var end = Expression.Label(label, modelVar);
 
-            propertyDeclares.Add(varOfEntity);
-            propertyValues.Add(setVarOfEntityValue);
-            propertyValues.Add(returnVarOfEntity);
-            propertyValues.Add(endOfBlock);
+            varies.Add(modelVar);
+            values.Add(setModelVar);
+            values.Add(ret);
+            values.Add(end);
 
-            return Expression.Block(propertyDeclares, propertyValues.ToArray());
+            return Expression.Block(varies, values.ToArray());
         }
 
         public static object GetOrAddSubQueryValue(IQueryValueCache valueCache, QueryEntityModel queryModel, object value)

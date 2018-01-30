@@ -79,16 +79,35 @@ namespace Zarf
             {
                 var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
                 System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
-                var y = db.Users.Where(i => i.Id < 1000).Select(n =>
-                      new
-                      {
-                          Id = n.Id,
-                          Name = n.Name,
-                          N = db.Users.Where(i => i.Id == n.Id).ToList()
-                      }).ToList();
+                //db.Users.Where(i => i.Id == 1).Select(n =>
+                //     new
+                //     {
+                //         Id = n.Id,
+                //         Name = n.Name,
+                //         N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
+                //     }).ToList();
+
+                //db.Users.Where(i => i.Id == 1).Select(n =>
+                //   new
+                //   {
+                //       Id = n.Id,
+                //       Name = n.Name,
+                //       N = db.Users.Where(i => i.Id == n.Id).ToList()
+                //   }).ToList();
 
                 st.Start();
-                var yy = db.Users.Where(i => i.Id < 500).Select(n =>
+                db.Users.Where(i => i.Id <= 10000).Select(n =>
+                new
+                {
+                    Id = n.Id,
+                    Name = n.Name,
+                    N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
+                }).ToList();
+                st.Stop();
+                Console.WriteLine(st.ElapsedMilliseconds);
+                st.Reset();
+                st.Start();
+                var yy = db.Users.Where(i => i.Id < 10000).Select(n =>
                     new
                     {
                         Id = n.Id,
@@ -97,7 +116,6 @@ namespace Zarf
                     }).ToList();
                 st.Stop();
                 Console.WriteLine(st.ElapsedMilliseconds);
-
                 var n1 = 1;
             }
 
