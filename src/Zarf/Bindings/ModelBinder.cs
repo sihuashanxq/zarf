@@ -63,6 +63,10 @@ namespace Zarf.Bindings
             return Expression.Lambda(modelCreation, DataReader).Compile();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns></returns>
         public override Expression Visit(Expression expression)
         {
             //子查询
@@ -71,14 +75,14 @@ namespace Zarf.Bindings
                 queryModel != Select.QueryModel &&
                 queryModel.ModelType.IsCollection())
             {
-                return CreateSubQueryModel(queryModel);
+                return CreateSubQueryModelExpression(queryModel);
             }
 
             if (queryModel != null &&
                 queryModel != Select.QueryModel &&
-                queryModel.RefrencedColumns.Count != 0)
+                queryModel.RefrencedOuterColumns.Count != 0)
             {
-                return CreateSubQueryModel(queryModel);
+                return CreateSubQueryModelExpression(queryModel);
             }
 
             var tryGetMaped = expression.Is<AggregateExpression>() ? expression : Select.Mapper.GetValue(expression);
@@ -111,6 +115,11 @@ namespace Zarf.Bindings
             return base.Visit(expression);
         }
 
+        /// <summary>
+        /// 处理方法调用
+        /// </summary>
+        /// <param name="methodCall"></param>
+        /// <returns></returns>
         protected override Expression VisitMethodCall(MethodCallExpression methodCall)
         {
             if (methodCall.Arguments.Count == 0)
@@ -121,6 +130,11 @@ namespace Zarf.Bindings
             return base.VisitMethodCall(methodCall);
         }
 
+        /// <summary>
+        /// 处理查询中的常量
+        /// </summary>
+        /// <param name="constant"></param>
+        /// <returns></returns>
         protected override Expression VisitConstant(ConstantExpression constant)
         {
             for (var i = 0; i < Select.Projections.Count; i++)
@@ -146,6 +160,10 @@ namespace Zarf.Bindings
             return constant;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
         protected override Expression VisitMember(MemberExpression member)
         {
             var queryModel = QueryContext.ModelMapper.GetValue(member.Expression) ?? QueryContext.ModelMapper.GetValue(member);
@@ -158,6 +176,11 @@ namespace Zarf.Bindings
             return BindQueryProjection(bind);
         }
 
+        /// <summary>
+        /// new User{ Id=1}
+        /// </summary>
+        /// <param name="memInit"></param>
+        /// <returns></returns>
         protected override Expression VisitMemberInit(MemberInitExpression memInit)
         {
             var eNewBlock = Visit(memInit.NewExpression) as BlockExpression;
@@ -173,6 +196,11 @@ namespace Zarf.Bindings
             return BindMembers(eNewBlock, mes);
         }
 
+        /// <summary>
+        /// new {}
+        /// </summary>
+        /// <param name="newExpression"></param>
+        /// <returns></returns>
         protected override Expression VisitNew(NewExpression newExpression)
         {
             var binds = new List<Expression>();
@@ -189,6 +217,11 @@ namespace Zarf.Bindings
             return eBlock;
         }
 
+        /// <summary>
+        /// 绑定查询投影中的某列
+        /// </summary>
+        /// <param name="projection"></param>
+        /// <returns></returns>
         protected virtual Expression BindQueryProjection(Expression projection)
         {
             for (var i = 0; i < Select.Projections.Count; i++)
@@ -206,6 +239,9 @@ namespace Zarf.Bindings
             return null;
         }
 
+        /// <summary>
+        /// 获取类型成员绑定表达式
+        /// </summary>
         protected virtual Expression GetMemberBindingExpression(QueryEntityModel queryModel, MemberInfo member)
         {
             while (queryModel != null)
@@ -230,6 +266,12 @@ namespace Zarf.Bindings
             return null;
         }
 
+        /// <summary>
+        /// 绑定类型成员
+        /// </summary>
+        /// <param name="eNewBlock"></param>
+        /// <param name="memberExpressions"></param>
+        /// <returns></returns>
         protected virtual BlockExpression BindMembers(BlockExpression eNewBlock, List<MemberExpressionPair> memberExpressions)
         {
             var eObject = eNewBlock.Variables.FirstOrDefault();
@@ -254,6 +296,13 @@ namespace Zarf.Bindings
             return eNewBlock;
         }
 
+        /// <summary>
+        /// 绑定类型成员
+        /// </summary>
+        /// <param name="modelTemplate">类型模板</param>
+        /// <param name="member">成员</param>
+        /// <param name="memberExpression">成员对应的表达式</param>
+        /// <returns></returns>
         protected virtual Expression BindMember(Expression modelTemplate, MemberInfo member, Expression memberExpression)
         {
             var queryModel = Select.QueryModel.FindQueryModel(modelTemplate);
@@ -262,7 +311,7 @@ namespace Zarf.Bindings
             if (!memberExpression.Type.IsPrimtiveType())
             {
                 binding = binding is SelectExpression query
-                       ? CreateSubQueryModel(query.QueryModel)
+                       ? CreateSubQueryModelExpression(query.QueryModel)
                        : Visit(memberExpression);
 
                 return binding;
@@ -281,7 +330,10 @@ namespace Zarf.Bindings
             return binding;
         }
 
-        protected virtual Expression CreateSubQueryModel(QueryEntityModel queryModel)
+        /// <summary>
+        /// 创建子查询实例化表达式
+        /// </summary>
+        protected virtual Expression CreateSubQueryModelExpression(QueryEntityModel queryModel)
         {
             var modelElementType = queryModel.ModelElementType;
             var modelType = typeof(EntityEnumerable<>).MakeGenericType(modelElementType);
@@ -301,7 +353,7 @@ namespace Zarf.Bindings
                     typeof(IEnumerable<>).MakeGenericType(modelElementType)
                 );
 
-            model = FilterSubQuery(queryModel, model);
+            model = QueryModelFilter(queryModel, model);
 
             if (modelElementType == queryModel.ModelType)
             {
@@ -322,20 +374,26 @@ namespace Zarf.Bindings
             return model;
         }
 
-        protected virtual Expression FilterSubQuery(QueryEntityModel subQueryModel, Expression subQueryObj)
+        /// <summary>
+        /// 子查询QueryModel内存过滤
+        /// </summary>
+        /// <param name="queryModel"></param>
+        /// <param name="modelObj"></param>
+        /// <returns></returns>
+        protected virtual Expression QueryModelFilter(QueryEntityModel queryModel, Expression modelObj)
         {
-            if (subQueryModel.RefrencedColumns.Count == 0)
+            if (queryModel.RefrencedOuterColumns.Count == 0)
             {
-                return subQueryObj;
+                return modelObj;
             }
 
-            var propertyModel = Expression.Parameter(subQueryModel.RefrencedColumns.FirstOrDefault().Member.DeclaringType);
+            var propertyModel = Expression.Parameter(queryModel.RefrencedOuterColumns.FirstOrDefault().Member.DeclaringType);
             var predicate = null as Expression;
 
             var varies = new List<ParameterExpression>();
             var blocks = new List<Expression>();
 
-            foreach (var item in subQueryModel.RefrencedColumns)
+            foreach (var item in queryModel.RefrencedOuterColumns)
             {
                 var projection = BindQueryProjection(item.RefrencedColumn);
                 if (projection == null)
@@ -355,19 +413,19 @@ namespace Zarf.Bindings
 
             if (predicate == null)
             {
-                return subQueryObj;
+                return modelObj;
             }
 
             var convert = typeof(Enumerable).GetMethod("OfType").MakeGenericMethod(propertyModel.Type);
             var model = Expression.Call(
                null,
                ReflectionUtil.EnumerableWhere.MakeGenericMethod(propertyModel.Type),
-               Expression.Call(null, convert, subQueryObj),
+               Expression.Call(null, convert, modelObj),
                Expression.Lambda(predicate, propertyModel));
 
             //关联字段值预求值,放入局部变量,避免主查询连接失效后,子查询过滤失败
-            var label = Expression.Label(subQueryObj.Type, VarPrefix + VariablesCounter++);
-            var modelVar = Expression.Variable(subQueryObj.Type, VarPrefix + VariablesCounter++);
+            var label = Expression.Label(modelObj.Type, VarPrefix + VariablesCounter++);
+            var modelVar = Expression.Variable(modelObj.Type, VarPrefix + VariablesCounter++);
             var modelValue = Expression.Assign(modelVar, model);
             var ret = Expression.Return(label, modelVar);
             var end = Expression.Label(label, modelVar);
@@ -430,6 +488,13 @@ namespace Zarf.Bindings
             return Expression.Block(varies, values.ToArray());
         }
 
+        /// <summary>
+        /// 缓存子查询实例
+        /// </summary>
+        /// <param name="valueCache"></param>
+        /// <param name="queryModel"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static object GetOrAddSubQueryValue(IQueryValueCache valueCache, QueryEntityModel queryModel, object value)
         {
             var v = valueCache.GetValue(queryModel);

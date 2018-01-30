@@ -26,7 +26,10 @@ namespace Zarf.Query
 
         public QueryEntityModel Previous { get; set; }
 
-        public List<QueryEntityModelRefrenceOuterColumn> RefrencedColumns { get; }
+        /// <summary>
+        /// 子查询引用的外部列集,关联关系
+        /// </summary>
+        public List<QueryEntityModelRefrenceOuterColumn> RefrencedOuterColumns { get; }
 
         public QueryEntityModel(SelectExpression select, Expression model, Type modelType, QueryEntityModel previous = null)
         {
@@ -34,7 +37,7 @@ namespace Zarf.Query
             Model = model.UnWrap();
             ModelType = modelType;
             Previous = previous;
-            RefrencedColumns = new List<QueryEntityModelRefrenceOuterColumn>();
+            RefrencedOuterColumns = new List<QueryEntityModelRefrenceOuterColumn>();
             if (Model.NodeType == ExpressionType.Lambda)
             {
                 Model = Model.As<LambdaExpression>().Body;

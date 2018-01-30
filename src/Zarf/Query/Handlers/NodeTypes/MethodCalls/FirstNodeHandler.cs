@@ -26,7 +26,7 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
 
             Utils.CheckNull(select, "query");
 
-            if (select.QueryModel.RefrencedColumns.Count == 0)
+            if (select.QueryModel.RefrencedOuterColumns.Count == 0)
             {
                 select.Limit = 1;
             }

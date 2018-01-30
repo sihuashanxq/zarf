@@ -80,7 +80,7 @@ namespace Zarf.Query.Visitors
             foreach (var item in modelTypeDescriptor.FieldMaps)
             {
                 var field = modelNewType.GetField(item.Key);
-                Select.QueryModel.RefrencedColumns.Add(new QueryEntityModelRefrenceOuterColumn()
+                Select.QueryModel.RefrencedOuterColumns.Add(new QueryEntityModelRefrenceOuterColumn()
                 {
                     Member = field,
                     RefrencedColumn = item.Value
