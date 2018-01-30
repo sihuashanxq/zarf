@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+@model List<AspNetCoreApp.Models.User>
+
+<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
+
+    <table>
+        <thead>
+            <tr>
+                <td width="100">Id</td>
+                <td width="200">Name</td>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.Id</td>
+                        <td>@u.Name</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,29 @@
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.deps.json
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.runtimeconfig.json
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.runtimeconfig.dev.json
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.dll
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.pdb
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.csproj.CoreCompileInputs.cache
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfoInputs.cache
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfo.cs
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.dll
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.pdb
+C:\Users\root\documents\visual studio 2017\Projects\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache
+E:\src\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.deps.json
+E:\src\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.dll
+E:\src\Zarf\Zarf\bin\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.csproj.CoreCompileInputs.cache
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfoInputs.cache
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfo.cs
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.dll
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache
+E:\src\Zarf\src\Zarf\bin\Debug\netcoreapp2.0\Zarf.deps.json
+E:\src\Zarf\src\Zarf\bin\Debug\netcoreapp2.0\Zarf.dll
+E:\src\Zarf\src\Zarf\bin\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.csproj.CoreCompileInputs.cache
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfoInputs.cache
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.AssemblyInfo.cs
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.dll
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\src\Zarf\obj\Debug\netcoreapp2.0\Zarf.csprojResolveAssemblyReference.cache

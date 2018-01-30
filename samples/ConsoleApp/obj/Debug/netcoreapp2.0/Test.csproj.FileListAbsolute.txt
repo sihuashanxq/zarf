@@ -1,0 +1,15 @@
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Test.deps.json
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Test.runtimeconfig.json
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Test.runtimeconfig.dev.json
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Test.dll
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Test.pdb
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Zarf.dll
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Zarf.SqlServer.dll
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Zarf.SqlServer.pdb
+E:\src\Zarf\Test\bin\Debug\netcoreapp2.0\Zarf.pdb
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.csprojResolveAssemblyReference.cache
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.csproj.CoreCompileInputs.cache
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.AssemblyInfoInputs.cache
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.AssemblyInfo.cs
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.dll
+E:\src\Zarf\Test\obj\Debug\netcoreapp2.0\Test.pdb
