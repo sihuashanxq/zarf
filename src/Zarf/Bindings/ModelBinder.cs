@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Extensions;
+using Zarf.Infrastructure;
 using Zarf.Query;
 using Zarf.Query.Expressions;
 
@@ -35,7 +36,7 @@ namespace Zarf.Bindings
             ExpressionEquality = new ExpressionEqualityComparer();
         }
 
-        public Delegate Bind<TEntity>(IBindingContext bindingContext)
+        public Delegate Bind(IBindingContext bindingContext)
         {
             var model = bindingContext.Expression.As<SelectExpression>()?.QueryModel?.Model ?? bindingContext.Expression;
             var select = bindingContext.Expression;

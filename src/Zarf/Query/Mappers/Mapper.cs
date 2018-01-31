@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Zarf.Infrastructure;
 using Zarf.Query.Expressions;
 
 namespace Zarf.Query.Mappers

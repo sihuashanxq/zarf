@@ -34,7 +34,7 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
 
             Utils.CheckNull(select, "query");
 
-            select.QueryModel = new QueryEntityModel(select, modelExpression, method.DeclaringType, select.QueryModel);
+            select.QueryModel = new QueryEntityModel(select, modelExpression, method.ReturnType, select.QueryModel);
 
             QueryContext.SelectMapper.Map(parameter, select);
             QueryContext.ModelMapper.Map(parameter, select.QueryModel);

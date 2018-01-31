@@ -51,6 +51,12 @@ namespace Zarf.Query.Visitors
                     binding = base.Visit(binding);
                 }
 
+                var mappedExpression = QueryContext.ExpressionMapper.GetValue(binding);
+                if (mappedExpression != null)
+                {
+                    binding = mappedExpression;
+                }
+
                 if (binding.Is<AliasExpression>())
                 {
                     return binding.As<AliasExpression>().Expression;

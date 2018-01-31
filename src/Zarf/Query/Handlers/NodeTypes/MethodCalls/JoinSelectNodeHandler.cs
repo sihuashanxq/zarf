@@ -26,11 +26,10 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
 
         public override SelectExpression HandleNode(SelectExpression select, Expression selector, MethodInfo method)
         {
-            var modelType = selector.Type;
             var parameters = selector.GetParameters().ToList();
             var modelExpression = new QueryModelExpandExpressionVisitor(QueryContext, select, parameters[0]).Visit(selector);
 
-            select.QueryModel = new QueryEntityModel(select, modelExpression, modelType, select.QueryModel);
+            select.QueryModel = new QueryEntityModel(select, modelExpression, method.ReturnType, select.QueryModel);
 
             for (var i = 0; i < parameters.Count; i++)
             {

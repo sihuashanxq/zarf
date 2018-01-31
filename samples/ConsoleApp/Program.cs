@@ -79,50 +79,19 @@ namespace Zarf
             {
                 var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
                 System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
-                //db.Users.Where(i => i.Id == 1).Select(n =>
-                //     new
-                //     {
-                //         Id = n.Id,
-                //         Name = n.Name,
-                //         N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
-                //     }).ToList();
-
-                //db.Users.Where(i => i.Id == 1).Select(n =>
-                //   new
-                //   {
-                //       Id = n.Id,
-                //       Name = n.Name,
-                //       N = db.Users.Where(i => i.Id == n.Id).ToList()
-                //   }).ToList();
 
                 st.Start();
-                db.Users.Where(i => i.Id <= 10000).Select(n =>
-                new
+                for (var i = 0; i < 20000; i++)
                 {
-                    Id = n.Id,
-                    Name = n.Name,
-                    N = db.Users.Where(i => i.Id == n.Id).AsEnumerable()
-                }).ToList();
-                st.Stop();
-                Console.WriteLine(st.ElapsedMilliseconds);
-                st.Reset();
-                st.Start();
-                var yy = db.Users.Where(i => i.Id < 10000).Select(n =>
-                    new
-                    {
-                        Id = n.Id,
-                        Name = n.Name,
-                        N = db.Users.Where(i => i.Id == n.Id).ToList()
-                    }).ToList();
-                st.Stop();
-                Console.WriteLine(st.ElapsedMilliseconds);
-                var n1 = 1;
-            }
+                    var n2 = db.Users.Where(n => n.Id == 1)
+                        .Select(n => new
+                        {
+                            E = db.Users.Where(n3 => n3.Id == 1).ToList()
+                        }).ToList();
+                }
 
-            using (var db = new SqliteDbContext())
-            {
-                var xx = db.Users.ToList();
-                Console.ReadKey();
+                st.Stop();
+                Console.WriteLine(st.ElapsedMilliseconds);
             }
         }
 

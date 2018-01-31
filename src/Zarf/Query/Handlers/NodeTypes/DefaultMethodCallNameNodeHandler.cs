@@ -56,8 +56,14 @@ namespace Zarf.Query.Handlers.NodeTypes
                 return exp;
             }
 
-            select.QueryModel.ModelType = methodCall.Type;
-            QueryContext.ModelMapper.Map(methodCall, select.QueryModel);
+            var model = select.QueryModel;
+
+            //ToList AsEnumerable 重设ModelType
+            model.ModelType = methodCall.Type;
+
+            //重新映射一下model.Model,子查询中:Select(item=>item)
+            QueryContext.ModelMapper.Map(model.Model, model);
+            QueryContext.ModelMapper.Map(methodCall, model);
 
             return select;
         }
@@ -144,36 +150,49 @@ namespace Zarf.Query.Handlers.NodeTypes
         /// <returns></returns>
         protected Expression HandleQueryMethod(Expression obj, MethodCallExpression methodCall)
         {
-            //join 特殊处理,不支持外部参数引用
-            if (methodCall.Method.Name == "Join" && typeof(IQuery).IsAssignableFrom(methodCall.Method.DeclaringType))
-            {
-                var joinBody = Expression.Call(obj, methodCall.Method, methodCall.Arguments);
-                var joinQuery = Expression.Lambda(joinBody).Compile().DynamicInvoke();
+            var method = methodCall.Method;
+            var methodName = method.Name;
+            var declareType = method.DeclaringType;
 
-                return Compile(Expression.Constant(joinQuery));
+            /*
+             * Join,AsEnumerable特殊处理
+             * 子查询中Join不支持外部参数引用,需要外部关联,需要提前或者延后
+             * 子查询内部不支持LeftJoin InnerJoin(懒得弄了)
+            */
+            if ((methodName == "Join" || methodName == "AsEnumerable") &&
+                typeof(IQuery).IsAssignableFrom(declareType))
+            {
+                var queryBody = Expression.Call(
+                    obj,
+                    methodCall.Method,
+                    methodCall.Arguments);
+
+                var invokedQuery = Expression.Lambda(queryBody)
+                    .Compile()
+                    .DynamicInvoke();
+
+                return Compile(Expression.Constant(invokedQuery));
             }
 
-            var method = methodCall.Method;
             var iQuery = obj.As<ConstantExpression>()?.Value as IQuery;
             if (iQuery == null)
             {
-                throw new NullReferenceException("subquery refrence null!");
+                throw new NullReferenceException("parse the subquery failed!");
             }
 
-            var elementType = iQuery.As<Zarf.Core.Query>().InternalQuery.ElementType;
-            var expression = iQuery.As<Zarf.Core.Query>().InternalQuery.Expression;
+            var elementType = iQuery.As<Core.Query>().InternalQuery.ElementType;
+            var expression = iQuery.As<Core.Query>().InternalQuery.Expression;
 
-            var queryMethod = FindQueryableMethod(
+            //重定向IQuery<>方法到QueryableDefinition方法
+            var redirectedMethod = FindQueryableMethod(
                 method,
                 elementType,
-                method.ReturnType.GetModelElementType());
+                declareType.GetModelElementType());
 
-            if (queryMethod == null)
-            {
-                throw new NullReferenceException("not found subquery method!");
-            }
-
-            return Expression.Call(null, queryMethod, new[] { expression }.Concat(methodCall.Arguments).ToArray());
+            return Expression.Call(
+                null,
+                redirectedMethod,
+                new[] { expression }.Concat(methodCall.Arguments).ToArray());
         }
 
         public static MethodInfo FindQueryableMethod(MethodInfo method, Type typeOfEntity, Type typeOfResult)
@@ -221,7 +240,7 @@ namespace Zarf.Query.Handlers.NodeTypes
                 }
             }
 
-            throw new Exception($"can not find {method.Name}the mapped Queryable Method");
+            throw new Exception($"the method of  {method.Name } can not find a same definition in Queryable!");
         }
     }
 }

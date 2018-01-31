@@ -1,11 +1,12 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 
 using Zarf.Metadata.Entities;
 
 namespace Zarf.Core
 {
-    public interface IDbEntityCommand
+    public interface IDbEntityCommand: IDisposable
     {
         IDbEntityConnection EntityConnection { get; }
 

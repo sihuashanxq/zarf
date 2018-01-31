@@ -4,6 +4,6 @@ namespace Zarf.Bindings
 {
     public interface IModelBinder
     {
-        Delegate Bind<TEntity>(IBindingContext bindingContext);
+        Delegate Bind(IBindingContext bindingContext);
     }
 }

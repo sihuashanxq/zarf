@@ -60,6 +60,19 @@ namespace Zarf.Core
             return DbCommand;
         }
 
+        public virtual void Dispose()
+        {
+            if (EntityConnection != null)
+            {
+                EntityConnection.Dispose();
+            }
+
+            if (DbCommand != null)
+            {
+                DbCommand.Dispose();
+            }
+        }
+
         public abstract Task<IDataReader> ExecuteDataReaderAsync(string commandText, params DbParameter[] parameters);
 
         public abstract Task ExecuteNonQueryAsync(string commandText, params DbParameter[] parameters);

@@ -9,6 +9,8 @@ using Zarf.Generators;
 using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
 using Zarf.Query.Visitors;
+using System.Collections.Concurrent;
+using Zarf.Infrastructure;
 
 namespace Zarf.Query.Internals
 {
@@ -20,6 +22,15 @@ namespace Zarf.Query.Internals
 
         public IDbEntityConnectionFacotry DbConnectionFactory { get; }
 
+        protected static ConcurrentDictionary<long, Delegate> ModelElementCreatorCaches { get; }
+
+        protected ExpressionLikeComparer LikeComparer { get; }
+
+        static QueryExecutor()
+        {
+            ModelElementCreatorCaches = new ConcurrentDictionary<long, Delegate>();
+        }
+
         public QueryExecutor(
             ISQLGenerator sqlGenerator,
             IDbEntityCommandFacotry commandFactory,
@@ -28,6 +39,7 @@ namespace Zarf.Query.Internals
             DbCommandFactory = commandFactory;
             DbConnectionFactory = connectionFacotry;
             SQLGenerator = sqlGenerator;
+            LikeComparer = new ExpressionLikeComparer();
         }
 
         public IEnumerator<TEntity> Execute<TEntity>(Expression query, IQueryContext context)
@@ -40,51 +52,69 @@ namespace Zarf.Query.Internals
             return ExuecteCore<TEntity, TEntity>(query, context);
         }
 
+        protected virtual Delegate GetModelElementCreator(Expression expression, ModelBinder binder, IBindingContext bindingContext)
+        {
+            //TODO :子查询条件异常
+            if (expression.NodeType == ExpressionType.Extension)
+            {
+                return binder.Bind(bindingContext);
+            }
+
+            return
+                ModelElementCreatorCaches
+                .GetOrAdd(
+                    LikeComparer.GetHashCode(expression),
+                    k => binder.Bind(bindingContext));
+        }
+
         public TResult ExuecteCore<TResult, TEntity>(Expression expression, IQueryContext queryContext)
         {
             var compiledQuery = expression.NodeType == ExpressionType.Extension
                 ? expression
                 : new QueryExpressionVisitor(queryContext).Compile(expression);
 
-            var binder = new ModelBinder(queryContext);
-            var modelActivator = binder.Bind<TEntity>(new BindingContext(compiledQuery, this));
+            var elementCreator = GetModelElementCreator(
+                expression,
+                new ModelBinder(queryContext),
+                new BindingContext(compiledQuery, this));
 
             var parameters = new List<DbParameter>();
             var commandText = SQLGenerator.Generate(compiledQuery, parameters);
-            var command = DbCommandFactory.Create(DbConnectionFactory.Create());
-            var reader = command.ExecuteDataReader(commandText, parameters.ToArray());
 
-            if (typeof(TResult).IsCollection())
+            using (var command = DbCommandFactory.Create(DbConnectionFactory.Create()))
             {
-                return new EntityEnumerator<TEntity>(modelActivator, reader).Cast<TResult>();
-            }
-
-            using (reader)
-            {
-                if (reader.Read())
+                using (var reader = command.ExecuteDataReader(commandText, parameters.ToArray()))
                 {
-                    try
+                    if (typeof(TResult).IsCollection())
                     {
-                        return modelActivator.DynamicInvoke(reader).Cast<TResult>();
+                        return new DbMemoryEnumerator<TEntity>(elementCreator, reader).Cast<TResult>();
                     }
-                    finally
+
+                    if (reader.Read())
                     {
-                        var limit = compiledQuery.As<SelectExpression>()?.Limit ?? 1;
-                        if (limit > 1 && reader.Read())
+                        try
                         {
-                            throw new Exception("Sequence contains more than one matching element!");
+                            return elementCreator.DynamicInvoke(reader).Cast<TResult>();
+                        }
+                        finally
+                        {
+                            var limit = compiledQuery.As<SelectExpression>()?.Limit ?? 1;
+                            if (limit > 1 && reader.Read())
+                            {
+                                throw new Exception("Sequence contains more than one matching element!");
+                            }
                         }
                     }
+
+                    var defaultIfEmpty = compiledQuery.As<SelectExpression>()?.DefaultIfEmpty ?? false;
+                    if (!defaultIfEmpty)
+                    {
+                        throw new Exception("Sequence contains no matching element");
+                    }
+
+                    return default(TResult);
                 }
             }
-
-            var defaultIfEmpty = compiledQuery.As<SelectExpression>()?.DefaultIfEmpty ?? false;
-            if (!defaultIfEmpty)
-            {
-                throw new Exception("Sequence contains no matching element");
-            }
-
-            return default(TResult);
         }
     }
 }

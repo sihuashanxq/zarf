@@ -11,3 +11,16 @@
 *.dll 
 *.cache
 .vs/
+/samples/AspNetCoreApp/bin/Debug/netcoreapp2.0
+/samples/AspNetCoreApp/obj/Debug/netcoreapp2.0
+/samples/AspNetCoreApp/obj
+/samples/ConsoleApp/bin/Debug/netcoreapp2.0
+/samples/ConsoleApp/obj
+/src/Zarf/bin
+/src/Zarf/obj
+/src/Zarf.Sqlite/bin/Debug/netcoreapp2.0
+/src/Zarf.Sqlite/obj/Debug/netcoreapp2.0
+/src/Zarf.SqlServer/bin/Debug/netcoreapp2.0
+/src/Zarf.Sqlite/obj
+/src/Zarf.SqlServer/obj/Debug/netcoreapp2.0
+/src/Zarf.SqlServer/obj/Release/netcoreapp2.0

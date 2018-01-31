@@ -29,6 +29,12 @@ namespace Zarf.Query.Handlers.NodeTypes
                         propertyExpression = Compile(propertyExpression);
                     }
 
+                    var mappedExpression = QueryContext.ExpressionMapper.GetValue(propertyExpression);
+                    if (mappedExpression != null)
+                    {
+                        propertyExpression = mappedExpression;
+                    }
+
                     if (propertyExpression.Is<AliasExpression>())
                     {
                         var alias = propertyExpression.As<AliasExpression>();
