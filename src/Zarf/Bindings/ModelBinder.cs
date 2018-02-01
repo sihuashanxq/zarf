@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -18,50 +19,80 @@ namespace Zarf.Bindings
     {
         public static readonly ParameterExpression DataReader = Expression.Parameter(typeof(IDataReader), "reader");
 
-        public IQueryContext QueryContext { get; }
+        public IQueryContext QueryContext => BindingContext.QueryContext;
 
         protected IBindingContext BindingContext { get; set; }
 
-        public ExpressionEqualityComparer ExpressionEquality { get; }
-
         protected SelectExpression Select { get; set; }
+
+        protected static ExpressionEqualityComparer EqualityComparer { get; }
+
+        protected static ExpressionLikeComparer LikeComparer { get; }
+
+        protected static ConcurrentDictionary<int, Delegate> ModelElementCreatorCaches { get; }
 
         protected static long VariablesCounter = 0;
 
         const string VarPrefix = "_var_";
 
-        public ModelBinder(IQueryContext queryContext)
+        static ModelBinder()
         {
-            QueryContext = queryContext;
-            ExpressionEquality = new ExpressionEqualityComparer();
+            EqualityComparer = new ExpressionEqualityComparer();
+            LikeComparer = new ExpressionLikeComparer();
+            ModelElementCreatorCaches = new ConcurrentDictionary<int, Delegate>();
         }
 
         public Delegate Bind(IBindingContext bindingContext)
         {
-            var model = bindingContext.Expression.As<SelectExpression>()?.QueryModel?.Model ?? bindingContext.Expression;
-            var select = bindingContext.Expression;
+            var cacheKey = -1;
+            //如果是扩展类型,是一个子查询,不取缓存值
+            if (bindingContext.SourceExpression.NodeType != ExpressionType.Extension)
+            {
+                cacheKey = LikeComparer.GetHashCode(bindingContext.SourceExpression);
+                if (ModelElementCreatorCaches.TryGetValue(cacheKey, out var cachedCreator))
+                {
+                    return cachedCreator;
+                }
+            }
 
-            if (select is AggregateExpression aggreate)
+            var model = bindingContext.ModelExpression.As<SelectExpression>()?.QueryModel?.Model ?? bindingContext.ModelExpression;
+            var modelExpression = bindingContext.ModelExpression;
+
+            if (modelExpression is AggregateExpression aggreate)
             {
                 Select = aggreate.KeySelector?.As<ColumnExpression>()?.Select;
             }
-            else if (select.Is<AllExpression>())
+            else if (modelExpression.Is<AllExpression>())
             {
-                Select = select.As<AllExpression>().Select.As<SelectExpression>();
+                Select = modelExpression.As<AllExpression>().Select.As<SelectExpression>();
             }
-            else if (select.Is<AnyExpression>())
+            else if (modelExpression.Is<AnyExpression>())
             {
-                Select = select.As<AnyExpression>().Select.As<SelectExpression>();
+                Select = modelExpression.As<AnyExpression>().Select.As<SelectExpression>();
             }
             else
             {
-                Select = select.As<SelectExpression>();
+                Select = modelExpression.As<SelectExpression>();
             }
 
-            BindingContext = bindingContext;
+            if (Select == null)
+            {
+                throw new NullReferenceException("can not bind a none of SelectExpression");
+            }
+            else
+            {
+                BindingContext = bindingContext;
+            }
 
-            var modelCreation = Visit(model);
-            return Expression.Lambda(modelCreation, DataReader).Compile();
+            var modelElementCreator = Expression.Lambda(Visit(model), DataReader).Compile();
+
+            if (BindingContext.SourceExpression.NodeType != ExpressionType.Extension &&
+                BindingContext.CacheModelElementCreator)
+            {
+                ModelElementCreatorCaches.AddOrUpdate(cacheKey, modelElementCreator, (k, v) => v);
+            }
+
+            return modelElementCreator;
         }
 
         /// <summary>
@@ -76,6 +107,8 @@ namespace Zarf.Bindings
                 queryModel != Select.QueryModel &&
                 queryModel.ModelType.IsCollection())
             {
+                //有子查询不缓存委托
+                BindingContext.CacheModelElementCreator = false;
                 return CreateSubQueryModelExpression(queryModel);
             }
 
@@ -83,6 +116,8 @@ namespace Zarf.Bindings
                 queryModel != Select.QueryModel &&
                 queryModel.RefrencedOuterColumns.Count != 0)
             {
+                //有子查询不缓存委托
+                BindingContext.CacheModelElementCreator = false;
                 return CreateSubQueryModelExpression(queryModel);
             }
 
@@ -151,7 +186,7 @@ namespace Zarf.Bindings
                     projection = projection.As<AliasExpression>().Expression;
                 }
 
-                if (ExpressionEquality.Equals(projection, constant))
+                if (EqualityComparer.Equals(projection, constant))
                 {
                     var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(constant.Type);
                     return Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
@@ -229,8 +264,8 @@ namespace Zarf.Bindings
             {
                 var mappedProjection = Select.Mapper.GetValue(projection);
 
-                if (ExpressionEquality.Equals(Select.Projections[i], projection) ||
-                    ExpressionEquality.Equals(Select.Projections[i], mappedProjection))
+                if (EqualityComparer.Equals(Select.Projections[i], projection) ||
+                    EqualityComparer.Equals(Select.Projections[i], mappedProjection))
                 {
                     var valueSetter = MemberValueGetterProvider.Default.GetValueGetter(projection.Type);
                     return Expression.Call(null, valueSetter, DataReader, Expression.Constant(i));
@@ -311,11 +346,14 @@ namespace Zarf.Bindings
 
             if (!memberExpression.Type.IsPrimtiveType())
             {
-                binding = binding is SelectExpression query
-                       ? CreateSubQueryModelExpression(query.QueryModel)
-                       : Visit(memberExpression);
+                if (binding is SelectExpression select)
+                {
+                    //有子查询不缓存委托
+                    BindingContext.CacheModelElementCreator = false;
+                    return CreateSubQueryModelExpression(select.QueryModel);
+                }
 
-                return binding;
+                return Visit(memberExpression);
             }
 
             //此处是简单类型,应该是聚合,Select(item)

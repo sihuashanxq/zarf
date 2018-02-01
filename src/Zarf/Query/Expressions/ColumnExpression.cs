@@ -8,7 +8,7 @@ namespace Zarf.Query.Expressions
 {
     public class ColumnExpression : Expression
     {
-        private Type _type;
+        private Type _expressionType;
 
         public Column Column { get; set; }
 
@@ -18,7 +18,7 @@ namespace Zarf.Query.Expressions
 
         public string Alias { get; set; }
 
-        public override Type Type => Member?.GetPropertyType() ?? _type;
+        public override Type Type => Member?.GetPropertyType() ?? _expressionType;
 
         public override ExpressionType NodeType => ExpressionType.Extension;
 
@@ -33,18 +33,19 @@ namespace Zarf.Query.Expressions
             }
         }
 
-        public ColumnExpression(SelectExpression select, Column column, Type valueType, string alias = "")
+        public ColumnExpression(SelectExpression select, Column column, Type expType, string alias = "")
         {
             Select = select;
             Column = column;
-            _type = valueType;
+            Alias = alias;
+            _expressionType = expType;
         }
 
         public ColumnExpression Clone(string alias = "")
         {
             return new ColumnExpression(Select, Member, Alias)
             {
-                _type = _type,
+                _expressionType = _expressionType,
                 Alias = alias,
                 Column = Column
             };

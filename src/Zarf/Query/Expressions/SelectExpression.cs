@@ -42,9 +42,9 @@ namespace Zarf.Query.Expressions
 
         public bool DefaultIfEmpty { get; set; }
 
-        public SelectExpression SubSelect { get; set; }
+        public SelectExpression ChildSelect { get; set; }
 
-        public SelectExpression SourceSelect { get; set; }
+        public SelectExpression ParentSelect { get; set; }
 
         public SelectExpression OuterSelect { get; set; }
 
@@ -77,7 +77,7 @@ namespace Zarf.Query.Expressions
         {
             var select = new SelectExpression(Type, Mapper, alias)
             {
-                SubSelect = this,
+                ChildSelect = this,
                 Table = null,
                 DefaultIfEmpty = DefaultIfEmpty,
                 QueryModel = QueryModel
@@ -88,7 +88,7 @@ namespace Zarf.Query.Expressions
 
             DefaultIfEmpty = false;
             OuterSelect = select;
-            SourceSelect = select;
+            ParentSelect = select;
 
             return select;
         }
@@ -171,40 +171,39 @@ namespace Zarf.Query.Expressions
         }
 
         /// <summary>
-        /// 是否一个空查询
-        /// 引用一个Table
+        /// 是否可以以平坦方式Join 
+        ///  A INNER JOIN B ;NOT: A JOIN ( ) AS B
         /// </summary>
-        /// <returns></returns>
-        public bool IsEmptyQuery()
+        public bool CanJoinAsFlatTable()
         {
-            var isEmpty =
-                !IsDistinct &&
-                Where == null &&
-                Offset == null &&
-                (SubSelect?.IsEmptyQuery() ?? true) &&
-                Orders.Count == 0 &&
-                Groups.Count == 0 &&
-                Sets.Count == 0 &&
-                Limit == 0;
-
-            if (!isEmpty)
+            if (IsDistinct || Where != null || Offset != null || Limit != 0 ||
+                Orders.Count != 0 || Groups.Count != 0 || Sets.Count != 0)
             {
-                foreach (var item in Joins)
-                {
-                    if (!item.Select.IsEmptyQuery())
-                    {
-                        return false;
-                    }
-                }
+                return false;
             }
 
-            return isEmpty;
+            if (ChildSelect != null && !ChildSelect.CanJoinAsFlatTable())
+            {
+                return false;
+            }
+
+            foreach (var item in Joins)
+            {
+                if (item.Select.CanJoinAsFlatTable())
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         public IEnumerable<Expression> GenSelectProjections()
         {
             var cols = new List<Expression>();
-            if (SubSelect == null)
+            if (ChildSelect == null)
             {
                 var modeTypeDescriptor = TypeDescriptorCacheFactory.Factory.Create(EntityModelType);
 
@@ -221,7 +220,7 @@ namespace Zarf.Query.Expressions
                 return cols;
             }
 
-            foreach (var item in SubSelect.Projections)
+            foreach (var item in ChildSelect.Projections)
             {
                 ColumnExpression col = null;
                 if (item.Is<AliasExpression>())
@@ -261,10 +260,10 @@ namespace Zarf.Query.Expressions
             select.Groups.AddRange(Groups.ToList());
             select.Joins.AddRange(Joins.ToList());
             select.Sets.AddRange(Sets.ToList());
-            select.SourceSelect = this;
+            select.ParentSelect = this;
             select.Limit = Limit;
             select.IsDistinct = IsDistinct;
-            select.SubSelect = SubSelect?.Clone();
+            select.ChildSelect = ChildSelect?.Clone();
             select.QueryModel = QueryModel;
             select.Where = Where == null ? Where : new WhereExperssion(Where.Predicate);
 
@@ -286,7 +285,7 @@ namespace Zarf.Query.Expressions
                 }
             }
 
-            return SubSelect?.ContainsSelectExpression(select) ?? false;
+            return ChildSelect?.ContainsSelectExpression(select) ?? false;
         }
     }
 }

@@ -178,7 +178,7 @@ namespace Zarf.Generators
                     break;
             }
 
-            if (join.Select.IsEmptyQuery() && join.Select.Projections.Count == 0)
+            if (join.Select.CanJoinAsFlatTable() && join.Select.Projections.Count == 0)
             {
                 BuildFromTable(join.Select);
             }
@@ -356,15 +356,15 @@ namespace Zarf.Generators
 
         protected virtual void BuildSubQuery(SelectExpression select)
         {
-            if (select.SubSelect != null)
+            if (select.ChildSelect != null)
             {
-                Attach(select.SubSelect);
+                Attach(select.ChildSelect);
             }
         }
 
         protected virtual void BuildFromTable(SelectExpression select)
         {
-            if (select.SubSelect == null)
+            if (select.ChildSelect == null)
             {
                 Utils.CheckNull(select.Table, "query.Table is null");
                 AttachSQL(select.Table.Schema.Escape(), '.', select.Table.Name.Escape());

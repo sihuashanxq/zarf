@@ -16,9 +16,9 @@ namespace Zarf.Query.Visitors
     public class QueryModelRewriterExpressionVisitor : ExpressionVisitorBase
     {
         /// <summary>
-        /// 外部列
+        /// 外部关联列
         /// </summary>
-        public List<ColumnExpression> OuterColumns { get; }
+        public List<ColumnExpression> RelationColumns { get; }
 
         public SelectExpression Select { get; }
 
@@ -26,7 +26,7 @@ namespace Zarf.Query.Visitors
 
         public QueryModelRewriterExpressionVisitor(SelectExpression select, IQueryContext context)
         {
-            OuterColumns = new List<ColumnExpression>();
+            RelationColumns = new List<ColumnExpression>();
             Context = context;
             Select = select;
         }
@@ -35,9 +35,9 @@ namespace Zarf.Query.Visitors
         {
             exp = Visit(exp);
 
-            if (OuterColumns.Count == 0) return exp;
+            if (RelationColumns.Count == 0) return exp;
 
-            var modelTypeDescriptor = QueryModelTypeGenerator.GenRealtionType(Select.QueryModel.Model.Type, OuterColumns);
+            var modelTypeDescriptor = QueryModelTypeGenerator.GenRealtionType(Select.QueryModel.Model.Type, RelationColumns);
             var modelNewType = modelTypeDescriptor.SubModelType;
             var model = Select.QueryModel.Model;
             var modelNewExpression = Select.QueryModel.Model.As<NewExpression>();
@@ -119,24 +119,40 @@ namespace Zarf.Query.Visitors
             }
         }
 
-        protected virtual Expression VisitColumn(ColumnExpression outer)
+        protected virtual Expression VisitColumn(ColumnExpression column)
         {
-            if (!Select.ContainsSelectExpression(outer.Select))
+            if (Select.ContainsSelectExpression(column.Select))
             {
-                var query = outer.Select.Clone();
-                var columnExpression = outer.Clone(Context.AliasGenerator.GetNewColumn());
+                return column;
+            }
+            var relationSelect = column.Select;
+            var relationColumnSelect = relationSelect.Clone();
 
-                columnExpression.Select = query;
+            var columnExpression = new ColumnExpression(
+                relationColumnSelect,
+                column.Column,
+                column.Type,
+                Context.AliasGenerator.GetNewColumn());
 
-                outer.Select.AddProjection(columnExpression);
+            RelationColumns.Add(columnExpression);
 
-                Select.AddJoin(new JoinExpression(query, null, JoinType.Cross));
+            relationColumnSelect.AddProjection(columnExpression);
+            relationSelect.AddProjection(columnExpression);
 
+            Select.AddJoin(new JoinExpression(relationColumnSelect, null, JoinType.Cross));
+
+            if (columnExpression.Select.CanJoinAsFlatTable())
+            {
                 Select.AddProjection(columnExpression);
-                OuterColumns.Add(columnExpression);
+                return column;
             }
 
-            return outer;
+            //不能平坦方式Join,此时引用的列在一个子查询中
+            //引用其别名
+            var aliasColumn = new ColumnExpression(relationColumnSelect, new Column(columnExpression.Alias), columnExpression.Type, string.Empty);
+            Select.Mapper.Map(columnExpression, aliasColumn);
+            Select.AddProjection(aliasColumn);
+            return aliasColumn;
         }
 
         protected IEnumerable<ColumnExpression> GetColumns(SelectExpression select)

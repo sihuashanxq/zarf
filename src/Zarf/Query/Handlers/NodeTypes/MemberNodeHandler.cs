@@ -40,7 +40,7 @@ namespace Zarf.Query.Handlers.NodeTypes
                         var alias = propertyExpression.As<AliasExpression>();
                         var owner = QueryContext.SelectMapper.GetValue(alias);
 
-                        if (owner.OuterSelect?.SubSelect == owner)
+                        if (owner.OuterSelect?.ChildSelect == owner)
                         {
                             owner = owner.OuterSelect;
                         }
@@ -61,7 +61,7 @@ namespace Zarf.Query.Handlers.NodeTypes
                     if (propertyExpression.Is<SelectExpression>())
                     {
                         var refQuery = propertyExpression.As<SelectExpression>();
-                        if (refQuery.OuterSelect != null && refQuery.OuterSelect.SubSelect == refQuery)
+                        if (refQuery.OuterSelect != null && refQuery.OuterSelect.ChildSelect == refQuery)
                         {
                             return refQuery.OuterSelect;
                         }

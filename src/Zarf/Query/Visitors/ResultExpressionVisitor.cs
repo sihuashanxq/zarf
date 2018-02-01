@@ -86,7 +86,7 @@ namespace Zarf.Query.Visitors
                 //聚合列被合并到主查询中,移除对主查询的Cross Join
                 foreach (var join in query.Joins.ToList())
                 {
-                    if (join.Select == Select || join.Select.SourceSelect == Select)
+                    if (join.Select == Select || join.Select.ParentSelect == Select)
                     {
                         query.Joins.Remove(join);
                     }

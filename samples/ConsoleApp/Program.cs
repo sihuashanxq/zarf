@@ -81,15 +81,7 @@ namespace Zarf
                 System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
 
                 st.Start();
-                for (var i = 0; i < 20000; i++)
-                {
-                    var n2 = db.Users.Where(n => n.Id == 1)
-                        .Select(n => new
-                        {
-                            E = db.Users.Where(n3 => n3.Id == 1).ToList()
-                        }).ToList();
-                }
-
+                BasicTest(db);
                 st.Stop();
                 Console.WriteLine(st.ElapsedMilliseconds);
             }
@@ -106,7 +98,7 @@ namespace Zarf
 
             Console.WriteLine();
             Console.WriteLine("First id=2.......................");
-            Console.WriteLine(db.Query<User>().First(item => item.Id == 2));
+            Console.WriteLine(db.Query<User>().First(item => item.Id == 1));
 
             Console.WriteLine();
             Console.WriteLine("Skip 2..........................");
