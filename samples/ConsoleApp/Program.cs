@@ -77,7 +77,16 @@ namespace Zarf
         {
             using (var db = new SqlServerDbContext())
             {
-                var xbn = db.ServiceProvider.GetService(typeof(ISQLFunctionHandlerRegistrar)) as ISQLFunctionHandlerRegistrar;
+                System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
+
+                st.Start();
+                BasicTest(db);
+                st.Stop();
+                Console.WriteLine(st.ElapsedMilliseconds);
+            }
+
+            using (var db = new SqliteDbContext())
+            {
                 System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
 
                 st.Start();

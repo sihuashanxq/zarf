@@ -96,22 +96,6 @@ namespace Zarf.SqlServer.Generators
             return select;
         }
 
-        protected override Expression VisitAll(AllExpression all)
-        {
-            AttachSQL(" IF NOT EXISTS(");
-            Attach(all.Select);
-            AttachSQL(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
-            return all;
-        }
-
-        protected override Expression VisitAny(AnyExpression any)
-        {
-            AttachSQL(" IF EXISTS(");
-            Attach(any.Select);
-            AttachSQL(") SELECT CAST(1 AS BIT) ELSE SELECT CAST(0 AS BIT)");
-            return any;
-        }
-
         protected override Expression VisitSkip(SkipExpression skip)
         {
             AttachSQL(" ROW_NUMBER() OVER ( ");
