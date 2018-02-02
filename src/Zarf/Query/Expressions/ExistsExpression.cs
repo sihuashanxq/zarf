@@ -13,6 +13,11 @@ namespace Zarf.Query.Expressions
 
         public ExistsExpression(SelectExpression select)
         {
+            select.Projections.Clear();
+            select.Groups.Clear();
+            select.Orders.Clear();
+            select.AddProjection(Expression.Constant(1));
+            select.Limit = 1;
             Select = select;
         }
     }

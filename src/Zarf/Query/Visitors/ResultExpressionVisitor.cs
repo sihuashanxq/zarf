@@ -69,9 +69,11 @@ namespace Zarf.Query.Visitors
             return newExpression;
         }
 
-        protected virtual bool CombineAggregateSelect(SelectExpression query)
+        protected virtual bool CombineAggregateSelect(SelectExpression select)
         {
-            foreach (var item in query.Projections)
+            var aggregateRelationVisitor = new AggregateRelationExpressionVisitor(Context, select);
+
+            foreach (var item in select.Projections)
             {
                 if (!(item is AggregateExpression aggreate))
                 {
@@ -83,16 +85,19 @@ namespace Zarf.Query.Visitors
                     SubQueryModelExpressionVisitor.Visit(Select.QueryModel.Model),
                     Select.QueryModel.ModelType, Select.QueryModel);
 
+                //聚合列合并后,处理与Where条件中与外部查询关联的列
+                aggregateRelationVisitor.Visit(select);
+
                 //聚合列被合并到主查询中,移除对主查询的Cross Join
-                foreach (var join in query.Joins.ToList())
+                foreach (var join in select.Joins.ToList())
                 {
                     if (join.Select == Select || join.Select.ParentSelect == Select)
                     {
-                        query.Joins.Remove(join);
+                        select.Joins.Remove(join);
                     }
                 }
 
-                var alias = new AliasExpression(Context.AliasGenerator.GetNewColumn(), query, null, item.Type);
+                var alias = new AliasExpression(Context.AliasGenerator.GetNewColumn(), select, null, item.Type);
 
                 Select.AddProjection(alias);
                 Select.Mapper.Map(aggreate, alias);

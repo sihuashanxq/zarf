@@ -80,20 +80,26 @@ namespace Zarf
                 System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
 
                 st.Start();
-                BasicTest(db);
+                var users = db.Users.ToList();
+
+                var z = users.Where(i => i.Id < 100)
+                        .Select(i => new
+                        {
+                            i.Id,
+                            Bigger = users.Where(n4 => users.Where(nn => nn.Id == i.Id + 1).Count() != 0).Sum(n6 => n6.Id)
+                        }).ToList();
+
+                var n5 = db.Users.Where(i => i.Id < 100)
+                   .Select(i => new
+                   {
+                       i.Id,
+                       Bigger = db.Users
+                       .Where(nameof => db.Users.Where(nn => nn.Id == i.Id + 1) != null).Sum(n6 => n6.Id)
+                   }).ToList();
                 st.Stop();
                 Console.WriteLine(st.ElapsedMilliseconds);
             }
 
-            using (var db = new SqliteDbContext())
-            {
-                System.Diagnostics.Stopwatch st = new System.Diagnostics.Stopwatch();
-
-                st.Start();
-                BasicTest(db);
-                st.Stop();
-                Console.WriteLine(st.ElapsedMilliseconds);
-            }
         }
 
         static void BasicTest(DbContext db)

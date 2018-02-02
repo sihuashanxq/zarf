@@ -10,6 +10,8 @@ namespace Zarf.Query.Mappers
 
         TValue GetValue(TKey key);
 
+        TKey GetKey(TValue value);
+
         TValue this[TKey key] { get; set; }
 
         IEnumerable<TKey> Keys { get; }

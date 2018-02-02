@@ -43,5 +43,18 @@ namespace Zarf.Query.Mappers
                 _keyValues.AddOrUpdate(key, v, (k, _) => v);
             }
         }
+
+        public TKey GetKey(TValue value)
+        {
+            foreach (var item in _keyValues)
+            {
+                if (value.Equals(item.Value))
+                {
+                    return item.Key;
+                }
+            }
+
+            return default(TKey);
+        }
     }
 }

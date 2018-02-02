@@ -54,7 +54,8 @@ namespace Zarf.Query
 
         public void Dispose()
         {
-       
+            //重置,否则子查询过滤无数据
+            Reset();
         }
     }
 }

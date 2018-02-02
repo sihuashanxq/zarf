@@ -56,8 +56,12 @@ namespace Zarf.Query.Visitors
                         queryModel = queryModel.Previous;
                     }
 
-                    var memberExpression = Expression.MakeMemberAccess(queryModel.Model, mem.Member);
-                    var binding = QueryContext.BindingMaper.GetValue(memberExpression);
+                    var binding = QueryContext.BindingMaper.GetValue(Expression.MakeMemberAccess(queryModel.Model, mem.Member));
+                    var mappedExpression = QueryContext.ExpressionMapper.GetValue(binding);
+                    if (mappedExpression != null)
+                    {
+                        binding = mappedExpression;
+                    }
 
                     if (binding == null)
                     {

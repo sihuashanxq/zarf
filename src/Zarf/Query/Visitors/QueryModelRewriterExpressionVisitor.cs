@@ -125,6 +125,7 @@ namespace Zarf.Query.Visitors
             {
                 return column;
             }
+
             var relationSelect = column.Select;
             var relationColumnSelect = relationSelect.Clone();
 
@@ -141,18 +142,19 @@ namespace Zarf.Query.Visitors
 
             Select.AddJoin(new JoinExpression(relationColumnSelect, null, JoinType.Cross));
 
-            if (columnExpression.Select.CanJoinAsFlatTable())
+            if (relationSelect.CanJoinAsFlatTable())
             {
                 Select.AddProjection(columnExpression);
                 return column;
             }
 
-            //不能平坦方式Join,此时引用的列在一个子查询中
-            //引用其别名
-            var aliasColumn = new ColumnExpression(relationColumnSelect, new Column(columnExpression.Alias), columnExpression.Type, string.Empty);
-            Select.Mapper.Map(columnExpression, aliasColumn);
-            Select.AddProjection(aliasColumn);
-            return aliasColumn;
+            //不能平坦方式Join,此时引用的列在一个子查询中,引用其别名
+            var alias = new ColumnExpression(relationColumnSelect, new Column(columnExpression.Alias), columnExpression.Type, string.Empty);
+
+            Select.Mapper.Map(columnExpression, alias);
+            Select.AddProjection(alias);
+
+            return alias;
         }
 
         protected IEnumerable<ColumnExpression> GetColumns(SelectExpression select)
