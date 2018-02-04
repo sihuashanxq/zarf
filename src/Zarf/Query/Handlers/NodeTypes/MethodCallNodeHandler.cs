@@ -31,6 +31,8 @@ namespace Zarf.Query.Handlers.NodeTypes
             RegisterHandler(AnyNodeHandler.SupprotedMethods, new AnyNodeHandler(queryContext, queryCompiler));
             RegisterHandler(JoinSelectNodeHandler.SupprotedMethods, new JoinSelectNodeHandler(queryContext, queryCompiler));
             RegisterHandler(ToListNodeHandler.SupprotedMethods, new ToListNodeHandler(queryContext, queryCompiler));
+            RegisterHandler(IntersectNodeHandler.SupprotedMethods, new IntersectNodeHandler(queryContext, queryCompiler));
+            RegisterHandler(ExceptNodeHandler.SupprotedMethods, new ExceptNodeHandler(queryContext, queryCompiler));
         }
 
         public override Expression HandleNode(MethodCallExpression methodCall)

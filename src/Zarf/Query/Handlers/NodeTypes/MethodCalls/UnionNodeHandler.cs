@@ -20,15 +20,15 @@ namespace Zarf.Query.Handlers.Methods
         {
 
         }
-  
-        public override SelectExpression HandleNode(SelectExpression select, Expression sets,MethodInfo method)
+
+        public override SelectExpression HandleNode(SelectExpression select, Expression sets, MethodInfo method)
         {
             var setsSelect = Compile<SelectExpression>(sets);
 
             Utils.CheckNull(select, "Query Expression");
             Utils.CheckNull(setsSelect, "Except Query Expression");
 
-            select.Sets.Add(new UnionExpression(setsSelect));
+            select.Sets.Add(new UnionExpression(setsSelect, method.Name == "Concat"));
             select.QueryModel.ModelType = method.ReturnType;
 
             return select;

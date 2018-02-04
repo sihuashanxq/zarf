@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Zarf.Query.Expressions;
-using Zarf.Query.Handlers.NodeTypes.MethodCalls;
 
 namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
 {

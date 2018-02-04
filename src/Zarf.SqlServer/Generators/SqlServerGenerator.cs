@@ -17,50 +17,6 @@ namespace Zarf.SqlServer.Generators
 
         }
 
-        protected override Expression VisitAggregate(AggregateExpression exp)
-        {
-            switch (exp.Method.Name)
-            {
-                case "Min":
-                    AttachSQL("MIN", '(');
-                    break;
-                case "Max":
-                    AttachSQL("Max", '(');
-                    break;
-                case "Sum":
-                    AttachSQL("Sum", '(');
-                    break;
-                case "Average":
-                    AttachSQL("AVG", '(');
-                    break;
-                case "Count":
-                    AttachSQL("Count", "(");
-                    break;
-                case "LongCount":
-                    AttachSQL("Count_Big", "(");
-                    break;
-                default:
-                    throw new NotImplementedException($"method {exp.Method.Name} is not supported!");
-            }
-
-            if (exp.KeySelector == null)
-            {
-                AttachSQL("1");
-            }
-            else
-            {
-                Attach(exp.KeySelector);
-            }
-            AttachSQL(')');
-
-            if (!exp.Alias.IsNullOrEmpty())
-            {
-                AttachSQL(" AS ", exp.Alias);
-            }
-
-            return exp;
-        }
-
         protected override Expression VisitQuery(SelectExpression select)
         {
             if (select.IsInPredicate || select.OuterSelect != null)

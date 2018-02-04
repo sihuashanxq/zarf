@@ -19,43 +19,22 @@ namespace Zarf.Sqlite.Generators
 
         protected override Expression VisitAggregate(AggregateExpression exp)
         {
-            switch (exp.Method.Name)
+            if (exp.Method.Name != "LongCount")
             {
-                case "Min":
-                    AttachSQL("MIN", '(');
-                    break;
-                case "Max":
-                    AttachSQL("Max", '(');
-                    break;
-                case "Sum":
-                    AttachSQL("Sum", '(');
-                    break;
-                case "Average":
-                    AttachSQL("AVG", '(');
-                    break;
-                case "Count":
-                case "LongCount":
-                    AttachSQL("Count", "(");
-                    break;
-                default:
-                    throw new NotImplementedException($"method {exp.Method.Name} is not supported!");
+                return base.VisitAggregate(exp);
             }
 
             if (exp.KeySelector == null)
             {
-                AttachSQL("1");
+                Attach("1");
             }
             else
             {
                 Attach(exp.KeySelector);
             }
 
-            AttachSQL(')');
-
-            if (!exp.Alias.IsNullOrEmpty())
-            {
-                AttachSQL(" AS ", exp.Alias);
-            }
+            Attach(" ) ");
+            Attach(!exp.Alias.IsNullOrEmpty() ? " AS " + exp.Alias : string.Empty);
 
             return exp;
         }
@@ -64,16 +43,16 @@ namespace Zarf.Sqlite.Generators
         {
             if (select.IsInPredicate || select.OuterSelect != null)
             {
-                AttachSQL(" ( ");
+                Attach(" ( ");
             }
 
-            AttachSQL(" SELECT  ");
+            Attach(" SELECT  ");
 
             BuildDistinct(select);
 
             BuildProjections(select);
 
-            AttachSQL(" FROM ");
+            Attach(" FROM ");
 
             BuildSubQuery(select);
             BuildFromTable(select);
@@ -93,7 +72,7 @@ namespace Zarf.Sqlite.Generators
 
             if (select.IsInPredicate || select.OuterSelect != null)
             {
-                AttachSQL(" ) ");
+                Attach(" ) ");
             }
 
             return select;

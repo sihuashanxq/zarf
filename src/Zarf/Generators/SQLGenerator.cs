@@ -152,7 +152,8 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitUnion(UnionExpression union)
         {
-            AttachSQL(" UNION ALL ");
+            Attach(" UNION ");
+            Attach(union.IncludeRepated ? "  ALL  " : string.Empty);
             Attach(union.Select);
             return union;
         }
@@ -546,6 +547,65 @@ namespace Zarf.Generators
             return any;
         }
 
+        protected virtual Expression VisitAggregate(AggregateExpression exp)
+        {
+            switch (exp.Method.Name)
+            {
+                case "Min":
+                    AttachSQL("MIN", '(');
+                    break;
+                case "Max":
+                    AttachSQL("Max", '(');
+                    break;
+                case "Sum":
+                    AttachSQL("Sum", '(');
+                    break;
+                case "Average":
+                    AttachSQL("CAST( AVG", "(");
+                    break;
+                case "Count":
+                    AttachSQL("Count", "(");
+                    break;
+                case "LongCount":
+                    AttachSQL("Count_Big", "(");
+                    break;
+                default:
+                    throw new NotImplementedException($"method {exp.Method.Name} is not supported!");
+            }
+
+            if (exp.KeySelector == null)
+            {
+                Attach("1");
+            }
+            else
+            {
+                Attach(exp.KeySelector);
+            }
+
+            Attach(" ) ");
+
+            if (exp.Method.Name == "Average")
+            {
+                if (ReflectionUtil.DecimalNullableType == exp.Method.ReturnType ||
+                    ReflectionUtil.DecimalType == exp.Method.ReturnType)
+                {
+                    Attach(" As NUMERIC(38,18) ) ");
+                }
+                else if (ReflectionUtil.FloatNullableType == exp.Method.ReturnType ||
+                    ReflectionUtil.FloatType == exp.Method.ReturnType)
+                {
+                    Attach(" As Real ) ");
+                }
+                else
+                {
+                    Attach(" As Float ) ");
+                }
+            }
+
+            Attach(!exp.Alias.IsNullOrEmpty() ? " AS " + exp.Alias : string.Empty);
+            return exp;
+        }
+
         protected abstract Expression VisitQuery(SelectExpression select);
 
         protected abstract Expression VisitSkip(SkipExpression skip);
@@ -553,7 +613,5 @@ namespace Zarf.Generators
         protected abstract Expression VisitExists(ExistsExpression exists);
 
         protected abstract Expression VisitStore(DbStoreExpression store);
-
-        protected abstract Expression VisitAggregate(AggregateExpression aggregate);
     }
 }
