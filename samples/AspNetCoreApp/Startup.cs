@@ -19,8 +19,6 @@ namespace AspNetCoreApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-
             services.AddTransient(
                 p => new SqlServerDemoDbContext(
                     b => b.UseSqlServer(@"Data Source=localhost\SQLEXPRESS;Initial Catalog=ORM;Integrated Security=True")));

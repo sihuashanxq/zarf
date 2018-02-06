@@ -13,6 +13,7 @@ using Zarf.Generators.Functions;
 using Zarf.Generators.Functions.Registrars;
 using Zarf.Metadata;
 using Zarf.Metadata.DataAnnotations;
+using Zarf.Metadata.Entities;
 using Zarf.Query;
 using Zarf.Sqlite;
 using Zarf.SqlServer;
@@ -75,11 +76,10 @@ namespace ConsoleApp
             {
                 var st = new Stopwatch();
                 st.Start();
-
-                //SimpleQuery.SimpleQuery(db);
-                Function.Query(db);
-                Complex.SubQuery(db);
-                Complex.Join(db);
+                db.Query<User>().Average(i => i.Age);
+                //Function.Query(db);
+                //Complex.SubQuery(db);
+                //Complex.Join(db);
 
                 st.Stop();
                 Console.WriteLine(st.ElapsedMilliseconds);
