@@ -1,4 +1,5 @@
-*   [概述](#overview)
+Zarf是一个基于.Net轻量级的的ORM库,提供了类似于Linq的查询Api.支持SQLite3及MSSQLSERVER数据库
+
 *   [DbContext](#dbcontext)
 *   [查询](#query)
     *   [SQL注入](#sqlinject)
@@ -11,6 +12,8 @@
         *   [GroupBy](#groupby)
         *   [Take](#take)
         *   [Skip](#skip)
+        *   [All](#all)
+        *   [Any](#any)
         *   [Fist/OrDefault](#firstordefault)
         *   [Single/OrDefault](#singleordefault)
         *   [Union](#union)
@@ -25,7 +28,14 @@
         *   [ToList](#tolist)
         *   [AsEnumerable](#asenumerable)
     *   [子查询](#sub_query)
+        *   [聚合子查询](#aggragesubquery)
+        *   [非聚合子查询](#notaggratesubquery)
     *   [函数支持](#function)
+        *   [自定义函数](#customfunction)
+        *   [内置函数支持](#functionsoupprt)
+            *   [简单类型](#simpletype)
+            *   [String](#string)
+            *   [Math](#math)
     *   [插入](#insert)
     *   [更新](#update)
         *   [属性跟踪](#track)
@@ -35,9 +45,6 @@
 *   [性能测试](#performance)
 *   [数据库支持](#database)
 *   [协议](#license)
-
-<h2 id="overview">概述</h1>
-Zarf是一个基于.Net轻量级的的ORM库,提供了类似于Linq的查询Api.支持SQLite3及MSSQLSERVER数据库
 
 <h2 id="dbcontext">DbContex</h2>
 
@@ -159,7 +166,7 @@ db.Query<User>()
 SELECT  [T0].[Id] AS C8,[T1].[Goods] AS C9 FROM [User] AS [T0] Inner JOIN [Order] AS [T1] ON [T0].[Id] = [T1].[UserId]
 ```
 
-&emsp;Join方法后面只能继续调用Join或者Select方法,如果需要调用Where等方法过滤,需要体检调用或者在Select之后调用.
+&emsp;Join方法后面只能继续调用Join或者Select方法,如果需要调用Where等方法过滤,需要在Join前调用或者在Select之后调用.
 
 &emsp;提供了InnerJoin,LeftJoin,RightJoin,CorssJoin,FullJoin扩展方法,在子查询中只能使用Join,不能使用InnerJoin等扩展方法
 
@@ -200,6 +207,24 @@ db.Query<User>().Skip(2);
 ```
 ```sql
 exec sp_executesql N' SELECT  [T1].[C0],[T1].[C1],[T1].[C2],[T1].[C3],[T1].[C4] FROM  (  SELECT  [T0].[Id] AS C0,[T0].[Age] AS C1,[T0].[Name] AS C2,[T0].[CreateDay] AS C3,[T0].[Tel] AS C4, ROW_NUMBER() OVER ( ORDER BY GETDATE()) AS __ROWINDEX__ FROM [User] AS [T0] )  AS [T1] WHERE [T1].[__rowIndex__] > @P0',N'@P0 int',@P0=2
+```
+
+<h4 id="all">All</h4>
+All用于对查询出的所有元素进行判定是否同时满足某些条件,生成Case WHEN NOT EXISTS( NOT )
+```c#
+db.Query<User>().All(u => u.Id > 0);
+```
+```sql
+exec sp_executesql N' SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE  NOT ( [T0].[Id] > @P1 ) ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END',N'@P0 bit,@P1 int',@P0=1,@P1=0
+```
+
+<h4 id="any">Any</h4>
+All用于对查询出的所有元素进行判定是否部分满足某些条件,生成Case WHEN  EXISTS ()
+```c#
+db.Query<User>().Any(u => u.Id > 10);
+```
+```sql
+exec sp_executesql N' SELECT CASE WHEN  EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE [T0].[Id] > @P1 ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END',N'@P0 bit,@P1 int',@P0=1,@P1=10
 ```
 
 <h4 id="first">First/OrDefault</h4>
@@ -293,20 +318,190 @@ db.Query<User>().Average(i=>i.Age);
 &emsp;ToList调用会导致一次正式的查询,同时将数据拷贝到内存中,调用该方法不会生成额外的SQL语句
 
 <h4 id="asenumerable">AsEnumerable</h4>
-
 &emsp;AsEnumerable方法调用不会导致一次查询,正式查询将在对其调用GetEnumerator方法,ToList,foreach时触发.
 
+<h3 id="sub_query">子查询</h3>
+&emsp;子查询只能出现在Select方法中,用于复杂查询.同时子查询如果时非聚合类的查询,无法缓存创建实体的委托,性能较低.
 
+&emsp;子查询必须以Sum,Max,Min,Average,Count,First/OrDefault,Single/OrDefault,ToList,AsEnumerable结尾,不能返回IQuery接口
 
-    <!-- *   [子查询](#sub_query)
-    *   [函数支持](#function)
-    *   [插入](#insert)
+<h4 id="aggragesubquery">聚合子查询</h4>
+聚合子查询不会生成两条查询语句,会合并到外层查询中进行查询,可以重用实体创建委托
+```c#
+ //在子查询中如果是聚合类的查询,则合并到外层查询中
+ db.Query<User>()
+    .Where(i => i.Id < 10)
+    .Select(i => new
+    {
+        UserId = i.Id,
+        MaxUserId = db.Query<User>().Where(m => m.Id == i.Id).Max(m => m.Id)
+    });
+```
+```sql
+exec sp_executesql N' SELECT  [T0].[Id],[T0].[Id] AS C5,(  SELECT   TOP  1 Max([T1].[Id] )  AS C12 FROM [User] AS [T1] WHERE [T1].[Id] = [T0].[Id] )  AS C13 FROM [User] AS [T0] WHERE [T0].[Id] < @P0',N'@P0 int',@P0=10
+```
+
+<h4 id="notaggratesubquery">非聚合子查询</h4>
+
+```c#
+db.Query<User>()
+    .Where(i => i.Id < 10)
+    .Select(i => new
+    {
+        UserId = i.Id,
+        Orders = db.Query<Order>().Where(o => o.UserId == i.Id).ToList(),
+        Orders2=db.Query<Order>().Where(o => o.UserId == i.Id).AsEnumerable()
+    });   
+```
+
+```sql
+--外层查询
+exec sp_executesql N' SELECT  [T0].[Id] AS [C9],[T0].[Id] AS [C13],[T0].[Id] AS C5 FROM [User] AS [T0] WHERE [T0].[Id] < @P0',N'@P0 int',@P0=10
+
+--内层Orders查询
+exec sp_executesql N' SELECT  [T1].[Id] AS C6,[T1].[UserId] AS C7,[T1].[Goods] AS C8,[T0].[C9] FROM [Order] AS [T1] Cross JOIN  (  SELECT  [T0].[Id] AS [C9] FROM [User] AS [T0] WHERE [T0].[Id] < @P0 )   AS [T0] WHERE [T1].[UserId] = [T0].[C9] GROUP BY [T1].[Id],[T1].[UserId],[T1].[Goods],[T0].[C9]',N'@P0 int',@P0=10
+
+--内层Orders2将延迟到第一次调用Orders2的GetEnumerator时触发,只查询一次
+```
+&emsp;针对非聚合类的子查询则采用分多次查询的方式,在内存中过滤,ToList相对与AsEnumerable方法,在查询时的开销较多.
+
+&emsp;如果引用了外层查询的字段,在子查询中会自动关联该条件进行Corss Join过滤
+
+&emsp;在进行子查询前,尽量对外层查询进行过滤,因为在子查询前的条件过滤,子查询中会包含该条件.在子查询之进行的过滤,子查询中不会包含
+
+&emsp;这种类型的查询无法返回委托,需要多次创建,性能较低
+
+&emsp;在子查询中进行Join调用时,不能引用外部查询字段,需要提交关联或者延迟后Select调用之后
+
+&emsp;由于在内存中进行过滤子查询,会生成一个子查询返回类型的子类,因此在子查询中不能出现匿名类型及密封类型,如果没有引用外部字段,则无所谓
+
+<h3 id="function">函数支持</h3>
+提供了实现自定义函数的能力(只支持参数,返回值都时简单类型的函数)
+
+<h4 id="customfunction">自定义函数</h4>
+```c#
+/// <summary>
+/// int 扩展
+/// </summary>
+public static class IntExtension
+{
+    [SQLFunctionHandler(typeof(IntSQLFunctionHandler))]
+    public static int Add(this int i, int n)
+    {
+        //如果没有常数调用(Add(1,2),1.Add(2))的情况,可以抛出异常
+        return i + n;
+    }
+}
+
+/// <summary>
+/// 处理Function的SQL生成
+/// </summary>
+public class IntSQLFunctionHandler : ISQLFunctionHandler
+{
+    public Type SoupportedType => typeof(int);
+
+    public bool HandleFunction(ISQLGenerator generator, MethodCallExpression methodCall)
+    {
+        //SQL 生成,调用generator可以对常量进行参数化处理
+        if (methodCall.Method.Name == "Add")
+        {
+            generator.Attach(methodCall.Arguments[0]);
+            generator.Attach(" + ");
+            generator.Attach(methodCall.Arguments[1]);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+//使用
+db.Query<User>().Where(i => i.Id.Add(2) < 10).Select(i => new { Id = i.Id.Add(3), Name = i.Name});
+
+```
+
+```sql
+exec sp_executesql N' SELECT  [T0].[Id] + @P0 AS C5,[T0].[Name] AS C6 FROM [User] AS [T0] WHERE [T0].[Id] + @P1 < @P2',N'@P0 int,@P1 int,@P2 int',@P0=3,@P1=2,@P2=10
+```
+
+<h4 id="functionsoupprt">内置函数支持</h4>
+
+<h5 id="simpletype">简单类型</h5>
+支持全部常见简单类型的Equals,Parse,ToString方法
+
+```c#
+int,int?char,char?,double,double?,short,short?,byte,byte?,bool,bool?
+decimal,decimal?,DateTime,DateTime?uint,uint?ulong,ulong?,float,float?
+ushort,ushort?,string
+```
+
+如:
+```c#
+db.Query<User>().Select(i => i.Id.ToString());
+```
+```sql
+ SELECT   CAST ([T0].[Id] AS NVARCHAR ) FROM [User] AS [T0]
+```
+
+<h5 id="string">String</h5>
+
+```c#
+    IsNullOrEmpty
+    IsNullOrWhiteSpace
+    StartsWith
+    EndsWith
+    Contains
+    Trim
+    TrimStart
+    TrimEnd
+    IndexOf
+    Substring
+    ToLower
+    ToUpper
+    Replace
+    Concat
+```
+
+```c#
+//Id包含1
+db.Query<User>().Select(i => i.Id.ToString().Contains("1"));
+```
+
+```sql
+exec sp_executesql N' SELECT   ( CASE WHEN   CAST ([T0].[Id] AS NVARCHAR ) LIKE ''%''+ @P0 +''%'' THEN @P1 ELSE @P2 END )  FROM [User] AS [T0]',N'@P0 nvarchar(1),@P1 bit,@P2 bit',@P0=N'1',@P1=1,@P2=0
+```
+<h5 id="math">Math</h5>
+支持所有System.Math类中定义的静态方法,SQLite采用了一些垫片
+
+```c#
+    Abs,Acos,Asin
+    Atan,Cos,Ceiling
+    Floor,Exp,Log10
+    Sign,Sin,Sqrt
+    Tan,Atan2,Log
+    Max,Min,PowRound,
+    SinhCosh,TanhTruncate
+```
+
+```c#
+db.Query<User>().Select(i => Math.Max(i.Id, i.Age));
+```
+
+```sql
+ SELECT  CASE WHEN [T0].[Id] > [T0].[Age] THEN [T0].[Id] ELSE  [T0].[Age] END  FROM [User] AS [T0]
+```
+
+<h3 id="#insert">插入</h3>
+
+<!-- 
+  *   [插入](#insert)
     *   [更新](#update)
+        *   [属性跟踪](#track)
     *   [删除](#delete)
+    *   [SQL合并](#combinesql)
     *   [事务支持](#transaction)
 *   [性能测试](#performance)
-*   [数据库支持](#database)
-*   [协议](#license) -->
+*   [数据库支持](#database) -->
 
-<h1 id="license">协议</h1>
+<h2 id="license">协议</h1>
 MIT

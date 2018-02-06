@@ -76,7 +76,8 @@ namespace ConsoleApp
             {
                 var st = new Stopwatch();
                 st.Start();
-                db.Query<User>().Average(i => i.Age);
+                var x = db.Query<User>().Select(i => Math.Max(i.Id, i.Age)).ToList();
+
                 //Function.Query(db);
                 //Complex.SubQuery(db);
                 //Complex.Join(db);

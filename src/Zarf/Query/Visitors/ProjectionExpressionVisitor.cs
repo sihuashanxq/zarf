@@ -4,6 +4,7 @@ using Zarf.Extensions;
 using Zarf.Query.Expressions;
 using System.Reflection;
 using Zarf.Metadata.DataAnnotations;
+using System;
 
 namespace Zarf.Query.Visitors
 {
@@ -152,7 +153,8 @@ namespace Zarf.Query.Visitors
                 return true;
             }
 
-            return methodCall.Method.DeclaringType.IsPrimtiveType();
+            return methodCall.Method.DeclaringType.IsPrimtiveType() || 
+                methodCall.Method.DeclaringType == typeof(Math);
         }
     }
 }

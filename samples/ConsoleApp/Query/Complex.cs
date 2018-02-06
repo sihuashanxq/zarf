@@ -60,7 +60,6 @@ namespace ConsoleApp
                 {
                     UserId = i.Id,
                     Orders = db.Query<Order>().Where(o => o.UserId == i.Id).ToList(),
-                    MaxUserId = db.Query<User>().Where(m => m.Id == i.Id).Max(m => m.Id)
                 });
 
             Console.WriteLine(" Sub Query ");
