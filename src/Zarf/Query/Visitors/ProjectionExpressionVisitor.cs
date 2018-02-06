@@ -129,13 +129,11 @@ namespace Zarf.Query.Visitors
             {
                 Select.AddProjection(visitedNode);
             }
-
             else if (visitedNode is CaseWhenExpression)
             {
                 Select.AddProjection(visitedNode);
                 QueryContext.ExpressionMapper.Map(node, visitedNode);
             }
-
             else if (visitedNode.Is<MethodCallExpression>() &&
                  IsSQLFunction(visitedNode.As<MethodCallExpression>()))
             {
@@ -153,7 +151,7 @@ namespace Zarf.Query.Visitors
                 return true;
             }
 
-            return methodCall.Method.DeclaringType.IsPrimtiveType() || 
+            return methodCall.Method.DeclaringType.IsPrimtiveType() ||
                 methodCall.Method.DeclaringType == typeof(Math);
         }
     }

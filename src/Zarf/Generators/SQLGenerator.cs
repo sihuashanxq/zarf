@@ -531,19 +531,19 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitAll(AllExpression all)
         {
-            Attach(" SELECT CASE WHEN ");
+            Attach(" (SELECT CASE WHEN ");
             Attach(" NOT EXISTS( ");
             Attach(all.Select);
-            Attach(" ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END");
+            Attach(" ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END )");
             return all;
         }
 
         protected virtual Expression VisitAny(AnyExpression any)
         {
-            Attach(" SELECT CASE WHEN ");
+            Attach(" (SELECT CASE WHEN ");
             Attach(" EXISTS( ");
             Attach(any.Select);
-            Attach(" ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END");
+            Attach(" ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END )");
             return any;
         }
 

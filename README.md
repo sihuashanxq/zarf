@@ -1,4 +1,4 @@
-Zarf是一个基于.Net轻量级的的ORM库,提供了类似于Linq的查询Api.支持SQLite3及MSSQLSERVER数据库
+&emsp;&emsp;Zarf是一个基于.Net轻量级的的ORM库,提供了类似于Linq的查询Api.支持SQLite3及MSSQLSERVER数据库,当前为一个研究项目,请勿用于正式开发.
 
 *   [DbContext](#dbcontext)
 *   [查询](#query)
@@ -28,22 +28,23 @@ Zarf是一个基于.Net轻量级的的ORM库,提供了类似于Linq的查询Api.
         *   [ToList](#tolist)
         *   [AsEnumerable](#asenumerable)
     *   [子查询](#sub_query)
-        *   [聚合子查询](#aggragesubquery)
-        *   [非聚合子查询](#notaggratesubquery)
+        *   [聚合/All/Any子查询](#aggragesubquery)
+        *   [非聚/All/Any合子查询](#notaggratesubquery)
+    *   [复杂查询](#complex)
     *   [函数支持](#function)
         *   [自定义函数](#customfunction)
         *   [内置函数支持](#functionsoupprt)
             *   [简单类型](#simpletype)
             *   [String](#string)
             *   [Math](#math)
-    *   [插入](#insert)
-    *   [更新](#update)
-        *   [属性跟踪](#track)
-    *   [删除](#delete)
-    *   [SQL合并](#combinesql)
-    *   [事务支持](#transaction)
+    *   [修改](#modify)    
+        *   [插入](#insert)
+        *   [更新](#update)
+        *   [删除](#delete)
+        *   [变更跟踪](#track)
+        *   [SQL合并](#combinesql)
+        *   [事务支持](#transaction)
 *   [性能测试](#performance)
-*   [数据库支持](#database)
 *   [协议](#license)
 
 <h2 id="dbcontext">DbContex</h2>
@@ -215,7 +216,7 @@ All用于对查询出的所有元素进行判定是否同时满足某些条件,�
 db.Query<User>().All(u => u.Id > 0);
 ```
 ```sql
-exec sp_executesql N' SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE  NOT ( [T0].[Id] > @P1 ) ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END',N'@P0 bit,@P1 int',@P0=1,@P1=0
+exec sp_executesql N' (SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE  NOT ( [T0].[Id] > @P1 ) ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=0
 ```
 
 <h4 id="any">Any</h4>
@@ -224,7 +225,7 @@ All用于对查询出的所有元素进行判定是否部分满足某些条件,�
 db.Query<User>().Any(u => u.Id > 10);
 ```
 ```sql
-exec sp_executesql N' SELECT CASE WHEN  EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE [T0].[Id] > @P1 ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END',N'@P0 bit,@P1 int',@P0=1,@P1=10
+exec sp_executesql N' (SELECT CASE WHEN  EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE [T0].[Id] > @P1 ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=10
 ```
 
 <h4 id="first">First/OrDefault</h4>
@@ -325,10 +326,10 @@ db.Query<User>().Average(i=>i.Age);
 
 &emsp;子查询必须以Sum,Max,Min,Average,Count,First/OrDefault,Single/OrDefault,ToList,AsEnumerable结尾,不能返回IQuery接口
 
-<h4 id="aggragesubquery">聚合子查询</h4>
+<h4 id="aggragesubquery">聚合/All/Any子查询</h4>
 聚合子查询不会生成两条查询语句,会合并到外层查询中进行查询,可以重用实体创建委托
 ```c#
- //在子查询中如果是聚合类的查询,则合并到外层查询中
+ //在子查询中如果是聚合类/All/Any的查询,则合并到外层查询中
  db.Query<User>()
     .Where(i => i.Id < 10)
     .Select(i => new
@@ -341,7 +342,7 @@ db.Query<User>().Average(i=>i.Age);
 exec sp_executesql N' SELECT  [T0].[Id],[T0].[Id] AS C5,(  SELECT   TOP  1 Max([T1].[Id] )  AS C12 FROM [User] AS [T1] WHERE [T1].[Id] = [T0].[Id] )  AS C13 FROM [User] AS [T0] WHERE [T0].[Id] < @P0',N'@P0 int',@P0=10
 ```
 
-<h4 id="notaggratesubquery">非聚合子查询</h4>
+<h4 id="notaggratesubquery">非聚合/All/Any子查询</h4>
 
 ```c#
 db.Query<User>()
@@ -375,10 +376,37 @@ exec sp_executesql N' SELECT  [T1].[Id] AS C6,[T1].[UserId] AS C7,[T1].[Goods] A
 
 &emsp;由于在内存中进行过滤子查询,会生成一个子查询返回类型的子类,因此在子查询中不能出现匿名类型及密封类型,如果没有引用外部字段,则无所谓
 
+<h3 id="complex">复杂查询</h3>
+
+```c#
+db.Query<User>()
+        .Where(i => i.Id < 100)
+        .Where(m => db.Query<User>().FirstOrDefault(n => n.Id == 1) != null)
+        .Where(m => db.Query<User>().All(i => i.Id > 0))
+        .Select(n => new
+        {
+            AllIdMoreThanOne = db.Query<User>().Where(mm => mm.Id == n.Id).All(nnn => nnn.Id > 0),
+            Orders = db.Query<Order>().Where(m => m.Id == n.Id).ToList()
+        }).ToList();
+```
+
+```sql
+--Where中的FirstOrDefault!=null转换成EXISTS
+
+--外层查询
+exec sp_executesql N' SELECT  [T0].[Id] AS [C20],[T0].[Id] AS [C25], (SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T3] Cross JOIN  (  SELECT  [T0].[Id] AS [C20] FROM [User] AS [T0] WHERE [T0].[Id] < @P1 AND  EXISTS ( SELECT   TOP  1 @P2 FROM [User] AS [T1] WHERE [T1].[Id] = @P3)  AND  NOT (  EXISTS ( SELECT   TOP  1 @P4 FROM [User] AS [T2] WHERE  NOT ( [T2].[Id] > @P5 ))  ) )   AS [T0] WHERE [T3].[Id] = [T0].[C20] AND  NOT ( [T3].[Id] > @P6 ) GROUP BY [T3].[Id],[T3].[Age],[T3].[Name],[T3].[CreateDay],[T3].[Tel],[T0].[C20] ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END ) AS C21 FROM [User] AS [T0] WHERE [T0].[Id] < @P7 AND  EXISTS ( SELECT   TOP  1 @P8 FROM [User] AS [T1] WHERE [T1].[Id] = @P9)  AND  NOT (  EXISTS ( SELECT   TOP  1 @P10 FROM [User] AS [T2] WHERE  NOT ( [T2].[Id] > @P11 ))  )',N'@P0 bit,@P1 int,@P2 int,@P3 int,@P4 int,@P5 int,@P6 int,@P7 int,@P8 int,@P9 int,@P10 int,@P11 int',@P0=1,@P1=100,@P2=1,@P3=1,@P4=1,@P5=0,@P6=0,@P7=100,@P8=1,@P9=1,@P10=1,@P11=0
+
+--内层All被合并到外层查询中
+
+--内层ToList子查询
+exec sp_executesql N' SELECT  [T4].[Id] AS C22,[T4].[UserId] AS C23,[T4].[Goods] AS C24,[T0].[C25] FROM [Order] AS [T4] Cross JOIN  (  SELECT  [T0].[Id] AS [C25] FROM [User] AS [T0] WHERE [T0].[Id] < @P0 AND  EXISTS ( SELECT   TOP  1 @P1 FROM [User] AS [T1] WHERE [T1].[Id] = @P2)  AND  NOT (  EXISTS ( SELECT   TOP  1 @P3 FROM [User] AS [T2] WHERE  NOT ( [T2].[Id] > @P4 ))  ) )   AS [T0] WHERE [T4].[Id] = [T0].[C25] GROUP BY [T4].[Id],[T4].[UserId],[T4].[Goods],[T0].[C25]',N'@P0 int,@P1 int,@P2 int,@P3 int,@P4 int',@P0=100,@P1=1,@P2=1,@P3=1,@P4=0
+```
+
 <h3 id="function">函数支持</h3>
 提供了实现自定义函数的能力(只支持参数,返回值都时简单类型的函数)
 
 <h4 id="customfunction">自定义函数</h4>
+
 ```c#
 /// <summary>
 /// int 扩展
@@ -446,20 +474,13 @@ db.Query<User>().Select(i => i.Id.ToString());
 <h5 id="string">String</h5>
 
 ```c#
-    IsNullOrEmpty
-    IsNullOrWhiteSpace
-    StartsWith
-    EndsWith
-    Contains
-    Trim
-    TrimStart
-    TrimEnd
-    IndexOf
-    Substring
-    ToLower
-    ToUpper
-    Replace
-    Concat
+    IsNullOrEmpty,IsNullOrWhiteSpace
+    StartsWith,EndsWith
+    Contains,Trim
+    TrimStart,TrimEnd
+    IndexOf,Substring
+    ToLower,ToUpper
+    Replace,Concat
 ```
 
 ```c#
@@ -491,17 +512,207 @@ db.Query<User>().Select(i => Math.Max(i.Id, i.Age));
  SELECT  CASE WHEN [T0].[Id] > [T0].[Age] THEN [T0].[Id] ELSE  [T0].[Age] END  FROM [User] AS [T0]
 ```
 
-<h3 id="#insert">插入</h3>
+<h3 id="#modify">修改</h3>
 
-<!-- 
-  *   [插入](#insert)
-    *   [更新](#update)
-        *   [属性跟踪](#track)
-    *   [删除](#delete)
-    *   [SQL合并](#combinesql)
-    *   [事务支持](#transaction)
-*   [性能测试](#performance)
-*   [数据库支持](#database) -->
+<h4 id="insert">插入</h4>
+
+```c#
+//db.AddRange()
+db.Add(new User(){Id=1,Age=18,CreateDate=DateTime.Now,Name="张三",Tel="1234567879"});
+var rowsCount=db.Save();
+```
+
+<h4 id="update">更新</h4>
+
+```c#
+
+db.Update(new User(){Id=1,Age=18,CreateDate=DateTime.Now,Name="张三",Tel="1234567879"});
+var rowsCount=db.Save();
+```
+
+<h4 id="delete">删除</h4>
+
+```c#
+
+db.Delete(new User(){Id=1,Age=18,CreateDate=DateTime.Now,Name="张三",Tel="1234567879"});
+var rowsCount=db.Save();
+
+```
+
+&emsp;1.Update,Delete操作的类型需要包含一个名为"Id"的属性或者字段,或者在某个属性或字段上应用PrimaryAttribute/AutoIncrementAttribute特性
+
+&emsp;2.插入的类型如果包含了AutoIncrementAttribute特性的成员,则在Save之后会更新该成员的值
+
+&emsp;3.针对Add,Update,Delete操作,会合并到一条SQL语句中执行(针对第2种情形,则单独一条进行插入)
+
+```c#
+var u = db.Query<User>().FirstOrDefault(i => i.Id == 1);
+var du = db.Query<User>().FirstOrDefault(i => i.Id == 10);
+
+u.Name = "拜拜拜";
+
+db.Add(new User() { Id = 999, Name = "张三", Age = 18, CreateDay = DateTime.Now, Tel = "12345978" });
+db.Add(new User() { Id = 10001, Name = "李四", Age = 19, CreateDay = DateTime.Now, Tel = "12345978" });
+db.Update(u);
+db.Delete(du);
+
+var rowsCount = db.Save();
+
+```sql
+exec sp_executesql N'DECLARE @__ROWCOUNT__ INT=0;
+
+;INSERT INTO [User]([Id],[Age],[Name],[CreateDay],[Tel]) VALUES  (@P0,@P1,@P2,@P3,@P4),(@P5,@P6,@P7,@P8,@P9);
+SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();
+;UPDATE [User]SET [Age]=@P10,[Name]=@P11,[CreateDay]=@P12,[Tel]=@P13 WHERE Id=@P14;;SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();
+;DELETE FROM  [User] WHERE Id=@P15;
+;SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();SELECT @__ROWCOUNT__ AS ROWSCOUNT;',N'@P0 int,@P1 int,@P2 nvarchar(2),@P3 datetime,@P4 nvarchar(8),@P5 int,@P6 int,@P7 nvarchar(2),@P8 datetime,@P9 nvarchar(8),@P10 int,@P11 nvarchar(3),@P12 datetime,@P13 nvarchar(20),@P14 int,@P15 int',@P0=999,@P1=18,@P2=N'张三',@P3='2018-02-06 16:00:39.850',@P4=N'12345978',@P5=10001,@P6=19,@P7=N'李四',@P8='2018-02-06 16:00:39.853',@P9=N'12345978',@P10=2,@P11=N'拜拜拜',@P12='2017-08-13 12:30:00',@P13=N'Wheaa2              ',@P14=1,@P15=10
+```
+
+<h4 id="track">变更跟踪</h4>
+&emsp;变更跟踪可以 减少修改时生成的列的数量,仅对产生变更的列进行修改,但对消耗掉一定的内存
+
+&emsp;当没有任何字段变更时,及时调用了Update,也不会修改数据库,能减少了修改次数
+
+```c#
+//未跟踪
+var u = db.Query<User>().FirstOrDefault(i => i.Id == 1);
+u.Name = "拜拜拜";
+
+db.Update(u);
+db.Save();
+
+//开启跟踪
+var u = db.Query<User>().FirstOrDefault(i => i.Id == 1);
+db.TrackEntity(u);
+
+u.Name = "拜拜拜";
+
+db.Update(u);
+db.Save();
+
+```
+
+```sql
+--未跟踪
+exec sp_executesql N'DECLARE @__ROWCOUNT__ INT=0;
+;UPDATE [User]SET [Age]=@P0,[Name]=@P1,[CreateDay]=@P2,[Tel]=@P3 WHERE Id=@P4;
+;SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();SELECT @__ROWCOUNT__ AS ROWSCOUNT;',N'@P0 int,@P1 nvarchar(3),@P2 datetime,@P3 nvarchar(20),@P4 int',@P0=2,@P1=N'拜拜拜',@P2='2017-08-13 12:30:00',@P3=N'Wheaa2              ',@P4=1
+
+--开启跟踪
+exec sp_executesql N'DECLARE @__ROWCOUNT__ INT=0;
+;UPDATE [User]SET [Name]=@P1 WHERE Id=@P4;
+;SELECT @__ROWCOUNT__=@__ROWCOUNT__+ROWCOUNT_BIG();SELECT @__ROWCOUNT__ AS ROWSCOUNT;',N'@P1 nvarchar(3),@P4 int',@P1=N'拜拜拜',@P4=1
+```
+
+<h3 id="combinesql">SQL合并</h3>
+&emsp;针对Add,Update,Delete操作,会合并到一条SQL语句中执行,根据数据库能够支持的最大参数个数而定
+
+<h3 id="transaction">事务支持</h3>
+
+&emsp;如果没有在调用Save之前手动开启事务,则在Save方法调用时,会自动开始一个事务.如果手工开启了事务,则不会
+
+&emsp;事务嵌套,慎用
+
+```c#
+
+var trans = db.BeginTransaction();
+
+try
+{
+    db.Add(new User() { Id = 9999999, Name = "张三", Age = 18, CreateDay = DateTime.Now, Tel = "12345978" });
+    db.Save();
+    trans.Commit();
+}
+catch
+{
+    trans.Rollback();
+}
+```
+
+<h2 id="performance">性能测试</h2>
+&emsp; 硬件
+
+&emsp; CPU:I7-4770K
+
+&emsp; 内存:8GB
+
+&emsp; 硬盘:SSD
+
+&emsp; OS:Win10
+
+&emsp; Db:Microsoft SQL Server 2016 (SP1) Express
+
+```c#
+//预制数据
+for (var i = 0; i < 500000; i++)
+{
+    db.Add(new User()
+    {
+        Id = i,
+        Age = i,
+        Name = "Name" + i,
+        CreateDay = DateTime.Now,
+        Tel = "123456789"
+    });
+}
+
+db.Save();
+```
+
+50万条数据ToList,重复五次,每次条件不一样,取平均值
+```c#
+var st = new Stopwatch();
+
+//预热
+db.Query<User>().Where(i => i.Id > 0).ToList();
+
+st.Start();
+for (var j = 0; j < 5; j++)
+{
+    db.Query<User>().Where(m => m.Id > j).ToList();
+}
+
+st.Stop();
+Console.WriteLine("50万条ToList:" + st.ElapsedMilliseconds / 5.0);
+//50万条ToList:1399.2毫秒
+```
+前40万条数据ToList,重复五次,每次条件不一样,取平均值
+```c#
+var st = new Stopwatch();
+//预热
+db.Query<User>().Where(m => m.Id > 0).Take(1).ToList();
+
+st.Start();
+for (var j = 0; j < 5; j++)
+{
+    db.Query<User>().Where(m => m.Id > j).Take(400000).ToList();
+}
+
+st.Stop();
+Console.WriteLine("前40万条ToList:" + st.ElapsedMilliseconds / 5.0);
+//前40万条ToList:1166.6毫秒
+```
+
+循环查询2万次,每次查询一条数据,数据不重复
+```c#
+var st = new Stopwatch();
+//预热
+db.Query<User>().Where(i => i.Id == 0).ToList();
+
+st.Start();
+for (var j = 0; j < 5; j++)
+{
+    for (var i = 0; i < 20000; i++)
+    {
+        db.Query<User>().Where(m => m.Id == i).ToList();
+    }
+}
+
+st.Stop();
+Console.WriteLine("循环查询2万次,每次查询一条数据:" + st.ElapsedMilliseconds / 5.0);
+
+//循环查询2万次,每次查询一条数据:10519毫秒
+```
 
 <h2 id="license">协议</h1>
 MIT

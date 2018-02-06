@@ -75,15 +75,11 @@ namespace ConsoleApp
             using (var db = new SqlServerDbContext())
             {
                 var st = new Stopwatch();
-                st.Start();
-                var x = db.Query<User>().Select(i => Math.Max(i.Id, i.Age)).ToList();
 
-                //Function.Query(db);
-                //Complex.SubQuery(db);
-                //Complex.Join(db);
-
+                //预热
+                var x = db.Users.All(n => n.Id > 0);
                 st.Stop();
-                Console.WriteLine(st.ElapsedMilliseconds);
+                Console.WriteLine("前40万条ToList:" + st.ElapsedMilliseconds / 5.0);
             }
         }
     }

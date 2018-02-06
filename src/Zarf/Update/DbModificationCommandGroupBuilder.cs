@@ -84,15 +84,18 @@ namespace Zarf.Update
                 paramemters.Add(parameter);
             }
 
-            AddCommandToGroup(
-                groups,
-                new DbModificationCommand(
-                    entry,
-                    columns,
-                    paramemters,
-                    GetColumnName(entry.Primary),
-                    GetDbParameter(entry.Entity, entry.Primary))
-            );
+            if (columns.Count != 0)
+            {
+                AddCommandToGroup(
+                    groups,
+                    new DbModificationCommand(
+                        entry,
+                        columns,
+                        paramemters,
+                        GetColumnName(entry.Primary),
+                        GetDbParameter(entry.Entity, entry.Primary))
+                );
+            }
         }
 
         protected virtual void BuildDelete(List<DbModificationCommandGroup> groups, EntityEntry entry)

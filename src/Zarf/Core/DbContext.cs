@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -122,19 +123,19 @@ namespace Zarf
             return Task.Run(() => Delete(entity));
         }
 
-        public IDbEntityTransaction BeginTransaction()
+        public IDbEntityTransaction BeginTransaction(IsolationLevel level = IsolationLevel.ReadCommitted)
         {
             if (!DbService.EntityConnection.HasTransaction())
             {
                 Save();
             }
 
-            return DbService.EntityConnection.BeginTransaction();
+            return DbService.EntityConnection.BeginTransaction(level);
         }
 
-        public Task<IDbEntityTransaction> BeginTransactionAsync()
+        public Task<IDbEntityTransaction> BeginTransactionAsync(IsolationLevel level = IsolationLevel.ReadCommitted)
         {
-            return Task.FromResult(BeginTransaction());
+            return Task.FromResult(BeginTransaction(level));
         }
 
         public int Save()

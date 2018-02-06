@@ -14,7 +14,7 @@ namespace Zarf.Core
     {
         public static IServiceCollection UseZarfCore(this IServiceCollection serviceCollection)
         {
-            serviceCollection.AddScoped<IEntityTracker, EntityTracker>();
+            serviceCollection.AddSingleton<IEntityTracker, EntityTracker>();
             serviceCollection.AddScoped<IEntityEntryCache, EntityEntryCache>();
             serviceCollection.AddScoped<IQueryExecutor,QueryExecutor>();
             serviceCollection.AddScoped<IDbModifyExecutor,DbModifyExecutor>();
