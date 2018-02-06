@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Zarf.Sqlite\Zarf.Sqlite.csproj" />
     <ProjectReference Include="..\..\src\Zarf.SqlServer\Zarf.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\Zarf\Zarf.csproj" />
     <ProjectReference Include="..\Entities\Entities.csproj" />
   </ItemGroup>
 

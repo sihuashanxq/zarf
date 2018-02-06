@@ -42,7 +42,7 @@ namespace Zarf.Query.Handlers.NodeTypes.MethodCalls
                 throw new Exception("error join query!");
             }
 
-            if (select.Where != null)
+            if (select.Sets.Count > 0)
             {
                 select = select.PushDownSubQuery(QueryContext.AliasGenerator.GetNewTable());
             }

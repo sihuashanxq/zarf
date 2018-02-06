@@ -115,7 +115,7 @@ public class Order
 <h3 id="api">Api</h3>
 
 <h4 id="iquey">IQuery`</h4>
-&emsp; IQuery接口定义了数据查询的相关Api,使用DbContext中的Query方法进行实例化.
+&emsp;IQuery接口定义了数据查询的相关Api,使用DbContext中的Query方法进行实例化.
 
 &emsp;IQuery<T>接口没有继承IEnumerable,屏蔽了Linq相关扩展方法的干扰.同时定义了GetEnumerator方法,因此可以使用foreach对IQuery<T>进行迭代访问
 
@@ -216,7 +216,7 @@ All用于对查询出的所有元素进行判定是否同时满足某些条件,�
 db.Query<User>().All(u => u.Id > 0);
 ```
 ```sql
-exec sp_executesql N' (SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE  NOT ( [T0].[Id] > @P1 ) ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=0
+exec sp_executesql N' SELECT (SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE  NOT ( [T0].[Id] > @P1 ) ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=0
 ```
 
 <h4 id="any">Any</h4>
@@ -225,7 +225,7 @@ All用于对查询出的所有元素进行判定是否部分满足某些条件,�
 db.Query<User>().Any(u => u.Id > 10);
 ```
 ```sql
-exec sp_executesql N' (SELECT CASE WHEN  EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE [T0].[Id] > @P1 ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=10
+exec sp_executesql N'SELECT (SELECT CASE WHEN  EXISTS(  SELECT  @P0 FROM [User] AS [T0] WHERE [T0].[Id] > @P1 ) THEN   CAST(1 AS BIT) ELSE CAST(0 AS BIT) END)',N'@P0 bit,@P1 int',@P0=1,@P1=10
 ```
 
 <h4 id="first">First/OrDefault</h4>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ConsoleApp.Entities
+namespace Entities
 {
     public class User
     {

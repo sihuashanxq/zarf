@@ -1,20 +1,5 @@
-﻿using ConsoleApp;
-using ConsoleApp.Entities;
-using ConsoleApp.Queries;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
+﻿using Entities;
 using Zarf;
-using Zarf.Generators;
-using Zarf.Generators.Functions;
-using Zarf.Generators.Functions.Registrars;
-using Zarf.Metadata;
-using Zarf.Metadata.DataAnnotations;
-using Zarf.Metadata.Entities;
-using Zarf.Query;
 using Zarf.Sqlite;
 using Zarf.SqlServer;
 
@@ -41,55 +26,18 @@ namespace ConsoleApp
         public IQuery<User> Users => Query<User>();
     }
 
-    public static class IntExtension
-    {
-        [SQLFunctionHandler(typeof(IntFunHandler))]
-        public static int AddTowInt(this int i, int n)
-        {
-            return i + n;
-        }
-    }
-
-    public class IntFunHandler : ISQLFunctionHandler
-    {
-        public Type SoupportedType => typeof(int);
-
-        public bool HandleFunction(ISQLGenerator generator, MethodCallExpression methodCall)
-        {
-            if (methodCall.Method.Name == "AddTowInt")
-            {
-                generator.Attach(methodCall.Arguments[0]);
-                generator.Attach(" + ");
-                generator.Attach(methodCall.Arguments[1]);
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
         {
-            using (var db = new SqlServerDbContext())
+            using (var db = new SqliteDbContext())
             {
-                var st = new Stopwatch();
-
-                //预热
-                var x = db.Users.All(n => n.Id > 0);
-                st.Stop();
-                Console.WriteLine("前40万条ToList:" + st.ElapsedMilliseconds / 5.0);
+                //QueryDemo.Query(db);
+                ModifyDemo.Insert(db);
+                ModifyDemo.Update(db);
+                ModifyDemo.Delete(db);
+                //ModifyDemo.AsyncModify(db);
             }
         }
-    }
-
-    public class Address
-    {
-        public int Id { get; set; }
-
-        public string Street { get; set; }
-
-        public int UserId { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace ConsoleApp.Entities
+﻿namespace Entities
 {
     public class Order
     {

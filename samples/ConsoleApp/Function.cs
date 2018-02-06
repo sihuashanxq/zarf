@@ -1,12 +1,10 @@
-﻿using ConsoleApp.Entities;
-using System;
+﻿using System;
 using System.Linq.Expressions;
-using Zarf;
 using Zarf.Generators;
 using Zarf.Generators.Functions;
 using Zarf.Metadata.DataAnnotations;
 
-namespace ConsoleApp.Queries
+namespace ConsoleApp
 {
     /// <summary>
     /// int 扩展
@@ -39,29 +37,6 @@ namespace ConsoleApp.Queries
             }
 
             return false;
-        }
-    }
-
-    /// <summary>
-    /// 函数处理
-    /// </summary>
-    public class Function
-    {
-        public static void Query(DbContext db)
-        {
-            var idAdd2 = db.Query<User>().Where(i => i.Id.Add(2) < 10)
-                .Select(i => new
-                {
-                    IdAdd3 = i.Id.Add(3),
-                    Name = i.Name
-                });
-
-            Console.WriteLine("Function ");
-
-            foreach (var item in idAdd2)
-            {
-                Console.WriteLine(item);
-            }
         }
     }
 }

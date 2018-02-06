@@ -21,8 +21,6 @@ namespace Zarf.Metadata.Descriptors
 
         public string Name => Member.Name;
 
-        public string RefrenceForeignKey { get; }
-
         public Type MemberType { get; }
 
         public IEnumerable<Attribute> Attributes { get; }
@@ -33,7 +31,6 @@ namespace Zarf.Metadata.Descriptors
             Attributes = Member.GetCustomAttributes();
             MemberType = member.GetPropertyType();
             IsPrimaryKey = Attributes.FirstOrDefault(item => item is PrimaryKeyAttribute) != null;
-            RefrenceForeignKey = Attributes.OfType<ForeignKeyAttribute>()?.FirstOrDefault()?.Name ?? Name;
             IsAutoIncrement = ReflectionUtil.NumbericTypes.Contains(MemberType) && Attributes.OfType<AutoIncrementAttribute>().FirstOrDefault() != null;
         }
 

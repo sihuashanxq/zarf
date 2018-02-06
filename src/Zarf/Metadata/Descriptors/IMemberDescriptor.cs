@@ -14,8 +14,6 @@ namespace Zarf.Metadata.Descriptors
 
         string Name { get; }
 
-        string RefrenceForeignKey { get; }
-
         MemberInfo Member { get; }
 
         Type MemberType { get; }

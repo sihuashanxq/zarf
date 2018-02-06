@@ -22,7 +22,7 @@ namespace Zarf.Query.Internals.ModelTypes
         static QueryModelTypeGenerator()
         {
             ModelTypeCaches = new ConcurrentDictionary<string, QueryModelTypeCache>();
-
+            
             ModuleBuilder = AssemblyBuilder
                 .DefineDynamicAssembly(new AssemblyName("__SubQueryExtension__"), AssemblyBuilderAccess.RunAndCollect)
                 .DefineDynamicModule("__SubQueryExtension__Module__");
@@ -56,7 +56,7 @@ namespace Zarf.Query.Internals.ModelTypes
 
                 return new QueryModelTypeCache
                 {
-                    ModelType = typeBuilder.CreateType(),
+                    ModelType = typeBuilder.CreateTypeInfo(),
                     Fields = fields
                 };
             });

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
+using Zarf.Metadata.DataAnnotations;
 using Zarf.Metadata.Descriptors;
 using Zarf.Metadata.Entities;
 

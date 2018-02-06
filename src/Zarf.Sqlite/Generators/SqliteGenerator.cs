@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Zarf.Extensions;
 using Zarf.Generators;
 using Zarf.Generators.Functions.Providers;
+using Zarf.Metadata.Entities;
 using Zarf.Query.Expressions;
 using Zarf.Update.Expressions;
 
@@ -15,6 +17,11 @@ namespace Zarf.Sqlite.Generators
             : base(provider)
         {
 
+        }
+
+        public override string Generate(Expression expression, List<DbParameter> parameters)
+        {
+            return base.Generate(expression, parameters).Replace("[dbo].", string.Empty);
         }
 
         protected override Expression VisitAggregate(AggregateExpression exp)
@@ -80,7 +87,9 @@ namespace Zarf.Sqlite.Generators
 
         protected override Expression VisitSkip(SkipExpression skip)
         {
-            AttachSQL(" OFFSET ", skip.Offset, " ");
+            Attach(" OFFSET ");
+            Attach(skip.Offset.ToString());
+            Attach(" ");
             return skip;
         }
 
@@ -102,11 +111,11 @@ namespace Zarf.Sqlite.Generators
             if (store.Persists.Count == 1 && (
                 store.Persists.First().As<InsertExpression>()?.GenerateIdentity ?? false))
             {
-                AttachSQL(";SELECT 1 ROWSCOUNT,LAST_INSERT_ROWID() AS ID;");
+                Attach(";SELECT 1 ROWSCOUNT,LAST_INSERT_ROWID() AS ID;");
             }
             else
             {
-                AttachSQL(";SELECT changes() AS ROWSCOUNT;");
+                Attach(";SELECT changes() AS ROWSCOUNT;");
             }
 
             return store;
@@ -114,20 +123,21 @@ namespace Zarf.Sqlite.Generators
 
         protected void BuildInsert(InsertExpression insert)
         {
-            AttachSQL(Environment.NewLine).
-            AttachSQL(";INSERT INTO ").
-            AttachSQL(insert.Table.Schema.Escape()).
-            AttachSQL('.').
-            AttachSQL(insert.Table.Name.Escape()).
-            AttachSQL("(");
+            Attach(Environment.NewLine);
+            Attach(";INSERT INTO ");
+            Attach(insert.Table.Schema.Escape());
+            Attach(".");
+            Attach(insert.Table.Name.Escape());
+            Attach("(");
 
             foreach (var col in insert.Columns)
             {
-                AttachSQL(col.Escape()).AttachSQL(',');
+                Attach(col.Escape());
+                Attach(",");
             }
 
             SQL.Length--;
-            AttachSQL(") ");
+            Attach(") ");
 
             var parameters = insert.DbParams.ToList();
             var colCount = insert.Columns.Count();
@@ -138,25 +148,26 @@ namespace Zarf.Sqlite.Generators
                 var mod = (i % colCount);
                 if (mod == 0)
                 {
-                    AttachSQL(i != 0 ? " UNION " : " ").
-                    AttachSQL(" SELECT ").
-                    AttachSQL(parameter.Name);
+                    Attach(i != 0 ? " UNION " : " ");
+                    Attach(" SELECT ");
+                    Attach(parameter.Name);
                 }
                 else
                 {
-                    AttachSQL(',').AttachSQL(parameter.Name);
+                    Attach(",");
+                    Attach(parameter.Name);
                 }
             }
         }
 
         protected void BuildUpdate(UpdateExpression update)
         {
-            AttachSQL(Environment.NewLine).
-            AttachSQL(";UPDATE ").
-            AttachSQL(update.Table.Schema.Escape()).
-            AttachSQL('.').
-            AttachSQL(update.Table.Name.Escape()).
-            AttachSQL("SET ");
+            Attach(Environment.NewLine);
+            Attach(";UPDATE ");
+            Attach(update.Table.Schema.Escape());
+            Attach(".");
+            Attach(update.Table.Name.Escape());
+            Attach("SET ");
 
             var columns = update.Columns.ToList();
             var parameters = update.DbParams.ToList();
@@ -164,57 +175,57 @@ namespace Zarf.Sqlite.Generators
             {
                 var col = columns[i];
                 var dbParam = parameters[i];
-                AttachSQL(col.Escape()).
-                AttachSQL('=').
-                AttachSQL(dbParam.Name).
-                AttachSQL(',');
+                Attach(col.Escape());
+                Attach("=");
+                Attach(dbParam.Name);
+                Attach(",");
             }
 
             SQL.Length--;
 
-            AttachSQL(" WHERE ").
-            AttachSQL(update.Identity).
-            AttachSQL('=').
-            AttachSQL(update.IdentityValue.Name).
-            AttachSQL(";");
+            Attach(" WHERE ");
+            Attach(update.Identity);
+            Attach("=");
+            Attach(update.IdentityValue.Name);
+            Attach(";");
         }
 
         protected void BuildDelete(DeleteExpression delete)
         {
-            AttachSQL(Environment.NewLine).
-            AttachSQL(";DELETE FROM  ").
-            AttachSQL(delete.Table.Schema.Escape()).
-            AttachSQL('.').
-            AttachSQL(delete.Table.Name.Escape()).
-            AttachSQL(" WHERE ").
-            AttachSQL(delete.PrimaryKey);
+            Attach(Environment.NewLine);
+            Attach(";DELETE FROM  ");
+            Attach(delete.Table.Schema.Escape());
+            Attach(".");
+            Attach(delete.Table.Name.Escape());
+            Attach(" WHERE ");
+            Attach(delete.PrimaryKey);
 
             var primaryKeyValues = delete.PrimaryKeyValues.ToList();
             if (primaryKeyValues.Count == 1)
             {
-                AttachSQL('=');
-                AttachSQL(delete.PrimaryKeyValues.FirstOrDefault().Name);
+                Attach("=");
+                Attach(delete.PrimaryKeyValues.FirstOrDefault().Name);
             }
             else
             {
-                AttachSQL("IN (");
+                Attach("IN (");
                 foreach (var primaryKeyValue in primaryKeyValues)
                 {
-                    AttachSQL(primaryKeyValue.Name + ',');
+                    Attach(primaryKeyValue.Name + ",");
                 }
 
                 SQL.Length--;
-                AttachSQL(')');
+                Attach(")");
             }
 
-            AttachSQL(";");
+            Attach(";");
         }
 
         protected override Expression VisitExists(ExistsExpression exists)
         {
-            AttachSQL(" EXISTS (");
+            Attach(" EXISTS (");
             Attach(exists.Select);
-            AttachSQL(") ");
+            Attach(") ");
             return exists;
         }
     }

@@ -24,3 +24,10 @@
 /src/Zarf.Sqlite/obj
 /src/Zarf.SqlServer/obj/Debug/netcoreapp2.0
 /src/Zarf.SqlServer/obj/Release/netcoreapp2.0
+/samples/Entities/bin/Debug/netcoreapp2.0
+/samples/Entities/obj
+/samples/Performance/bin/Debug/netcoreapp2.0
+/samples/Performance/obj
+/src/Zarf.Sqlite/bin/Debug/netstandard2.0
+/src/Zarf.SqlServer/bin/Debug/netstandard2.0
+/src/Zarf.SqlServer/obj/Debug/netstandard2.0

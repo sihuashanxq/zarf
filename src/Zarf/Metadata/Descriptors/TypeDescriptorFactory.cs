@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using Zarf.Metadata.DataAnnotations;
 
 namespace Zarf.Metadata.Descriptors
 {
@@ -24,11 +25,13 @@ namespace Zarf.Metadata.Descriptors
                 var properties = typeOfEntity
                     .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Where(item => Utils.IsAnonymouseType(typeOfEntity) || (item.CanRead && item.CanWrite))
-                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.PropertyType));
+                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.PropertyType))
+                    .Where(item => item.GetCustomAttribute<NotMappedAttribute>() == null);
 
                 var fileds = typeOfEntity
                     .GetFields(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.FieldType));
+                    .Where(item => Utils.IsAnonymouseType(typeOfEntity) || ReflectionUtil.SimpleTypes.Contains(item.FieldType))
+                    .Where(item => item.GetCustomAttribute<NotMappedAttribute>() == null);
 
                 foreach (var property in properties)
                 {

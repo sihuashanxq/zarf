@@ -13,15 +13,20 @@ namespace Zarf.Generators
     public abstract partial class SQLGenerator : ExpressionVisitor, ISQLGenerator
     {
         /// <summary>
+        /// 生成SQL的跟表达式
+        /// </summary>
+        protected Expression Root { get; set; }
+
+        /// <summary>
         /// 参数计数
         /// </summary>
         private int _parameterCounter = 0;
 
+        private List<DbParameter> _parameters;
+
         /// <summary>
         /// 生成的参数
         /// </summary>
-        private List<DbParameter> _parameters;
-
         protected List<DbParameter> Parameters => _parameters;
 
         /// <summary>
@@ -41,13 +46,13 @@ namespace Zarf.Generators
             lock (this)
             {
                 _parameterCounter = 0;
+                _parameters = parameters;
 
                 SQL = new StringBuilder();
-                _parameters = parameters;
 
                 Attach(expression);
 
-                return SQL.ToString().Replace("[dbo].", "");
+                return SQL.ToString();
             }
         }
 
@@ -63,23 +68,23 @@ namespace Zarf.Generators
             }
         }
 
+        public override Expression Visit(Expression node)
+        {
+            if (Root == null)
+            {
+                Root = node;
+            }
+
+            return base.Visit(node);
+        }
+
         /// <summary>
         /// 附加SQL到当前SQL中
         /// </summary>
         /// <param name="text"></param>
         public virtual void Attach(string text)
         {
-            AttachSQL(text);
-        }
-
-        public SQLGenerator AttachSQL(params object[] args)
-        {
-            foreach (var arg in args)
-            {
-                SQL.Append(arg);
-            }
-
-            return this;
+            SQL.Append(text);
         }
 
         protected DbParameter CreateParameter(object parameterValue)
@@ -97,7 +102,7 @@ namespace Zarf.Generators
 
             if (column.Column == null)
             {
-                AttachSQL(" NULL ");
+                Attach(" NULL ");
             }
             else
             {
@@ -106,7 +111,7 @@ namespace Zarf.Generators
 
             if (!column.Alias.IsNullOrEmpty())
             {
-                AttachSQL(" AS ");
+                Attach(" AS ");
                 SQL.Append(column.Alias.Escape());
             }
 
@@ -117,22 +122,23 @@ namespace Zarf.Generators
         {
             if (alias.Expression is SelectExpression)
             {
-                AttachSQL("( ");
+                Attach("( ");
                 Attach(alias.Expression);
-                AttachSQL(" ) ");
+                Attach(" ) ");
             }
             else
             {
                 Attach(alias.Expression);
             }
 
-            AttachSQL(" AS ", alias.Alias);
+            Attach(" AS ");
+            Attach(alias.Alias);
             return alias;
         }
 
         protected virtual Expression VisitExcept(ExceptExpression except)
         {
-            AttachSQL(" Except ");
+            Attach(" Except ");
             Attach(except.Select);
             return except;
         }
@@ -145,7 +151,7 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitIntersect(IntersectExpression intersec)
         {
-            AttachSQL(" INTERSECT ");
+            Attach(" INTERSECT ");
             Attach(intersec.Select);
             return intersec;
         }
@@ -163,19 +169,19 @@ namespace Zarf.Generators
             switch (join.JoinType)
             {
                 case JoinType.Left:
-                    AttachSQL(" Left JOIN ");
+                    Attach(" Left JOIN ");
                     break;
                 case JoinType.Right:
-                    AttachSQL(" Right JOIN ");
+                    Attach(" Right JOIN ");
                     break;
                 case JoinType.Full:
-                    AttachSQL(" Full JOIN ");
+                    Attach(" Full JOIN ");
                     break;
                 case JoinType.Inner:
-                    AttachSQL(" Inner JOIN ");
+                    Attach(" Inner JOIN ");
                     break;
                 case JoinType.Cross:
-                    AttachSQL(" Cross JOIN ");
+                    Attach(" Cross JOIN ");
                     break;
             }
 
@@ -186,12 +192,12 @@ namespace Zarf.Generators
             else
             {
                 Attach(join.Select);
-                AttachSQL("  AS " + join.Select.Alias.Escape());
+                Attach("  AS " + join.Select.Alias.Escape());
             }
 
             if (join.JoinType != JoinType.Cross)
             {
-                AttachSQL(" ON ");
+                Attach(" ON ");
                 Attach(join.Predicate ?? Utils.ExpressionTrue);
             }
 
@@ -211,7 +217,7 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitWhere(WhereExperssion where)
         {
-            AttachSQL(" WHERE ");
+            Attach(" WHERE ");
             Attach(where.Predicate);
             return where;
         }
@@ -239,14 +245,14 @@ namespace Zarf.Generators
             switch (unary.NodeType)
             {
                 case ExpressionType.Not:
-                    AttachSQL(" NOT ( ");
+                    Attach(" NOT ( ");
                     if (unary.Operand.Is<ConstantExpression>() && unary.Operand.Type == typeof(bool))
                     {
-                        AttachSQL(" 1 =");
+                        Attach(" 1 =");
                     }
 
                     Attach(unary.Operand);
-                    AttachSQL(" )");
+                    Attach(" )");
                     break;
                 default:
                     Visit(unary.Operand);
@@ -283,13 +289,13 @@ namespace Zarf.Generators
                 Attach(leftIsNull ? right : left);
                 if (binary.NodeType == ExpressionType.Equal)
                 {
-                    AttachSQL(" IS NULL ");
+                    Attach(" IS NULL ");
                     return binary;
                 }
 
                 if (binary.NodeType == ExpressionType.NotEqual)
                 {
-                    AttachSQL(" IS NOT NULL ");
+                    Attach(" IS NOT NULL ");
                     return binary;
                 }
 
@@ -309,7 +315,7 @@ namespace Zarf.Generators
             foreach (var column in columns)
             {
                 VisitColumn(column);
-                AttachSQL(',');
+                Attach(",");
             }
 
             SQL.Length--;
@@ -319,13 +325,17 @@ namespace Zarf.Generators
         {
             if (select.Limit != 0)
             {
-                AttachSQL(" LIMIT  ", select.Limit, " ");
+                Attach(" LIMIT  ");
+                Attach(select.Limit.ToString());
+                Attach(" ");
                 return;
             }
 
             if (select.Offset != null)
             {
-                AttachSQL(" LIMIT  ", int.MaxValue, " ");
+                Attach(" LIMIT  ");
+                Attach(int.MaxValue.ToString());
+                Attach(" ");
             }
         }
 
@@ -333,7 +343,7 @@ namespace Zarf.Generators
         {
             if (select.IsDistinct)
             {
-                AttachSQL(" DISTINCT ");
+                Attach(" DISTINCT ");
             }
         }
 
@@ -341,14 +351,14 @@ namespace Zarf.Generators
         {
             if (select.Projections == null || select.Projections.Count == 0)
             {
-                AttachSQL('*');
+                Attach("*");
             }
             else
             {
                 foreach (var item in select.Projections)
                 {
                     Attach(item);
-                    AttachSQL(',');
+                    Attach(",");
                 }
 
                 SQL.Length--;
@@ -368,12 +378,15 @@ namespace Zarf.Generators
             if (select.ChildSelect == null)
             {
                 Utils.CheckNull(select.Table, "query.Table is null");
-                AttachSQL(select.Table.Schema.Escape(), '.', select.Table.Name.Escape());
+                Attach(select.Table.Schema.Escape());
+                Attach(".");
+                Attach(select.Table.Name.Escape());
             }
 
             if (!select.Alias.IsNullOrEmpty())
             {
-                AttachSQL(" AS ", select.Alias.Escape());
+                Attach(" AS ");
+                Attach(select.Alias.Escape());
             }
         }
 
@@ -410,12 +423,12 @@ namespace Zarf.Generators
                 return;
             }
 
-            AttachSQL(" ORDER BY ");
+            Attach(" ORDER BY ");
 
             foreach (var order in select.Orders)
             {
                 Attach(order);
-                AttachSQL(',');
+                Attach(",");
             }
 
             SQL.Length--;
@@ -428,12 +441,12 @@ namespace Zarf.Generators
                 return;
             }
 
-            AttachSQL(" GROUP BY ");
+            Attach(" GROUP BY ");
 
             foreach (var group in select.Groups)
             {
                 Attach(group);
-                AttachSQL(',');
+                Attach(",");
             }
 
             SQL.Length--;
@@ -531,6 +544,11 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitAll(AllExpression all)
         {
+            if (ReferenceEquals(all, Root))
+            {
+                Attach("SELECT");
+            }
+
             Attach(" (SELECT CASE WHEN ");
             Attach(" NOT EXISTS( ");
             Attach(all.Select);
@@ -540,6 +558,11 @@ namespace Zarf.Generators
 
         protected virtual Expression VisitAny(AnyExpression any)
         {
+            if (ReferenceEquals(any, Root))
+            {
+                Attach("SELECT");
+            }
+
             Attach(" (SELECT CASE WHEN ");
             Attach(" EXISTS( ");
             Attach(any.Select);
@@ -552,26 +575,28 @@ namespace Zarf.Generators
             switch (exp.Method.Name)
             {
                 case "Min":
-                    AttachSQL("MIN", '(');
+                    Attach("MIN");
                     break;
                 case "Max":
-                    AttachSQL("Max", '(');
+                    Attach("Max");
                     break;
                 case "Sum":
-                    AttachSQL("Sum", '(');
+                    Attach("Sum");
                     break;
                 case "Average":
-                    AttachSQL("CAST( AVG", "(");
+                    Attach("CAST( AVG");
                     break;
                 case "Count":
-                    AttachSQL("Count", "(");
+                    Attach("Count");
                     break;
                 case "LongCount":
-                    AttachSQL("Count_Big", "(");
+                    Attach("Count_Big");
                     break;
                 default:
                     throw new NotImplementedException($"method {exp.Method.Name} is not supported!");
             }
+
+            Attach(" (");
 
             if (exp.KeySelector == null)
             {
