@@ -212,6 +212,7 @@ exec sp_executesql N' SELECT  [T1].[C0],[T1].[C1],[T1].[C2],[T1].[C3],[T1].[C4] 
 
 <h4 id="all">All</h4>
 All用于对查询出的所有元素进行判定是否同时满足某些条件,生成Case WHEN NOT EXISTS( NOT )
+
 ```c#
 db.Query<User>().All(u => u.Id > 0);
 ```
@@ -221,6 +222,7 @@ exec sp_executesql N' SELECT (SELECT CASE WHEN  NOT EXISTS(  SELECT  @P0 FROM [U
 
 <h4 id="any">Any</h4>
 All用于对查询出的所有元素进行判定是否部分满足某些条件,生成Case WHEN  EXISTS ()
+
 ```c#
 db.Query<User>().Any(u => u.Id > 10);
 ```
@@ -328,6 +330,7 @@ db.Query<User>().Average(i=>i.Age);
 
 <h4 id="aggragesubquery">聚合/All/Any子查询</h4>
 聚合子查询不会生成两条查询语句,会合并到外层查询中进行查询,可以重用实体创建委托
+
 ```c#
  //在子查询中如果是聚合类/All/Any的查询,则合并到外层查询中
  db.Query<User>()
@@ -557,6 +560,7 @@ db.Update(u);
 db.Delete(du);
 
 var rowsCount = db.Save();
+```
 
 ```sql
 exec sp_executesql N'DECLARE @__ROWCOUNT__ INT=0;
@@ -694,6 +698,7 @@ Console.WriteLine("前40万条ToList:" + st.ElapsedMilliseconds / 5.0);
 ```
 
 循环查询2万次,每次查询一条数据,数据不重复
+
 ```c#
 var st = new Stopwatch();
 //预热
