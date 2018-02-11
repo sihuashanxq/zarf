@@ -11,7 +11,7 @@ using Zarf.Update;
 
 namespace Zarf
 {
-    public class DbContext : IDisposable, IServiceScope
+    public class DbContext : IDisposable
     {
         private int _immInsertRowsCount;
 

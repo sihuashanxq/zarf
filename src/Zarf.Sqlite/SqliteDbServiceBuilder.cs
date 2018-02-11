@@ -18,7 +18,7 @@ namespace Zarf.Sqlite
 
             foreach (var item in Assembly
                     .GetExecutingAssembly()
-                    .GetTypes()
+                    .GetExportedTypes()
                     .Where(t => typeof(ISQLFunctionHandler).IsAssignableFrom(t) && !t.IsAbstract))
             {
                 _handlers.Add(Activator.CreateInstance(item) as ISQLFunctionHandler);
